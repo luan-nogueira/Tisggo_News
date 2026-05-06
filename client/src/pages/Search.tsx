@@ -151,6 +151,7 @@ export default function SearchPage() {
               <ul className="space-y-2 text-sm">
                 <li><a href="#" className="text-muted-foreground hover:text-accent transition-colors">Sobre nós</a></li>
                 <li><a href="#" className="text-muted-foreground hover:text-accent transition-colors">Contato</a></li>
+                <li><Link href="/admin"><a className="text-muted-foreground hover:text-accent transition-colors">Portal de notícias adm</a></Link></li>
               </ul>
             </div>
             <div>

@@ -114,35 +114,7 @@ export default function Home() {
                   <Search className="w-4 h-4" />
                 </button>
               </form>
-              {isAuthenticated && user?.role === 'admin' && (
-                <Link href="/admin/dashboard" className="px-4 py-2 bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors rounded flex items-center gap-2">
-                  <LogIn className="w-4 h-4" />
-                  Admin
-                </Link>
-              )}
-              {!isAuthenticated && (
-                <div className="flex items-center gap-2">
-                  <a href={getLoginUrl()} className="px-4 py-2 bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors rounded flex items-center gap-2">
-                    <LogIn className="w-4 h-4" />
-                    Login
-                  </a>
-                  {getLoginUrl() === "#login-not-configured" && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          await utils.client.auth.mockLogin.mutate();
-                          window.location.reload();
-                        } catch (e) {
-                          console.error(e);
-                        }
-                      }}
-                      className="px-4 py-2 bg-gray-700 text-white font-bold hover:bg-gray-600 transition-colors rounded border border-accent cursor-pointer"
-                    >
-                      Admin Local
-                    </button>
-                  )}
-                </div>
-              )}
+              {/* Auth buttons removed from header */}
               <button className="px-4 py-2 bg-accent text-black font-bold hover:bg-yellow-500 transition-colors">
                 ANUNCIE
               </button>
@@ -287,6 +259,7 @@ export default function Home() {
                 <li><a href="#" className="hover:text-accent transition-colors">Sobre</a></li>
                 <li><a href="#" className="hover:text-accent transition-colors">Contato</a></li>
                 <li><a href="#" className="hover:text-accent transition-colors">Anuncie</a></li>
+                <li><Link href="/admin" className="hover:text-accent transition-colors">Portal de notícias adm</Link></li>
               </ul>
             </div>
             <div>
