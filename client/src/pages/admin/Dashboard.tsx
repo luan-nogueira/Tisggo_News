@@ -6,6 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
 import { Sparkles, Loader2, Edit2, Trash2, Plus, Eye, FileText, Users, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
