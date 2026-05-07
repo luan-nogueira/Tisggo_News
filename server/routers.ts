@@ -16,6 +16,9 @@ import { createArticle, updateArticle, deleteArticle, createArticleSchema, updat
 import { automateNews } from "./automation";
 import { sdk } from "./_core/sdk";
 import { upsertUser } from "./db";
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { ENV } from "./_core/env";
 
 export const appRouter = router({
   system: systemRouter,
@@ -28,29 +31,38 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
-    mockLogin: publicProcedure.mutation(async ({ ctx }) => {
-      const mockAdmin = {
-        openId: "mock-admin-id",
-        name: "Admin Local",
-        email: "admin@tisgo.local",
-        role: "admin" as const,
-      };
+    loginAdmin: publicProcedure
+      .input(z.object({ email: z.string().email(), password: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        if (input.email !== ENV.adminEmail || input.password !== ENV.adminPassword) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "E-mail ou senha incorretos",
+          });
+        }
 
-      // Ensure user exists in DB
-      await upsertUser(mockAdmin);
+        const adminUser = {
+          openId: "admin-system-id",
+          name: "Administrador",
+          email: input.email,
+          role: "admin" as const,
+        };
 
-      // Create session token
-      const token = await sdk.createSessionToken(mockAdmin.openId, { name: mockAdmin.name });
+        // Ensure user exists in DB
+        await upsertUser(adminUser);
 
-      // Set cookie
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.cookie(COOKIE_NAME, token, {
-        ...cookieOptions,
-        maxAge: ONE_YEAR_MS,
-      });
+        // Create session token
+        const token = await sdk.createSessionToken(adminUser.openId, { name: adminUser.name });
 
-      return { success: true };
-    }),
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
+
+        return { success: true };
+      }),
   }),
 
   articles: router({
