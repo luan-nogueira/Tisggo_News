@@ -289,7 +289,7 @@ export default function Category() {
                 <li><a href="#" className="hover:text-accent transition-colors">Sobre</a></li>
                 <li><a href="#" className="hover:text-accent transition-colors">Contato</a></li>
                 <li><a href="#" className="hover:text-accent transition-colors">Anuncie</a></li>
-                <li><Link href="/admin" className="hover:text-accent transition-colors">Portal de notícias adm</Link></li>
+                <li><Link href="/admin/dashboard" className="hover:text-accent transition-colors">Portal de notícias adm</Link></li>
               </ul>
             </div>
             <div>
