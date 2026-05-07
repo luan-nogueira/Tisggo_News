@@ -16,7 +16,7 @@ export default function Dashboard() {
   const automateNews = trpc.articles.automate.useMutation();
   const [isAutomating, setIsAutomating] = useState(false);
 
-  if (!user || user.role !== "admin") {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
