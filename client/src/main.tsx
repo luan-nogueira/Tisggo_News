@@ -7,6 +7,7 @@ import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
+import { auth } from "./lib/firebase";
 
 const queryClient = new QueryClient();
 
@@ -42,9 +43,22 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
-      fetch(input, init) {
+      async fetch(input, init) {
+        let token = "";
+        try {
+          if (auth.currentUser) {
+            token = await auth.currentUser.getIdToken();
+          }
+        } catch (e) {
+          console.error("Failed to get Firebase token", e);
+        }
+
         return globalThis.fetch(input, {
           ...(init ?? {}),
+          headers: {
+            ...(init?.headers ?? {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           credentials: "include",
         });
       },

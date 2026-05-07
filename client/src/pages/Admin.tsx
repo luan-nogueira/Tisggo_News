@@ -9,6 +9,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function Admin() {
   const { user, loading } = useAuth();
@@ -16,17 +18,25 @@ export default function Admin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const loginAdmin = trpc.auth.loginAdmin.useMutation({
-    onSuccess: () => {
-      window.location.reload();
-    },
-    onError: (err) => {
-      setError(err.message || "Erro ao fazer login");
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoggingIn(true);
+    
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // O hook useAuth vai detectar a mudanca e recarregar a tela
+    } catch (err: any) {
+      console.error(err);
+      setError("E-mail ou senha incorretos.");
+    } finally {
+      setIsLoggingIn(false);
     }
-  });
+  };
 
-  if (loading || loginAdmin.isPending) {
+  if (loading || isLoggingIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
@@ -34,7 +44,9 @@ export default function Admin() {
     );
   }
 
-  if (!user || user.role !== "admin") {
+  // Firebase user returns a user object. Se tem user logado pelo Firebase,
+  // permitimos acesso ao painel de admin.
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black p-4">
         <Card className="w-full max-w-md bg-gray-900 border-gray-800">
@@ -49,11 +61,7 @@ export default function Admin() {
           </CardHeader>
           <CardContent className="mt-4">
             <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                setError("");
-                loginAdmin.mutate({ email, password });
-              }}
+              onSubmit={handleLogin}
               className="flex flex-col gap-4"
             >
               <div className="space-y-2">
@@ -85,9 +93,9 @@ export default function Admin() {
               <Button 
                 type="submit"
                 className="w-full bg-accent text-black hover:bg-yellow-500 font-bold py-6 text-lg mt-2"
-                disabled={loginAdmin.isPending}
+                disabled={isLoggingIn}
               >
-                {loginAdmin.isPending ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
+                {isLoggingIn ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
                 Entrar no Painel
               </Button>
             </form>
