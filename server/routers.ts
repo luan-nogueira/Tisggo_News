@@ -17,7 +17,6 @@ import { automateNews } from "./automation";
 import { sdk } from "./_core/sdk";
 import { upsertUser } from "./db";
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import { ENV } from "./_core/env";
 
 export const appRouter = router({
