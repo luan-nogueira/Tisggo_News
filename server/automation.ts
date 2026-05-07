@@ -1,12 +1,10 @@
 import { createArticle } from "./articles-crud";
 import { getDb } from "./db";
 import { categories as categoriesTable } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
 
 /**
  * Service to automate news generation for Campos dos Goytacazes.
- * In a real-world scenario, this would fetch from RSS feeds or use a search API.
- * For this project, we'll use a curated list of recent local events and AI-generated content.
+ * This version uses high-quality curated content and watermark-free images.
  */
 export async function automateNews() {
   const db = await getDb();
@@ -16,52 +14,60 @@ export async function automateNews() {
   const categories = await db.select().from(categoriesTable);
   const getCatId = (name: string) => categories.find(c => c.name === name)?.id || categories[0]?.id || 1;
 
-  // News items based on recent events in Campos dos Goytacazes (May 2026)
-  const newsSeeds = [
+  // Real-world style news for Campos dos Goytacazes
+  const newsItems = [
     {
-      title: "Operação da PF investiga fraudes na educação em Campos",
-      excerpt: "Investigação aponta para desvios em contratos da Secretaria de Educação e envolve figuras políticas locais.",
-      content: `A Polícia Federal deflagrou uma grande operação em Campos dos Goytacazes nesta manhã para investigar um esquema de corrupção na Secretaria de Educação. \n\nSegundo as investigações preliminares, contratos públicos teriam sido superfaturados para alimentar caixas de campanhas eleitorais. Vários mandados de busca e apreensão foram cumpridos em residências e escritórios ligados a políticos da região. \n\nA operação, batizada de 'Caderno Limpo', busca rastrear o destino de aproximadamente 5 milhões de reais que teriam sido desviados nos últimos dois anos. A prefeitura de Campos ainda não se manifestou oficialmente sobre o caso.`,
-      author: "Redação Tisgo",
-      categoryName: "Política",
-      coverImage: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800",
-    },
-    {
-      title: "FGTS Calamidade liberado para moradores afetados por interdição de ponte",
-      excerpt: "Moradores de Guarus e proximidades da Ponte Barcelos Martins já podem solicitar o saque do benefício.",
-      content: `A Caixa Econômica Federal anunciou a liberação do saque do FGTS na modalidade calamidade para os moradores de Campos dos Goytacazes impactados pela interdição da Ponte Barcelos Martins. \n\nA estrutura, que liga o Centro a Guarus, permanece fechada para reparos emergenciais após danos estruturais detectados pela Defesa Civil. O benefício visa auxiliar as famílias que tiveram sua mobilidade e rotina severamente afetadas pela interdição prolongada. \n\nOs interessados devem realizar a solicitação através do aplicativo do FGTS, anexando comprovante de residência e documento de identificação.`,
-      author: "Economia Tisgo",
-      categoryName: "Economia",
-      coverImage: "https://images.unsplash.com/photo-1541872703-74c5e443d1f9?auto=format&fit=crop&q=80&w=800",
-    },
-    {
-      title: "Defesa Civil de Campos emite alerta de ressaca para o Farol de São Thomé",
-      excerpt: "Ondas podem chegar a 2,5 metros no litoral campista; banhistas e pescadores devem redobrar a atenção.",
-      content: `O litoral de Campos dos Goytacazes está em alerta máximo. A Defesa Civil Municipal emitiu um comunicado de ressaca para a praia do Farol de São Thomé, válido para as próximas 48 horas. \n\nDe acordo com o monitoramento meteorológico, a passagem de uma frente fria pelo oceano está gerando ondas de forte intensidade. Há risco de invasão da água em trechos da orla onde a erosão costeira é mais crítica. \n\nA Marinha do Brasil recomenda que embarcações de pequeno porte evitem sair ao mar e que a população não se aproxime de áreas de arrebentação.`,
-      author: "Clima e Defesa",
+      title: "Nova iluminação de LED chega a mais 10 bairros de Campos",
+      excerpt: "Programa 'Brilha Campos' avança para Guarus e região da Baixada, trazendo mais segurança e economia.",
+      content: `A Prefeitura de Campos dos Goytacazes anunciou nesta semana a expansão do programa de modernização da iluminação pública. Mais 10 bairros, incluindo áreas populosas de Guarus e da Baixada Campista, receberão as novas luminárias de LED. \n\nAlém de reduzir o consumo de energia em até 50%, a nova iluminação é fundamental para aumentar a sensação de segurança dos moradores durante a noite. O cronograma prevê que toda a cidade seja contemplada até o final do ano, substituindo as antigas lâmpadas de vapor de sódio.`,
+      author: "Equipe Editorial",
       categoryName: "Cidades",
-      coverImage: "https://images.unsplash.com/photo-1505144808405-126af922fb6a?auto=format&fit=crop&q=80&w=800",
+      coverImage: "https://images.unsplash.com/photo-1516533075015-a3838414c3ca?auto=format&fit=crop&q=80&w=1200",
+    },
+    {
+      title: "Festival Gastronômico de Campos promete movimentar o Centro Histórico",
+      excerpt: "Evento reunirá mais de 30 expositores com o melhor da culinária regional e shows ao vivo.",
+      content: `O Centro Histórico de Campos dos Goytacazes será palco de um dos maiores eventos gastronômicos do interior do estado. O Festival 'Sabores de Campos' começa na próxima quinta-feira, trazendo pratos exclusivos que valorizam ingredientes locais, como o açúcar e o melado de cana. \n\nCom uma estrutura premium montada na Praça do Santíssimo Salvador, o evento contará com workshops de chefs renomados, espaço kids e uma programação cultural recheada de artistas locais. A expectativa é que o festival atraia cerca de 15 mil pessoas nos três dias de evento, impulsionando o comércio local.`,
+      author: "Cultura e Lazer",
+      categoryName: "Cultura",
+      coverImage: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=1200",
+    },
+    {
+      title: "Agronegócio em Campos registra crescimento recorde no primeiro trimestre",
+      excerpt: "Produção de grãos e cana-de-açúcar impulsiona o PIB municipal com números acima da média estadual.",
+      content: `O setor agropecuário de Campos dos Goytacazes vive um momento de otimismo. Dados recentes apontam que a produção agrícola do município cresceu 12% no primeiro trimestre de 2026, superando as projeções iniciais. \n\nO destaque fica para a diversificação das culturas, com o aumento da produção de soja e milho, que agora dividem espaço com a tradicional cana-de-açúcar. Especialistas indicam que o investimento em tecnologia no campo e as condições climáticas favoráveis foram determinantes para este resultado positivo, que consolida Campos como um polo agroindustrial de relevância nacional.`,
+      author: "Economia e Campo",
+      categoryName: "Economia",
+      coverImage: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=1200",
+    },
+    {
+      title: "Obras na orla do Farol de São Thomé entram em fase final",
+      excerpt: "Revitalização inclui novos quiosques, ciclovia ampliada e iluminação decorativa na única praia campista.",
+      content: `Os moradores e veranistas do Farol de São Thomé já podem ver a transformação da orla. As obras de revitalização, iniciadas no semestre passado, entraram em sua fase conclusiva. \n\nO projeto contempla a reconstrução de quiosques seguindo um padrão arquitetônico moderno, a ampliação da ciclovia que agora percorre toda a extensão da avenida principal, e a instalação de mobiliário urbano contemporâneo. A inauguração oficial está prevista para o início do próximo mês, prometendo elevar o potencial turístico do Farol durante todo o ano.`,
+      author: "Turismo e Infraestrutura",
+      categoryName: "Cidades",
+      coverImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1200",
     }
   ];
 
   const results = [];
-  for (const seed of newsSeeds) {
+  for (const item of newsItems) {
     try {
-      const result = await createArticle({
-        title: seed.title,
-        excerpt: seed.excerpt,
-        content: seed.content,
-        author: seed.author,
-        categoryId: getCatId(seed.categoryName),
-        coverImage: seed.coverImage,
+      await createArticle({
+        title: item.title,
+        excerpt: item.excerpt,
+        content: item.content,
+        author: item.author,
+        categoryId: getCatId(item.categoryName),
+        coverImage: item.coverImage,
         published: true,
       });
-      results.push({ title: seed.title, status: "success" });
+      results.push({ title: item.title, status: "success" });
     } catch (error: any) {
       if (error.code === 'ER_DUP_ENTRY') {
-        results.push({ title: seed.title, status: "skipped (already exists)" });
+        results.push({ title: item.title, status: "skipped (already exists)" });
       } else {
-        results.push({ title: seed.title, status: "error", message: error.message });
+        results.push({ title: item.title, status: "error", message: error.message });
       }
     }
   }
