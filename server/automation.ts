@@ -50,27 +50,34 @@ export async function automateNews() {
     }
   ];
 
-  const results = [];
-  for (const item of newsItems) {
-    try {
-      await createArticle({
-        title: item.title,
-        excerpt: item.excerpt,
-        content: item.content,
-        author: item.author,
-        categoryId: getCatId(item.categoryName),
-        coverImage: item.coverImage,
-        published: true,
-      });
-      results.push({ title: item.title, status: "success" });
-    } catch (error: any) {
-      if (error.code === 'ER_DUP_ENTRY') {
-        results.push({ title: item.title, status: "skipped (already exists)" });
-      } else {
-        results.push({ title: item.title, status: "error", message: error.message });
+  try {
+    const results = [];
+    // Reduzido para 3 itens para evitar timeout na Vercel Hobby
+    for (const item of newsItems.slice(0, 3)) {
+      try {
+        await createArticle({
+          title: item.title,
+          excerpt: item.excerpt,
+          content: item.content,
+          author: item.author,
+          categoryId: getCatId(item.categoryName),
+          coverImage: item.coverImage,
+          published: true,
+        });
+        results.push({ title: item.title, status: "success" });
+      } catch (error: any) {
+        if (error.code === 'ER_DUP_ENTRY' || error.message?.includes('Duplicate entry')) {
+          results.push({ title: item.title, status: "skipped (already exists)" });
+        } else {
+          console.error(`Error creating article "${item.title}":`, error);
+          results.push({ title: item.title, status: "error", message: error.message });
+        }
       }
     }
-  }
 
-  return results;
+    return results;
+  } catch (globalError: any) {
+    console.error("Global automation error:", globalError);
+    throw new Error("Falha na automação: " + globalError.message);
+  }
 }

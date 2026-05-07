@@ -39,7 +39,7 @@ class OAuthService {
   }
 
   private decodeState(state: string): string {
-    const redirectUri = atob(state);
+    const redirectUri = Buffer.from(state, "base64").toString();
     return redirectUri;
   }
 
@@ -265,7 +265,7 @@ class SDKServer {
         // Para simplificar e garantir funcionamento imediato na Vercel sem firebase-admin,
         // vamos extrair o UID e e-mail do token (JWT). 
         // Em um sistema de alta segurança, usaríamos firebase-admin.verifyIdToken(token).
-        const payload = JSON.parse(atob(token.split(".")[1]));
+        const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
         const openId = payload.sub || payload.uid;
         const email = payload.email;
         const name = payload.name || email?.split("@")[0] || "Admin";
