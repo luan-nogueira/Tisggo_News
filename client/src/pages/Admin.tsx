@@ -120,6 +120,7 @@ export default function Admin() {
     <DashboardLayout>
       <Switch>
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/" component={AdminDashboard} />
         <Route path="/admin/articles" component={AdminArticles} />
         <Route path="/admin/articles/new" component={ArticleForm} />
         <Route path="/admin/articles/:id/edit" component={ArticleForm} />

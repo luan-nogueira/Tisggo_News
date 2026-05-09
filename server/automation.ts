@@ -37,21 +37,19 @@ export async function automateNews() {
     });
     
     // Get 4 unique links
-    const uniqueLinks = [...new Set(links)].slice(0, 4);
+    // Process articles in parallel to avoid timeouts (limit to 3 for safety)
+    const uniqueLinks = [...new Set(links)].slice(0, 3);
     
-    for (const link of uniqueLinks) {
+    const articlePromises = uniqueLinks.map(async (link) => {
       try {
-        console.log(`[Automation] Processing article: ${link}`);
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s per article fetch
 
         const artRes = await fetch(link, { signal: controller.signal });
         clearTimeout(timeoutId);
         
-        if (!artRes.ok) {
-          console.warn(`[Automation] Failed to fetch article content: ${link}`);
-          continue;
-        }
+        if (!artRes.ok) return { title: link, status: "error", message: "Falha ao acessar conteúdo" };
+        
         const artHtml = await artRes.text();
         const $art = cheerio.load(artHtml);
         
@@ -59,33 +57,22 @@ export async function automateNews() {
         let excerpt = $art('meta[property="og:description"]').attr('content') || "";
         let coverImage = $art('meta[property="og:image"]').attr('content') || undefined;
         
-        // Try to get content (remove scripts, styles, etc)
         $art('script, style, iframe, .adsbygoogle, .banners, .whatsapp-button').remove();
         let contentText = $art('article, .content-article, .post-content, .texto-materia').html();
         if (!contentText) {
            contentText = $art('p').map((i, el) => `<p>${$art(el).text().trim()}</p>`).get().join('\n');
         } else {
-           // Basic sanitize: remove links but keep text
            contentText = contentText.replace(/<a\b[^>]*>(.*?)<\/a>/gi, '$1');
         }
 
-        // Clean Watermarks
         const watermarks = [
-          /Foto:\s*Ururau/gi,
-          /Fonte:\s*Portal\s*Ururau/gi,
-          /Fonte:\s*Ururau/gi,
-          /Portal\s*Ururau/gi,
-          /ururau\.com\.br/gi,
-          /Ururau/gi,
-          /Reprodução/gi
+          /Foto:\s*Ururau/gi, /Fonte:\s*Portal\s*Ururau/gi, /Fonte:\s*Ururau/gi,
+          /Portal\s*Ururau/gi, /ururau\.com\.br/gi, /Ururau/gi, /Reprodução/gi
         ];
 
         let cleanContent = contentText || "";
         for (const regex of watermarks) {
           cleanContent = cleanContent.replace(regex, "");
-        }
-        
-        for (const regex of watermarks) {
           title = title.replace(regex, "");
           excerpt = excerpt.replace(regex, "");
         }
@@ -96,42 +83,30 @@ export async function automateNews() {
         else if (link.includes("/policia/")) categoryName = "Polícia";
         else if (link.includes("/economia/")) categoryName = "Economia";
         else if (link.includes("/esportes/")) categoryName = "Esportes";
-        else if (link.includes("/estado-rj/")) categoryName = "Estado RJ";
         
-        if (!title || title.length < 5) {
-          console.warn(`[Automation] Skipping article due to short title: ${link}`);
-          continue;
-        }
-        if (!cleanContent || cleanContent.length < 50) {
-          console.warn(`[Automation] Skipping article due to short content: ${link}`);
-          continue;
-        }
+        if (!title || title.length < 5) return { title: link, status: "skipped (short title)" };
+        if (!cleanContent || cleanContent.length < 50) return { title: link, status: "skipped (short content)" };
 
         const existing = await db.select().from(articlesTable).where(eq(articlesTable.title, title)).limit(1);
-        if (existing.length > 0) {
-          console.log(`[Automation] Article already exists: ${title}`);
-          results.push({ title, status: "skipped (already exists)" });
-          continue;
-        }
+        if (existing.length > 0) return { title, status: "skipped (already exists)" };
 
         await createArticle({
-          title: title,
+          title,
           excerpt: excerpt.substring(0, 250),
           content: cleanContent,
           author: "Equipe Editorial",
           categoryId: getCatId(categoryName),
-          coverImage: coverImage,
+          coverImage,
           published: true,
         });
         
-        console.log(`[Automation] Successfully imported: ${title}`);
-        results.push({ title, status: "success" });
+        return { title, status: "success" };
       } catch (error: any) {
-        console.error(`[Automation] Error processing article ${link}:`, error.message);
-        results.push({ title: link, status: "error", message: error.message });
+        return { title: link, status: "error", message: error.message };
       }
-    }
+    });
 
+    const results = await Promise.all(articlePromises);
     return results;
   } catch (globalError: any) {
     console.error("Global automation error:", globalError);
