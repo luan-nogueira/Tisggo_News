@@ -18,13 +18,13 @@ export default function ArticleForm() {
   const { id } = useParams<{ id?: string }>();
   const [, navigate] = useLocation();
   const { data: categories } = trpc.categories.list.useQuery();
-  const { data: existingArticle, isLoading: articleLoading } = trpc.articles.get.useQuery(parseInt(id || "0"), { enabled: !!id });
+  const { data: existingArticle, isLoading: articleLoading } = trpc.articles.get.useQuery(id || "", { enabled: !!id });
   
   const [formData, setFormData] = useState({
     title: "",
     excerpt: "",
     content: "",
-    categoryId: 0,
+    categoryId: "",
     author: "",
     coverImage: "",
     published: false,
@@ -36,7 +36,7 @@ export default function ArticleForm() {
         title: existingArticle.title,
         excerpt: existingArticle.excerpt || "",
         content: existingArticle.content,
-        categoryId: existingArticle.categoryId,
+        categoryId: String(existingArticle.categoryId),
         author: existingArticle.author,
         coverImage: existingArticle.coverImage || "",
         published: existingArticle.published ?? false,
@@ -109,7 +109,7 @@ export default function ArticleForm() {
 
     if (id) {
       updateMutation.mutate({
-        id: parseInt(id),
+        id,
         ...formData,
       });
     } else {
@@ -228,13 +228,13 @@ export default function ArticleForm() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-black text-gray-500 tracking-wider">Categoria</label>
-                <Select value={formData.categoryId.toString()} onValueChange={(val) => setFormData({ ...formData, categoryId: parseInt(val) })}>
+                <Select value={formData.categoryId} onValueChange={(val) => setFormData({ ...formData, categoryId: val })}>
                   <SelectTrigger className="bg-white/5 border-white/5 rounded-2xl h-12">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent className="bg-[#0A0A0A] border-white/10 rounded-2xl">
                     {categories?.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()} className="focus:bg-white/5 rounded-xl">
+                      <SelectItem key={cat.id} value={String(cat.id)} className="focus:bg-white/5 rounded-xl">
                         {cat.name}
                       </SelectItem>
                     ))}

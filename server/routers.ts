@@ -18,10 +18,7 @@ import {
 import { generateSitemap } from "./sitemap";
 import { createArticle, updateArticle, deleteArticle, createArticleSchema, updateArticleSchema } from "./articles-crud";
 import { automateNews } from "./automation";
-import { sdk } from "./_core/sdk";
-import { upsertUser } from "./db";
 import { z } from "zod";
-import { ENV } from "./_core/env";
 
 export const appRouter = router({
   system: systemRouter,
@@ -40,35 +37,23 @@ export const appRouter = router({
     list: publicProcedure.query(async () => {
       return getArticles(20);
     }),
-    get: publicProcedure.input((val: unknown) => {
-      if (typeof val === "number") return val;
-      throw new Error("Invalid article ID");
-    }).query(async ({ input }) => {
+    get: publicProcedure.input(z.string()).query(async ({ input }) => {
       return getArticleById(input);
     }),
-    bySlug: publicProcedure.input((val: unknown) => {
-      if (typeof val === "string") return val;
-      throw new Error("Invalid slug");
-    }).query(async ({ input }) => {
+    bySlug: publicProcedure.input(z.string()).query(async ({ input }) => {
       const article = await getArticleBySlug(input);
       if (article) {
-        await incrementArticleViews(article.id);
+        await incrementArticleViews(String(article.id));
       }
       return article;
     }),
-    byCategory: publicProcedure.input((val: any) => {
-      if (typeof val === "number") return { categoryId: val, orderBy: "recent" as const };
-      if (typeof val === "object" && val !== null && typeof val.categoryId === "number") {
-        return { categoryId: val.categoryId as number, orderBy: (val.orderBy as "recent" | "popular") || "recent" };
-      }
-      throw new Error("Invalid input for byCategory");
-    }).query(async ({ input }) => {
+    byCategory: publicProcedure.input(z.object({
+      categoryId: z.string(),
+      orderBy: z.enum(["recent", "popular"]).optional().default("recent"),
+    })).query(async ({ input }) => {
       return getArticlesByCategory(input.categoryId, 20, 0, input.orderBy);
     }),
-    search: publicProcedure.input((val: unknown) => {
-      if (typeof val === "string") return val;
-      throw new Error("Invalid search query");
-    }).query(async ({ input }) => {
+    search: publicProcedure.input(z.string()).query(async ({ input }) => {
       return searchArticles(input);
     }),
     create: protectedProcedure.input(createArticleSchema).mutation(async ({ ctx, input }) => {
@@ -83,10 +68,7 @@ export const appRouter = router({
       }
       return updateArticle(input);
     }),
-    delete: protectedProcedure.input((val: unknown) => {
-      if (typeof val === "number") return val;
-      throw new Error("Invalid article ID");
-    }).mutation(async ({ ctx, input }) => {
+    delete: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
       if (ctx.user?.role !== "admin") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can delete articles" });
       }
@@ -116,7 +98,7 @@ export const appRouter = router({
       return createCategory(input);
     }),
     update: protectedProcedure.input(z.object({
-      id: z.number(),
+      id: z.string(),
       name: z.string().optional(),
       slug: z.string().optional(),
       description: z.string().optional(),
@@ -129,7 +111,7 @@ export const appRouter = router({
       const { id, ...data } = input;
       return updateCategory(id, data);
     }),
-    delete: protectedProcedure.input(z.number()).mutation(async ({ ctx, input }) => {
+    delete: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
       if (ctx.user?.role !== "admin") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage categories" });
       }
@@ -138,7 +120,7 @@ export const appRouter = router({
   }),
   sitemap: router({
     generate: publicProcedure.query(async () => {
-      const baseUrl = process.env.VITE_APP_URL || "https://tisgo-news.manus.space";
+      const baseUrl = process.env.VITE_APP_URL || "https://tisgo-news.vercel.app";
       return await generateSitemap(baseUrl);
     }),
   }),

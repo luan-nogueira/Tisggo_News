@@ -17,7 +17,7 @@ export default function AdminArticles() {
     a.author.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja deletar este artigo?")) {
       try {
         await deleteMutation.mutateAsync(id);
@@ -95,9 +95,6 @@ export default function AdminArticles() {
                       <Badge className={`${article.published === true ? 'bg-green-600' : 'bg-gray-700'} text-white text-[10px] font-black uppercase`}>
                         {article.published === true ? "Publicado" : "Rascunho"}
                       </Badge>
-                      <span className="text-gray-600 text-[10px] font-black uppercase tracking-widest">
-                        ID: {article.id}
-                      </span>
                     </div>
                     <h3 className="font-black text-xl text-white group-hover:text-accent transition-colors truncate mb-1">
                       {article.title}
@@ -124,7 +121,7 @@ export default function AdminArticles() {
                       variant="ghost" 
                       size="icon" 
                       className="text-gray-600 hover:text-red-500 hover:bg-red-500/10"
-                      onClick={() => handleDelete(article.id)}
+                      onClick={() => handleDelete(String(article.id))}
                       disabled={deleteMutation.isPending}
                     >
                       <Trash2 className="w-5 h-5" />

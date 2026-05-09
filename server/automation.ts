@@ -1,20 +1,13 @@
-import { createArticle } from "./articles-crud";
-import { getDb } from "./db";
-import { categories as categoriesTable, articles as articlesTable } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
-
+import * as db from "./db";
 import * as cheerio from "cheerio";
 
 /**
  * Service to automate news generation for Campos dos Goytacazes by scraping ururau.com.br
  */
 export async function automateNews() {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
   // Ensure default categories exist
-  const categories = await db.select().from(categoriesTable);
-  const getCatId = (name: string) => categories.find(c => c.name.toLowerCase() === name.toLowerCase())?.id || categories[0]?.id || 1;
+  const categories = await db.getCategories();
+  const getCatId = (name: string) => categories.find(c => c.name.toLowerCase() === name.toLowerCase())?.id || categories[0]?.id || "default";
 
   try {
     // Fetch homepage of ururau.com.br
@@ -27,21 +20,17 @@ export async function automateNews() {
     const links: string[] = [];
     $('a[href*="/noticias/"]').each((i, el) => {
       const href = $(el).attr('href');
-      // Only get specific article pages (ending with a number id)
       if (href && href.match(/\/\d+\/$/)) {
-        // Only use absolute URLs
         links.push(href.startsWith('http') ? href : `https://www.ururau.com.br${href}`);
       }
     });
     
-    // Get 4 unique links
-    // Process articles in parallel to avoid timeouts (limit to 3 for safety)
     const uniqueLinks = [...new Set(links)].slice(0, 3);
     
     const articlePromises = uniqueLinks.map(async (link) => {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s per article fetch
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         const artRes = await fetch(link, { signal: controller.signal });
         clearTimeout(timeoutId);
@@ -85,10 +74,11 @@ export async function automateNews() {
         if (!title || title.length < 5) return { title: link, status: "skipped (short title)" };
         if (!cleanContent || cleanContent.length < 50) return { title: link, status: "skipped (short content)" };
 
-        const existing = await db.select().from(articlesTable).where(eq(articlesTable.title, title)).limit(1);
-        if (existing.length > 0) return { title, status: "skipped (already exists)" };
+        // Check if article already exists in Firestore by title
+        const existing = await db.getArticleBySlug(title.toLowerCase().replace(/\s+/g, '-'));
+        if (existing) return { title, status: "skipped (already exists)" };
 
-        await createArticle({
+        await db.createArticle({
           title,
           excerpt: excerpt.substring(0, 250),
           content: cleanContent,

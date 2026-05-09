@@ -9,4 +9,12 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   adminEmail: process.env.ADMIN_EMAIL ?? "admin@tisggo.com",
   adminPassword: process.env.ADMIN_PASSWORD ?? "123456",
+  firebase: {
+    apiKey: "AIzaSyAeTqVqJ8JUfWd5KIXcy0Fu80hTK9xDvEU",
+    authDomain: "tisggo-news.firebaseapp.com",
+    projectId: "tisggo-news",
+    storageBucket: "tisggo-news.firebasestorage.app",
+    messagingSenderId: "700029482147",
+    appId: "1:700029482147:web:87bc624fe027247ec93b16",
+  }
 };

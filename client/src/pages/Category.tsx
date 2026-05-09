@@ -18,7 +18,7 @@ export default function Category() {
   const category = categories?.find((c) => c.slug === slug);
 
   const { data: articles, isLoading } = trpc.articles.byCategory.useQuery(
-    { categoryId: category?.id || 0, orderBy },
+    { categoryId: category?.id || "", orderBy },
     { enabled: !!category }
   );
 

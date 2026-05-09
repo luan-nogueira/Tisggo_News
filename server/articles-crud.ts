@@ -1,20 +1,18 @@
 import { z } from "zod";
-import { getDb } from "./db";
-import { articles as articlesTable } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
+import * as db from "./db";
 
 export const createArticleSchema = z.object({
   title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   excerpt: z.string().min(10, "Resumo deve ter pelo menos 10 caracteres"),
   content: z.string().min(50, "Conteúdo deve ter pelo menos 50 caracteres"),
-  categoryId: z.number().positive(),
+  categoryId: z.string().min(1, "Categoria é obrigatória"),
   author: z.string().min(2),
   coverImage: z.string().optional(),
   published: z.boolean().default(false),
 });
 
 export const updateArticleSchema = createArticleSchema.extend({
-  id: z.number().positive(),
+  id: z.string(),
 });
 
 function generateSlug(title: string) {
@@ -27,60 +25,23 @@ function generateSlug(title: string) {
 }
 
 export async function createArticle(data: z.infer<typeof createArticleSchema>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
   let slug = generateSlug(data.title);
   const randomStr = Math.random().toString(36).substring(2, 8);
   slug = `${slug}-${randomStr}`;
 
-  const result = await db.insert(articlesTable).values({
-    title: data.title,
-    excerpt: data.excerpt,
-    content: data.content,
-    categoryId: data.categoryId,
-    author: data.author,
-    coverImage: data.coverImage || null,
+  return await db.createArticle({
+    ...data,
     slug,
-    published: data.published,
-    views: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    publishedAt: data.published ? new Date() : null,
   });
-
-  return result;
 }
 
 export async function updateArticle(data: z.infer<typeof updateArticleSchema>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  // Keep existing slug to prevent breaking links, or you could update it if needed.
-  // For safety, we only update other fields and leave slug intact.
-  await db
-    .update(articlesTable)
-    .set({
-      title: data.title,
-      excerpt: data.excerpt,
-      content: data.content,
-      categoryId: data.categoryId,
-      author: data.author,
-      coverImage: data.coverImage || null,
-      published: data.published,
-      updatedAt: new Date(),
-      publishedAt: data.published ? new Date() : null,
-    })
-    .where(eq(articlesTable.id, data.id));
-
+  const { id, ...articleData } = data;
+  await db.updateArticle(id, articleData);
   return { success: true };
 }
 
-export async function deleteArticle(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  await db.delete(articlesTable).where(eq(articlesTable.id, id));
-
+export async function deleteArticle(id: string) {
+  await db.deleteArticle(id);
   return { success: true };
 }

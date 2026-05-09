@@ -35,7 +35,7 @@ export default function Dashboard() {
   const totalViews = articles?.reduce((sum, a) => sum + (a.views || 0), 0) || 0;
   const publishedArticles = articles?.filter(a => a.published).length || 0;
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja deletar este artigo?")) {
       try {
         await deleteArticle.mutateAsync(id);
@@ -175,7 +175,7 @@ export default function Dashboard() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-gray-400 text-sm">
-                        {categories?.find(c => c.id === article.categoryId)?.name}
+                        {categories?.find(c => String(c.id) === String(article.categoryId))?.name}
                       </td>
                       <td className="px-6 py-4 text-gray-400 text-sm">{article.views || 0}</td>
                       <td className="px-6 py-4 text-gray-400 text-sm">
@@ -196,7 +196,7 @@ export default function Dashboard() {
                             size="sm"
                             variant="outline"
                             className="border-gray-700 hover:border-red-600 text-gray-400 hover:text-red-600"
-                            onClick={() => handleDelete(article.id)}
+                            onClick={() => handleDelete(String(article.id))}
                             disabled={deleteArticle.isPending}
                           >
                             <Trash2 className="w-4 h-4" />

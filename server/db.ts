@@ -1,211 +1,175 @@
-import { eq, desc, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, articles, categories, InsertArticle, InsertCategory } from "../drizzle/schema";
+import { initializeApp } from "firebase/app";
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  doc, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  getDoc,
+  Timestamp,
+  setDoc,
+  deleteDoc
+} from "firebase/firestore";
 import { ENV } from './_core/env';
+import type { User, Article, Category, InsertUser, InsertArticle, InsertCategory } from "../drizzle/schema";
 
-import mysql from "mysql2/promise";
+// Initialize Firebase
+const app = initializeApp(ENV.firebase);
+const db = getFirestore(app);
 
-let _db: ReturnType<typeof drizzle> | null = null;
-let _connection: mysql.Pool | null = null;
+// Helper to convert Firestore data to our types
+const toData = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
 
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
-    try {
-      // Forcing SSL configuration for TiDB Cloud
-      _connection = mysql.createPool({
-        uri: process.env.DATABASE_URL,
-        ssl: {
-          rejectUnauthorized: false // Helps bypass some Vercel/TiDB environment mismatches
-        },
-        connectTimeout: 10000,
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0
-      });
-      _db = drizzle(_connection);
-      console.log("[Database] Connected successfully with explicit SSL config");
-    } catch (error) {
-      console.error("[Database] Connection failed:", error);
-      _db = null;
-    }
-  }
-  return _db;
+  return db;
 }
 
-export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
-
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
-  }
-
-  try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
-  } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
-    throw error;
-  }
+// USERS
+export async function getUserByOpenId(openId: string): Promise<User | null> {
+  const q = query(collection(db, "users"), where("openId", "==", openId), limit(1));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  return toData<User>(snapshot.docs[0]);
 }
 
-export async function getUserByOpenId(openId: string) {
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
+export async function upsertUser(user: Partial<InsertUser> & { openId: string }): Promise<void> {
+  const existing = await getUserByOpenId(user.openId);
+  const data = {
+    ...user,
+    updatedAt: Timestamp.now(),
+    lastSignedIn: Timestamp.now(),
+  };
 
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
-  return result.length > 0 ? result[0] : undefined;
-}
-
-// Article queries
-export async function getArticles(limit = 10, offset = 0) {
-  const db = await getDb();
-  if (!db) return [];
-  const result = await db.select().from(articles).where(eq(articles.published, true)).limit(limit).offset(offset).orderBy((t) => desc(t.publishedAt));
-  return result;
-}
-
-export async function getArticleBySlug(slug: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
-export async function getArticleById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(articles).where(eq(articles.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
-export async function getArticlesByCategory(categoryId: number, limit = 10, offset = 0, orderBy: 'recent' | 'popular' = 'recent') {
-  const db = await getDb();
-  if (!db) return [];
-  
-  let orderClause;
-  if (orderBy === 'popular') {
-    orderClause = desc(articles.views);
+  if (existing) {
+    await updateDoc(doc(db, "users", String(existing.id)), data);
   } else {
-    orderClause = desc(articles.publishedAt);
+    await addDoc(collection(db, "users"), {
+      ...data,
+      createdAt: Timestamp.now(),
+      role: user.role || "user",
+    });
   }
-
-  const result = await db.select()
-    .from(articles)
-    .where(eq(articles.categoryId, categoryId))
-    .limit(limit)
-    .offset(offset)
-    .orderBy(orderClause);
-    
-  return result;
 }
 
-export async function createArticle(data: InsertArticle) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.insert(articles).values(data);
+// ARTICLES
+export async function getArticles(pageSize = 10, offset = 0) {
+  // Firestore pagination is different, but for now we'll do a simple query
+  const q = query(
+    collection(db, "articles"), 
+    where("published", "==", true),
+    orderBy("publishedAt", "desc"), 
+    limit(pageSize)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(toData<Article>);
 }
 
-export async function updateArticle(id: number, data: Partial<InsertArticle>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(articles).set(data).where(eq(articles.id, id));
+export async function getArticleBySlug(slug: string): Promise<Article | null> {
+  const q = query(collection(db, "articles"), where("slug", "==", slug), limit(1));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  return toData<Article>(snapshot.docs[0]);
 }
 
-export async function deleteArticle(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(articles).where(eq(articles.id, id));
+export async function createArticle(article: any) {
+  const docRef = await addDoc(collection(db, "articles"), {
+    ...article,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    publishedAt: article.publishedAt ? Timestamp.fromDate(new Date(article.publishedAt)) : Timestamp.now(),
+    views: 0,
+  });
+  return { id: docRef.id };
 }
 
-export async function incrementArticleViews(id: number) {
-  const db = await getDb();
-  if (!db) return;
-  await db.update(articles).set({ views: sql`views + 1` }).where(eq(articles.id, id));
+export async function updateArticle(id: string, article: Partial<Article>) {
+  const data: any = { ...article, updatedAt: Timestamp.now() };
+  if (article.publishedAt) {
+    data.publishedAt = Timestamp.fromDate(new Date(article.publishedAt));
+  }
+  await updateDoc(doc(db, "articles", id), data);
 }
 
-// Category queries
+export async function incrementArticleViews(id: string) {
+  const articleRef = doc(db, "articles", id);
+  const articleSnap = await getDoc(articleRef);
+  if (articleSnap.exists()) {
+    const currentViews = articleSnap.data().views || 0;
+    await updateDoc(articleRef, { views: currentViews + 1 });
+  }
+}
+
+export async function getArticlesByCategory(categoryId: string, pageSize = 20, offset = 0, orderByField: "recent" | "popular" = "recent") {
+  const q = query(
+    collection(db, "articles"),
+    where("categoryId", "==", categoryId),
+    where("published", "==", true),
+    orderBy(orderByField === "recent" ? "publishedAt" : "views", "desc"),
+    limit(pageSize)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(toData<Article>);
+}
+
+export async function searchArticles(searchTerm: string) {
+  // Firestore doesn't support native full-text search, so we'll do a simple client-side filter
+  // For a production site, Algolia or similar would be better.
+  const q = query(collection(db, "articles"), where("published", "==", true), limit(50));
+  const snapshot = await getDocs(q);
+  const articles = snapshot.docs.map(toData<Article>);
+  const term = searchTerm.toLowerCase();
+  return articles.filter(a => 
+    a.title.toLowerCase().includes(term) || 
+    a.content.toLowerCase().includes(term) ||
+    a.excerpt?.toLowerCase().includes(term)
+  );
+}
+
+// CATEGORIES
 export async function getCategories() {
-  const db = await getDb();
-  if (!db) return [];
-  const result = await db.select().from(categories).orderBy((t) => t.name);
-  return result;
+  const q = query(collection(db, "categories"), orderBy("name", "asc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(toData<Category>);
 }
 
-export async function getCategoryBySlug(slug: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(categories).where(eq(categories.slug, slug)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+export async function createCategory(category: Partial<InsertCategory>) {
+  const docRef = await addDoc(collection(db, "categories"), {
+    ...category,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  });
+  return { id: docRef.id };
 }
 
-export async function createCategory(data: InsertCategory) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.insert(categories).values(data);
+export async function updateCategory(id: string, data: Partial<Category>) {
+  await updateDoc(doc(db, "categories", id), {
+    ...data,
+    updatedAt: Timestamp.now(),
+  });
 }
 
-export async function updateCategory(id: number, data: Partial<InsertCategory>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(categories).set(data).where(eq(categories.id, id));
+export async function deleteCategory(id: string) {
+  await deleteDoc(doc(db, "categories", id));
 }
 
-export async function deleteCategory(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(categories).where(eq(categories.id, id));
+// Extra methods for Admin
+export async function getAllArticlesAdmin() {
+  const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(toData<Article>);
 }
 
-export async function searchArticles(query: string, limit = 10) {
-  const db = await getDb();
-  if (!db) return [];
-  const result = await db.select().from(articles).where(sql`MATCH(${articles.title}, ${articles.content}) AGAINST(${query} IN BOOLEAN MODE)`).limit(limit);
-  return result;
+export async function deleteArticle(id: string) {
+  await deleteDoc(doc(db, "articles", id));
+}
+
+export async function getArticleById(id: string): Promise<Article | null> {
+  const docSnap = await getDoc(doc(db, "articles", id));
+  if (!docSnap.exists()) return null;
+  return toData<Article>(docSnap);
 }

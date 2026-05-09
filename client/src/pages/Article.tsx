@@ -14,7 +14,7 @@ export default function Article() {
   const { data: article, isLoading } = trpc.articles.bySlug.useQuery(slug || "");
   const { data: categories } = trpc.categories.list.useQuery();
   const { data: relatedArticles, isLoading: isLoadingRelated } = trpc.articles.byCategory.useQuery(
-    { categoryId: article?.categoryId || 0, orderBy: 'recent' },
+    { categoryId: article?.categoryId || "", orderBy: 'recent' },
     { enabled: !!article?.categoryId }
   );
 
@@ -47,7 +47,7 @@ export default function Article() {
 
   const publishDate = new Date(article.publishedAt || article.createdAt);
   const readingTime = Math.ceil(article.content.split(/\s+/).length / 200);
-  const categoryName = categories?.find(c => c.id === article.categoryId)?.name;
+  const categoryName = categories?.find(c => String(c.id) === String(article.categoryId))?.name;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -236,10 +236,10 @@ export default function Article() {
                 </div>
               ))}
             </div>
-          ) : relatedArticles && relatedArticles.filter(a => a.id !== article.id).length > 0 ? (
+          ) : relatedArticles && relatedArticles.filter(a => String(a.id) !== String(article.id)).length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {relatedArticles
-                .filter(a => a.id !== article.id)
+                .filter(a => String(a.id) !== String(article.id))
                 .slice(0, 2)
                 .map((relatedArticle) => (
                   <Link key={relatedArticle.id} href={`/article/${relatedArticle.slug}`} className="group block">
@@ -258,7 +258,7 @@ export default function Article() {
                       </div>
                       <div className="p-6">
                         <Badge className="bg-accent text-black hover:bg-yellow-500 mb-3 font-bold">
-                          {categories?.find(c => c.id === relatedArticle.categoryId)?.name || 'Geral'}
+                          {categories?.find(c => String(c.id) === String(relatedArticle.categoryId))?.name || 'Geral'}
                         </Badge>
                         <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-accent transition-colors">
                           {relatedArticle.title}

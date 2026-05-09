@@ -65,7 +65,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Red Urgent Bar */}
       {/* News Ticker */}
       <div className="news-ticker">
         <div className="news-ticker-content">
@@ -114,7 +113,6 @@ export default function Home() {
                   <Search className="w-4 h-4" />
                 </button>
               </form>
-              {/* Auth buttons removed from header */}
               <button className="px-4 py-2 bg-accent text-black font-bold hover:bg-yellow-500 transition-colors">
                 ANUNCIE
               </button>
@@ -169,7 +167,7 @@ export default function Home() {
                 <div className="bg-gray-900 border border-gray-800 hover:border-accent transition-colors rounded p-4">
                   <div className="flex items-start gap-3 mb-2">
                     <Badge className="bg-accent text-black hover:bg-yellow-500 text-xs font-bold flex-shrink-0">
-                      {categories?.find(c => c.id === article.categoryId)?.name}
+                      {categories?.find(c => String(c.id) === String(article.categoryId))?.name}
                     </Badge>
                   </div>
                   <h3 className="font-bold text-sm mb-2 group-hover:text-accent transition-colors line-clamp-2">
@@ -209,7 +207,7 @@ export default function Home() {
                   {/* Content */}
                   <div className="p-4">
                     <Badge className="bg-accent text-black hover:bg-yellow-500 text-xs font-bold mb-2">
-                      {categories?.find(c => c.id === article.categoryId)?.name}
+                      {categories?.find(c => String(c.id) === String(article.categoryId))?.name}
                     </Badge>
                     <h3 className="font-black text-base mb-2 group-hover:text-accent transition-colors line-clamp-2">
                       {article.title}
