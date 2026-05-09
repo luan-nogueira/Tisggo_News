@@ -11,10 +11,19 @@ let _connection: mysql.Pool | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      // For TiDB Cloud/MySQL with SSL, a pool is more reliable on Vercel
-      _connection = mysql.createPool(process.env.DATABASE_URL);
+      // Forcing SSL configuration for TiDB Cloud
+      _connection = mysql.createPool({
+        uri: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false // Helps bypass some Vercel/TiDB environment mismatches
+        },
+        connectTimeout: 10000,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+      });
       _db = drizzle(_connection);
-      console.log("[Database] Connected successfully");
+      console.log("[Database] Connected successfully with explicit SSL config");
     } catch (error) {
       console.error("[Database] Connection failed:", error);
       _db = null;
