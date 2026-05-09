@@ -17,8 +17,6 @@ export async function automateNews() {
   const getCatId = (name: string) => categories.find(c => c.name.toLowerCase() === name.toLowerCase())?.id || categories[0]?.id || 1;
 
   try {
-    const results = [];
-    
     // Fetch homepage of ururau.com.br
     const res = await fetch("https://www.ururau.com.br/");
     if (!res.ok) throw new Error("Falha ao acessar ururau.com.br");
