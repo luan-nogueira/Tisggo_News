@@ -1,7 +1,7 @@
-import { COOKIE_NAME, ONE_YEAR_MS } from "../shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { COOKIE_NAME, ONE_YEAR_MS } from "../shared/const.js";
+import { getSessionCookieOptions } from "./_core/cookies.js";
+import { systemRouter } from "./_core/systemRouter.js";
+import { publicProcedure, protectedProcedure, router } from "./_core/trpc.js";
 import { TRPCError } from "@trpc/server";
 import {
   getArticles,
@@ -14,10 +14,10 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-} from "./db";
-import { generateSitemap } from "./sitemap";
-import { createArticle, updateArticle, deleteArticle, createArticleSchema, updateArticleSchema } from "./articles-crud";
-import { automateNews } from "./automation";
+} from "./db.js";
+import { generateSitemap } from "./sitemap.js";
+import { createArticle, updateArticle, deleteArticle, createArticleSchema, updateArticleSchema } from "./articles-crud.js";
+import { automateNews } from "./automation.js";
 import { z } from "zod";
 
 export const appRouter = router({

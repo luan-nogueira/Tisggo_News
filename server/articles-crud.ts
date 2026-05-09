@@ -1,5 +1,5 @@
 import { z } from "zod";
-import * as db from "./db";
+import * as db from "./db.js";
 
 export const createArticleSchema = z.object({
   title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),

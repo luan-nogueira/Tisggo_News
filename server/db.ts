@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { ENV } from './_core/env';
+import { ENV } from './_core/env.js';
 import type { User, Article, Category, InsertUser, InsertArticle, InsertCategory } from "../drizzle/schema";
 
 if (!admin.apps.length) {
