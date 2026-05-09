@@ -3,15 +3,20 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, articles, categories, InsertArticle, InsertCategory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
-let _db: ReturnType<typeof drizzle> | null = null;
+import mysql from "mysql2/promise";
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
+let _db: ReturnType<typeof drizzle> | null = null;
+let _connection: mysql.Pool | null = null;
+
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      // For TiDB Cloud/MySQL with SSL, a pool is more reliable on Vercel
+      _connection = mysql.createPool(process.env.DATABASE_URL);
+      _db = drizzle(_connection);
+      console.log("[Database] Connected successfully");
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      console.error("[Database] Connection failed:", error);
       _db = null;
     }
   }
@@ -93,7 +98,7 @@ export async function getUserByOpenId(openId: string) {
 export async function getArticles(limit = 10, offset = 0) {
   const db = await getDb();
   if (!db) return [];
-  const result = await db.select().from(articles).limit(limit).offset(offset).orderBy((t) => desc(t.publishedAt));
+  const result = await db.select().from(articles).where(eq(articles.published, true)).limit(limit).offset(offset).orderBy((t) => desc(t.publishedAt));
   return result;
 }
 

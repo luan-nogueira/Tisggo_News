@@ -95,6 +95,7 @@ export async function automateNews() {
           author: "Equipe Editorial",
           categoryId: getCatId(categoryName),
           coverImage,
+          publishedAt: new Date(),
           published: true,
         });
         
