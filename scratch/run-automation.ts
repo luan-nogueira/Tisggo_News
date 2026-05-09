@@ -1,15 +1,14 @@
 import { automateNews } from "../server/automation";
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 
 async function run() {
-  console.log("Starting automation test...");
+  console.log("🚀 Iniciando automação manual...");
   try {
     const results = await automateNews();
-    console.log("Automation results:", JSON.stringify(results, null, 2));
-  } catch (error: any) {
-    console.error("Automation FAILED:");
-    console.error(error);
+    console.log("✅ Automação concluída com sucesso!");
+    console.table(results);
+  } catch (error) {
+    console.error("❌ Falha na automação:", error);
   }
 }
 
