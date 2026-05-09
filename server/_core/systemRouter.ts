@@ -4,14 +4,16 @@ import { adminProcedure, publicProcedure, router } from "./trpc";
 
 export const systemRouter = router({
   health: publicProcedure
-    .input(
-      z.object({
-        timestamp: z.number().min(0, "timestamp cannot be negative"),
-      })
-    )
-    .query(() => ({
-      ok: true,
-    })),
+    .query(async () => {
+      const { getDb } = await import("../db");
+      const db = await getDb();
+      return {
+        ok: true,
+        database: db ? "Connected" : "Disconnected",
+        hasEnv: !!process.env.DATABASE_URL,
+        time: new Date().toISOString(),
+      };
+    }),
 
   notifyOwner: adminProcedure
     .input(
