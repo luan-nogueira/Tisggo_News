@@ -18,7 +18,7 @@ registerOAuthRoutes(app);
 
 // Registra a API tRPC
 app.use(
-  "/api/trpc",
+  "/trpc",
   createExpressMiddleware({
     router: appRouter,
     createContext,
