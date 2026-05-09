@@ -73,6 +73,7 @@ export default function SearchPage() {
                           <img
                             src={article.coverImage}
                             alt={article.title}
+                            loading="lazy"
                             className="w-full h-full object-cover"
                           />
                         ) : (

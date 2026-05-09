@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Upload, Save, CheckCircle, Image as ImageIcon, Type, Layout, User } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Save, CheckCircle, Image as ImageIcon, Type, Layout, User, Settings } from "lucide-react";
 import { toast } from "sonner";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -34,12 +34,12 @@ export default function ArticleForm() {
     if (existingArticle) {
       setFormData({
         title: existingArticle.title,
-        excerpt: existingArticle.excerpt,
+        excerpt: existingArticle.excerpt || "",
         content: existingArticle.content,
         categoryId: existingArticle.categoryId,
         author: existingArticle.author,
-        coverImage: existingArticle.coverImage,
-        published: existingArticle.published,
+        coverImage: existingArticle.coverImage || "",
+        published: existingArticle.published ?? false,
       });
     }
   }, [existingArticle]);
@@ -82,7 +82,7 @@ export default function ArticleForm() {
   const createMutation = trpc.articles.create.useMutation({
     onSuccess: () => {
       toast.success("Artigo criado com sucesso!");
-      navigate("/admin");
+      navigate("/admin/articles");
     },
     onError: (error) => {
       toast.error(error.message || "Erro ao criar artigo");
@@ -92,7 +92,7 @@ export default function ArticleForm() {
   const updateMutation = trpc.articles.update.useMutation({
     onSuccess: () => {
       toast.success("Artigo atualizado com sucesso!");
-      navigate("/admin");
+      navigate("/admin/articles");
     },
     onError: (error) => {
       toast.error(error.message || "Erro ao atualizar artigo");
@@ -135,7 +135,7 @@ export default function ArticleForm() {
           <Button 
             variant="outline" 
             size="icon" 
-            onClick={() => navigate("/admin")}
+            onClick={() => navigate("/admin/articles")}
             className="rounded-2xl border-white/10 hover:bg-white/5 w-12 h-12"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -153,7 +153,7 @@ export default function ArticleForm() {
         <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
-            onClick={() => navigate("/admin")}
+            onClick={() => navigate("/admin/articles")}
             className="rounded-2xl px-6 font-bold text-gray-400 hover:text-white"
           >
             Descartar

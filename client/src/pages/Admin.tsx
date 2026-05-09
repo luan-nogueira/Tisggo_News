@@ -1,8 +1,11 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useLocation } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { Loader2, Lock } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminArticles from "@/pages/admin/Articles";
+import ArticleForm from "@/pages/admin/ArticleForm";
+import AdminCategories from "@/pages/admin/Categories";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -115,7 +118,15 @@ export default function Admin() {
 
   return (
     <DashboardLayout>
-      <AdminDashboard />
+      <Switch>
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/articles" component={AdminArticles} />
+        <Route path="/admin/articles/new" component={ArticleForm} />
+        <Route path="/admin/articles/:id/edit" component={ArticleForm} />
+        <Route path="/admin/categories" component={AdminCategories} />
+        {/* Fallback to Dashboard if path doesn't match */}
+        <Route component={AdminDashboard} />
+      </Switch>
     </DashboardLayout>
   );
 }

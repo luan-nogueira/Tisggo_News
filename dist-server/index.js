@@ -167,6 +167,12 @@ async function getArticleBySlug(slug) {
   const result = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
   return result.length > 0 ? result[0] : void 0;
 }
+async function getArticleById(id) {
+  const db = await getDb();
+  if (!db) return void 0;
+  const result = await db.select().from(articles).where(eq(articles.id, id)).limit(1);
+  return result.length > 0 ? result[0] : void 0;
+}
 async function getArticlesByCategory(categoryId, limit = 10, offset = 0, orderBy = "recent") {
   const db = await getDb();
   if (!db) return [];
@@ -189,6 +195,21 @@ async function getCategories() {
   if (!db) return [];
   const result = await db.select().from(categories).orderBy((t2) => t2.name);
   return result;
+}
+async function createCategory(data) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(categories).values(data);
+}
+async function updateCategory(id, data) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(categories).set(data).where(eq(categories.id, id));
+}
+async function deleteCategory(id) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(categories).where(eq(categories.id, id));
 }
 async function searchArticles(query, limit = 10) {
   const db = await getDb();
@@ -243,7 +264,7 @@ var OAuthService = class {
     }
   }
   decodeState(state) {
-    const redirectUri = atob(state);
+    const redirectUri = Buffer.from(state, "base64").toString();
     return redirectUri;
   }
   async getTokenByCode(code, state) {
@@ -404,6 +425,31 @@ var SDKServer = class {
     };
   }
   async authenticateRequest(req) {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      try {
+        const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+        const openId = payload.sub || payload.uid;
+        const email = payload.email;
+        const name = payload.name || email?.split("@")[0] || "Admin";
+        if (!openId) throw new Error("Invalid token payload");
+        const signedInAt2 = /* @__PURE__ */ new Date();
+        await upsertUser({
+          openId,
+          name,
+          email,
+          role: "admin",
+          // No nosso portal, quem loga via Firebase é admin
+          lastSignedIn: signedInAt2
+        });
+        const user2 = await getUserByOpenId(openId);
+        if (!user2) throw new Error("User not found after upsert");
+        return user2;
+      } catch (error) {
+        console.error("[Auth] Firebase token validation failed:", error);
+      }
+    }
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
     const session = await this.verifySession(sessionCookie);
@@ -666,6 +712,9 @@ var systemRouter = router({
   })
 });
 
+// server/routers.ts
+import { TRPCError as TRPCError3 } from "@trpc/server";
+
 // server/sitemap.ts
 import { eq as eq2 } from "drizzle-orm";
 async function generateSitemap(baseUrl) {
@@ -719,10 +768,16 @@ var createArticleSchema = z2.object({
 var updateArticleSchema = createArticleSchema.extend({
   id: z2.number().positive()
 });
+function generateSlug(title) {
+  const normalized = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return normalized.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").substring(0, 100);
+}
 async function createArticle(data) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const slug = data.title.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").substring(0, 100);
+  let slug = generateSlug(data.title);
+  const randomStr = Math.random().toString(36).substring(2, 8);
+  slug = `${slug}-${randomStr}`;
   const result = await db.insert(articles).values({
     title: data.title,
     excerpt: data.excerpt,
@@ -742,7 +797,6 @@ async function createArticle(data) {
 async function updateArticle(data) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const slug = data.title.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").substring(0, 100);
   await db.update(articles).set({
     title: data.title,
     excerpt: data.excerpt,
@@ -750,7 +804,6 @@ async function updateArticle(data) {
     categoryId: data.categoryId,
     author: data.author,
     coverImage: data.coverImage || null,
-    slug,
     published: data.published,
     updatedAt: /* @__PURE__ */ new Date(),
     publishedAt: data.published ? /* @__PURE__ */ new Date() : null
@@ -765,76 +818,113 @@ async function deleteArticle(id) {
 }
 
 // server/automation.ts
+import { eq as eq4 } from "drizzle-orm";
+import * as cheerio from "cheerio";
 async function automateNews() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const categories2 = await db.select().from(categories);
-  const getCatId = (name) => categories2.find((c) => c.name === name)?.id || categories2[0]?.id || 1;
-  const newsSeeds = [
-    {
-      title: "Opera\xE7\xE3o da PF investiga fraudes na educa\xE7\xE3o em Campos",
-      excerpt: "Investiga\xE7\xE3o aponta para desvios em contratos da Secretaria de Educa\xE7\xE3o e envolve figuras pol\xEDticas locais.",
-      content: `A Pol\xEDcia Federal deflagrou uma grande opera\xE7\xE3o em Campos dos Goytacazes nesta manh\xE3 para investigar um esquema de corrup\xE7\xE3o na Secretaria de Educa\xE7\xE3o. 
-
-Segundo as investiga\xE7\xF5es preliminares, contratos p\xFAblicos teriam sido superfaturados para alimentar caixas de campanhas eleitorais. V\xE1rios mandados de busca e apreens\xE3o foram cumpridos em resid\xEAncias e escrit\xF3rios ligados a pol\xEDticos da regi\xE3o. 
-
-A opera\xE7\xE3o, batizada de 'Caderno Limpo', busca rastrear o destino de aproximadamente 5 milh\xF5es de reais que teriam sido desviados nos \xFAltimos dois anos. A prefeitura de Campos ainda n\xE3o se manifestou oficialmente sobre o caso.`,
-      author: "Reda\xE7\xE3o Tisgo",
-      categoryName: "Pol\xEDtica",
-      coverImage: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-      title: "FGTS Calamidade liberado para moradores afetados por interdi\xE7\xE3o de ponte",
-      excerpt: "Moradores de Guarus e proximidades da Ponte Barcelos Martins j\xE1 podem solicitar o saque do benef\xEDcio.",
-      content: `A Caixa Econ\xF4mica Federal anunciou a libera\xE7\xE3o do saque do FGTS na modalidade calamidade para os moradores de Campos dos Goytacazes impactados pela interdi\xE7\xE3o da Ponte Barcelos Martins. 
-
-A estrutura, que liga o Centro a Guarus, permanece fechada para reparos emergenciais ap\xF3s danos estruturais detectados pela Defesa Civil. O benef\xEDcio visa auxiliar as fam\xEDlias que tiveram sua mobilidade e rotina severamente afetadas pela interdi\xE7\xE3o prolongada. 
-
-Os interessados devem realizar a solicita\xE7\xE3o atrav\xE9s do aplicativo do FGTS, anexando comprovante de resid\xEAncia e documento de identifica\xE7\xE3o.`,
-      author: "Economia Tisgo",
-      categoryName: "Economia",
-      coverImage: "https://images.unsplash.com/photo-1541872703-74c5e443d1f9?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-      title: "Defesa Civil de Campos emite alerta de ressaca para o Farol de S\xE3o Thom\xE9",
-      excerpt: "Ondas podem chegar a 2,5 metros no litoral campista; banhistas e pescadores devem redobrar a aten\xE7\xE3o.",
-      content: `O litoral de Campos dos Goytacazes est\xE1 em alerta m\xE1ximo. A Defesa Civil Municipal emitiu um comunicado de ressaca para a praia do Farol de S\xE3o Thom\xE9, v\xE1lido para as pr\xF3ximas 48 horas. 
-
-De acordo com o monitoramento meteorol\xF3gico, a passagem de uma frente fria pelo oceano est\xE1 gerando ondas de forte intensidade. H\xE1 risco de invas\xE3o da \xE1gua em trechos da orla onde a eros\xE3o costeira \xE9 mais cr\xEDtica. 
-
-A Marinha do Brasil recomenda que embarca\xE7\xF5es de pequeno porte evitem sair ao mar e que a popula\xE7\xE3o n\xE3o se aproxime de \xE1reas de arrebenta\xE7\xE3o.`,
-      author: "Clima e Defesa",
-      categoryName: "Cidades",
-      coverImage: "https://images.unsplash.com/photo-1505144808405-126af922fb6a?auto=format&fit=crop&q=80&w=800"
-    }
-  ];
-  const results = [];
-  for (const seed of newsSeeds) {
-    try {
-      const result = await createArticle({
-        title: seed.title,
-        excerpt: seed.excerpt,
-        content: seed.content,
-        author: seed.author,
-        categoryId: getCatId(seed.categoryName),
-        coverImage: seed.coverImage,
-        published: true
-      });
-      results.push({ title: seed.title, status: "success" });
-    } catch (error) {
-      if (error.code === "ER_DUP_ENTRY") {
-        results.push({ title: seed.title, status: "skipped (already exists)" });
-      } else {
-        results.push({ title: seed.title, status: "error", message: error.message });
+  const getCatId = (name) => categories2.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id || categories2[0]?.id || 1;
+  try {
+    const results = [];
+    const res = await fetch("https://www.ururau.com.br/");
+    if (!res.ok) throw new Error("Falha ao acessar ururau.com.br");
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const links = [];
+    $('a[href*="/noticias/"]').each((i, el) => {
+      const href = $(el).attr("href");
+      if (href && href.match(/\/\d+\/$/)) {
+        links.push(href.startsWith("http") ? href : `https://www.ururau.com.br${href}`);
+      }
+    });
+    const uniqueLinks = [...new Set(links)].slice(0, 4);
+    for (const link of uniqueLinks) {
+      try {
+        console.log(`[Automation] Processing article: ${link}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15e3);
+        const artRes = await fetch(link, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!artRes.ok) {
+          console.warn(`[Automation] Failed to fetch article content: ${link}`);
+          continue;
+        }
+        const artHtml = await artRes.text();
+        const $art = cheerio.load(artHtml);
+        let title = $art("h1").first().text().trim();
+        let excerpt = $art('meta[property="og:description"]').attr("content") || "";
+        let coverImage = $art('meta[property="og:image"]').attr("content") || void 0;
+        $art("script, style, iframe, .adsbygoogle, .banners, .whatsapp-button").remove();
+        let contentText = $art("article, .content-article, .post-content, .texto-materia").html();
+        if (!contentText) {
+          contentText = $art("p").map((i, el) => `<p>${$art(el).text().trim()}</p>`).get().join("\n");
+        } else {
+          contentText = contentText.replace(/<a\b[^>]*>(.*?)<\/a>/gi, "$1");
+        }
+        const watermarks = [
+          /Foto:\s*Ururau/gi,
+          /Fonte:\s*Portal\s*Ururau/gi,
+          /Fonte:\s*Ururau/gi,
+          /Portal\s*Ururau/gi,
+          /ururau\.com\.br/gi,
+          /Ururau/gi,
+          /Reprodução/gi
+        ];
+        let cleanContent = contentText || "";
+        for (const regex of watermarks) {
+          cleanContent = cleanContent.replace(regex, "");
+        }
+        for (const regex of watermarks) {
+          title = title.replace(regex, "");
+          excerpt = excerpt.replace(regex, "");
+        }
+        let categoryName = "Geral";
+        if (link.includes("/cidades/")) categoryName = "Cidades";
+        else if (link.includes("/politica/")) categoryName = "Pol\xEDtica";
+        else if (link.includes("/policia/")) categoryName = "Pol\xEDcia";
+        else if (link.includes("/economia/")) categoryName = "Economia";
+        else if (link.includes("/esportes/")) categoryName = "Esportes";
+        else if (link.includes("/estado-rj/")) categoryName = "Estado RJ";
+        if (!title || title.length < 5) {
+          console.warn(`[Automation] Skipping article due to short title: ${link}`);
+          continue;
+        }
+        if (!cleanContent || cleanContent.length < 50) {
+          console.warn(`[Automation] Skipping article due to short content: ${link}`);
+          continue;
+        }
+        const existing = await db.select().from(articles).where(eq4(articles.title, title)).limit(1);
+        if (existing.length > 0) {
+          console.log(`[Automation] Article already exists: ${title}`);
+          results.push({ title, status: "skipped (already exists)" });
+          continue;
+        }
+        await createArticle({
+          title,
+          excerpt: excerpt.substring(0, 250),
+          content: cleanContent,
+          author: "Equipe Editorial",
+          categoryId: getCatId(categoryName),
+          coverImage,
+          published: true
+        });
+        console.log(`[Automation] Successfully imported: ${title}`);
+        results.push({ title, status: "success" });
+      } catch (error) {
+        console.error(`[Automation] Error processing article ${link}:`, error.message);
+        results.push({ title: link, status: "error", message: error.message });
       }
     }
+    return results;
+  } catch (globalError) {
+    console.error("Global automation error:", globalError);
+    throw new Error("Falha na automa\xE7\xE3o: " + globalError.message);
   }
-  return results;
 }
 
 // server/routers.ts
 import { z as z3 } from "zod";
-import { TRPCError as TRPCError3 } from "@trpc/server";
 var appRouter = router({
   system: systemRouter,
   auth: router({
@@ -845,33 +935,17 @@ var appRouter = router({
       return {
         success: true
       };
-    }),
-    loginAdmin: publicProcedure.input(z3.object({ email: z3.string().email(), password: z3.string() })).mutation(async ({ ctx, input }) => {
-      if (input.email !== ENV.adminEmail || input.password !== ENV.adminPassword) {
-        throw new TRPCError3({
-          code: "UNAUTHORIZED",
-          message: "E-mail ou senha incorretos"
-        });
-      }
-      const adminUser = {
-        openId: "admin-system-id",
-        name: "Administrador",
-        email: input.email,
-        role: "admin"
-      };
-      await upsertUser(adminUser);
-      const token = await sdk.createSessionToken(adminUser.openId, { name: adminUser.name });
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.cookie(COOKIE_NAME, token, {
-        ...cookieOptions,
-        maxAge: ONE_YEAR_MS
-      });
-      return { success: true };
     })
   }),
   articles: router({
     list: publicProcedure.query(async () => {
       return getArticles(20);
+    }),
+    get: publicProcedure.input((val) => {
+      if (typeof val === "number") return val;
+      throw new Error("Invalid article ID");
+    }).query(async ({ input }) => {
+      return getArticleById(input);
     }),
     bySlug: publicProcedure.input((val) => {
       if (typeof val === "string") return val;
@@ -929,6 +1003,38 @@ var appRouter = router({
   categories: router({
     list: publicProcedure.query(async () => {
       return getCategories();
+    }),
+    create: protectedProcedure.input(z3.object({
+      name: z3.string().min(1),
+      slug: z3.string().min(1),
+      description: z3.string().optional(),
+      color: z3.string().optional(),
+      icon: z3.string().optional()
+    })).mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError3({ code: "FORBIDDEN", message: "Only admins can manage categories" });
+      }
+      return createCategory(input);
+    }),
+    update: protectedProcedure.input(z3.object({
+      id: z3.number(),
+      name: z3.string().optional(),
+      slug: z3.string().optional(),
+      description: z3.string().optional(),
+      color: z3.string().optional(),
+      icon: z3.string().optional()
+    })).mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError3({ code: "FORBIDDEN", message: "Only admins can manage categories" });
+      }
+      const { id, ...data } = input;
+      return updateCategory(id, data);
+    }),
+    delete: protectedProcedure.input(z3.number()).mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError3({ code: "FORBIDDEN", message: "Only admins can manage categories" });
+      }
+      return deleteCategory(input);
     })
   }),
   sitemap: router({

@@ -65,6 +65,17 @@ export default function DashboardLayout({
                   Dashboard
                 </Button>
               </Link>
+              <Link href="/admin/articles">
+                <Button variant={location.startsWith("/admin/articles") ? "secondary" : "ghost"} className="rounded-lg px-4 h-9 text-sm font-medium">
+                  Notícias
+                </Button>
+              </Link>
+              <Link href="/admin/categories">
+                <Button variant={location === "/admin/categories" ? "secondary" : "ghost"} className="rounded-lg px-4 h-9 text-sm font-medium">
+                  Categorias
+                </Button>
+              </Link>
+              <div className="w-px h-4 bg-white/10 mx-2" />
               <Link href="/">
                 <Button variant="ghost" className="rounded-lg px-4 h-9 text-sm font-medium text-gray-400 hover:text-white">
                   Ver Site
@@ -78,7 +89,7 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 p-1.5 pl-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all focus:outline-none">
                   <div className="flex flex-col items-end">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">{user.name || "Admin"}</span>
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">{user.displayName || "Admin"}</span>
                     <span className="text-[10px] text-gray-500">{user.email}</span>
                   </div>
                   <Avatar className="h-9 w-9 border border-accent/20">

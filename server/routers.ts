@@ -6,10 +6,14 @@ import { TRPCError } from "@trpc/server";
 import {
   getArticles,
   getArticleBySlug,
+  getArticleById,
   incrementArticleViews,
   getArticlesByCategory,
   searchArticles,
   getCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
 } from "./db";
 import { generateSitemap } from "./sitemap";
 import { createArticle, updateArticle, deleteArticle, createArticleSchema, updateArticleSchema } from "./articles-crud";
@@ -35,6 +39,12 @@ export const appRouter = router({
   articles: router({
     list: publicProcedure.query(async () => {
       return getArticles(20);
+    }),
+    get: publicProcedure.input((val: unknown) => {
+      if (typeof val === "number") return val;
+      throw new Error("Invalid article ID");
+    }).query(async ({ input }) => {
+      return getArticleById(input);
     }),
     bySlug: publicProcedure.input((val: unknown) => {
       if (typeof val === "string") return val;
@@ -92,6 +102,38 @@ export const appRouter = router({
   categories: router({
     list: publicProcedure.query(async () => {
       return getCategories();
+    }),
+    create: protectedProcedure.input(z.object({
+      name: z.string().min(1),
+      slug: z.string().min(1),
+      description: z.string().optional(),
+      color: z.string().optional(),
+      icon: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage categories" });
+      }
+      return createCategory(input);
+    }),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      slug: z.string().optional(),
+      description: z.string().optional(),
+      color: z.string().optional(),
+      icon: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage categories" });
+      }
+      const { id, ...data } = input;
+      return updateCategory(id, data);
+    }),
+    delete: protectedProcedure.input(z.number()).mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage categories" });
+      }
+      return deleteCategory(input);
     }),
   }),
   sitemap: router({

@@ -104,6 +104,13 @@ export async function getArticleBySlug(slug: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getArticleById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(articles).where(eq(articles.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 export async function getArticlesByCategory(categoryId: number, limit = 10, offset = 0, orderBy: 'recent' | 'popular' = 'recent') {
   const db = await getDb();
   if (!db) return [];

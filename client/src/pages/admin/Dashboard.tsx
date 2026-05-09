@@ -62,32 +62,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <header className="bg-black border-b border-gray-800 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="text-2xl font-black">
-                <span className="text-accent">TISGO</span>
-                <span className="text-white">NEWS</span>
-              </Link>
-              <span className="text-gray-500 text-sm font-bold">PAINEL ADMIN</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-400">{user.email}</span>
-              <Button
-                onClick={() => logout()}
-                className="bg-accent text-black hover:bg-yellow-500 font-bold text-sm"
-              >
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-8">
+    <div className="space-y-10">
         {/* Back Button */}
         <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-accent transition-colors mb-8">
           <span>← Voltar para o Site</span>
@@ -239,7 +214,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </main>
     </div>
   );
 }

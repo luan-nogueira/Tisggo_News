@@ -5,10 +5,28 @@ import { Link } from "wouter";
 import { Sparkles, Plus, Edit2, Trash2, Eye, Search, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 export default function AdminArticles() {
-  const { data: articles, isLoading } = trpc.articles.list.useQuery();
-  const [selectedArticle, setSelectedArticle] = useState<any>(null);
+  const { data: articles, isLoading, refetch } = trpc.articles.list.useQuery();
+  const deleteMutation = trpc.articles.delete.useMutation();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredArticles = articles?.filter(a => 
+    a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.author.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleDelete = async (id: number) => {
+    if (confirm("Tem certeza que deseja deletar este artigo?")) {
+      try {
+        await deleteMutation.mutateAsync(id);
+        refetch();
+      } catch (error) {
+        console.error("Erro ao deletar:", error);
+      }
+    }
+  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -32,13 +50,15 @@ export default function AdminArticles() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
-            placeholder="Filtrar por título..."
-            className="w-full bg-black border border-gray-800 rounded-lg py-2 pl-10 pr-4 text-sm focus:border-accent outline-none transition-colors"
+            placeholder="Filtrar por título ou autor..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-black border border-gray-800 rounded-lg py-2 pl-10 pr-4 text-sm focus:border-accent outline-none transition-colors text-white"
           />
         </div>
         <Button variant="outline" className="border-gray-800 text-gray-400 gap-2 w-full md:w-auto">
           <Filter className="w-4 h-4" />
-          Filtros
+          {filteredArticles?.length || 0} Resultados
         </Button>
       </div>
 
@@ -50,7 +70,7 @@ export default function AdminArticles() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {articles?.map((article, i) => (
+          {filteredArticles?.map((article, i) => (
             <motion.div
               key={article.id}
               initial={{ opacity: 0, x: -20 }}
@@ -100,7 +120,13 @@ export default function AdminArticles() {
                         <Edit2 className="w-5 h-5" />
                       </Button>
                     </Link>
-                    <Button variant="ghost" size="icon" className="text-gray-600 hover:text-red-500 hover:bg-red-500/10">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-gray-600 hover:text-red-500 hover:bg-red-500/10"
+                      onClick={() => handleDelete(article.id)}
+                      disabled={deleteMutation.isPending}
+                    >
                       <Trash2 className="w-5 h-5" />
                     </Button>
                   </div>
@@ -108,6 +134,11 @@ export default function AdminArticles() {
               </div>
             </motion.div>
           ))}
+          {filteredArticles?.length === 0 && (
+            <div className="text-center py-20 bg-gray-900/30 rounded-3xl border border-dashed border-gray-800">
+              <p className="text-gray-500 font-bold">Nenhum artigo encontrado para sua busca.</p>
+            </div>
+          )}
         </div>
       )}
     </div>
