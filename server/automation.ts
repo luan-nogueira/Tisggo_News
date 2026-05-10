@@ -55,9 +55,16 @@ export async function automateNews(limitPerSource = 2) {
   const stats = { added: 0, skipped: 0, errors: 0 };
   
   try {
-    const categories = await db.getCategories();
+    let categories = await db.getCategories();
     if (categories.length === 0) {
-      throw new Error("No categories found. Create categories first.");
+      console.log("[Automation] No categories found. Creating default 'Geral' category...");
+      await db.createCategory({
+        name: "Geral",
+        slug: "geral",
+        description: "Notícias diversas",
+        color: "#fbbf24"
+      });
+      categories = await db.getCategories();
     }
 
     for (const source of SOURCES) {
