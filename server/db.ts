@@ -20,38 +20,40 @@ export function getDb() {
 
       let finalProjectId = projectId;
       let finalClientEmail = clientEmail;
-      let finalPrivateKey = privateKey;
+      let finalPrivateKey = privateKey.trim();
 
-      // SMART JSON AUTO-DETECTION
-      if (privateKey.trim().startsWith('{')) {
+      // SMART JSON AUTO-DETECTION (Improved)
+      if (finalPrivateKey.startsWith('{')) {
         try {
-          console.log("[Firebase] Full JSON detected in FIREBASE_PRIVATE_KEY. Parsing...");
-          const config = JSON.parse(privateKey);
+          console.log("[Firebase] Attempting to parse FIREBASE_PRIVATE_KEY as JSON...");
+          const config = JSON.parse(finalPrivateKey);
           finalProjectId = config.project_id || finalProjectId;
           finalClientEmail = config.client_email || finalClientEmail;
           finalPrivateKey = config.private_key || finalPrivateKey;
-        } catch (e) {
-          console.warn("[Firebase] Detected JSON-like string but failed to parse. Falling back to raw key.");
+          console.log("[Firebase] JSON parsed successfully for project:", finalProjectId);
+        } catch (e: any) {
+          console.error("[Firebase] JSON parse failed:", e.message);
         }
       }
 
-      // ADVANCED PEM REPAIR LOGIC
-      let formattedKey = finalPrivateKey;
+      // ULTRA-ROBUST PEM REPAIR
+      let formattedKey = finalPrivateKey.trim();
       
-      // 1. Remove surrounding quotes
-      if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
-        formattedKey = formattedKey.substring(1, formattedKey.length - 1);
-      }
+      // Remove any literal quotes that might have been pasted
+      formattedKey = formattedKey.replace(/^['"]|['"]$/g, '');
 
-      // 2. Handle literal \n
+      // Fix double-escaped or literal \n
       formattedKey = formattedKey.replace(/\\n/g, '\n');
 
-      // 3. Ensure PEM headers
-      const header = "-----BEGIN PRIVATE KEY-----";
-      const footer = "-----END PRIVATE KEY-----";
-      if (!formattedKey.includes(header)) {
-        formattedKey = `${header}\n${formattedKey}\n${footer}`;
+      // Final check for headers
+      if (!formattedKey.includes("-----BEGIN PRIVATE KEY-----")) {
+        console.log("[Firebase] Adding missing PEM headers...");
+        formattedKey = `-----BEGIN PRIVATE KEY-----\n${formattedKey}\n-----END PRIVATE KEY-----`;
       }
+
+      // Log key structure for debugging (safe version)
+      console.log(`[Firebase] Key starts with: ${formattedKey.substring(0, 30)}...`);
+      console.log(`[Firebase] Key ends with: ...${formattedKey.substring(formattedKey.length - 30)}`);
 
       admin.initializeApp({
         credential: admin.credential.cert({
