@@ -335,7 +335,7 @@ export default function Home() {
 
       <main className="max-w-[1600px] mx-auto px-4 py-8">
         {/* Main Article + Sidebar Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12 items-start">
           {/* Main Slider */}
           {featuredArticles.length > 0 && (
             <div className="lg:col-span-2 relative h-[400px] md:h-[500px] rounded-xl overflow-hidden group shadow-2xl">
