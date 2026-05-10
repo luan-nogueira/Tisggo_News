@@ -17,6 +17,17 @@ export default function AdminArticles() {
     a.author.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const formatDate = (dateStr: any) => {
+    try {
+      if (!dateStr) return "";
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "";
+      return d.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return "";
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja deletar este artigo?")) {
       try {
@@ -33,7 +44,7 @@ export default function AdminArticles() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-black uppercase text-white tracking-tighter">Artigos</h1>
-          <p className="text-gray-500 text-sm font-medium">Gerencie o conteúdo do portal Tisgo</p>
+          <p className="text-gray-500 text-sm font-medium">Gerencie o conteúdo do portal Tisggo</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/admin/articles/new">
@@ -45,18 +56,18 @@ export default function AdminArticles() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center bg-gray-900/50 p-4 rounded-xl border border-gray-800">
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-muted/40 p-4 rounded-2xl border border-border">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Filtrar por título ou autor..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-black border border-gray-800 rounded-lg py-2 pl-10 pr-4 text-sm focus:border-accent outline-none transition-colors text-white"
+            className="w-full bg-background border border-border rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all text-foreground placeholder:text-muted-foreground"
           />
         </div>
-        <Button variant="outline" className="border-gray-800 text-gray-400 gap-2 w-full md:w-auto">
+        <Button variant="outline" className="border-border text-muted-foreground gap-2 w-full md:w-auto h-11 px-6 rounded-xl bg-background hover:bg-muted">
           <Filter className="w-4 h-4" />
           {filteredArticles?.length || 0} Resultados
         </Button>
@@ -78,49 +89,49 @@ export default function AdminArticles() {
               transition={{ delay: i * 0.03 }}
               className="group"
             >
-              <div className="bg-gray-900 border border-gray-800 hover:border-accent/50 transition-all duration-300 rounded-xl overflow-hidden shadow-sm hover:shadow-accent/5">
-                <div className="flex items-center p-4 gap-6">
-                  <div className="hidden md:block w-24 h-24 rounded-lg bg-gray-800 overflow-hidden flex-shrink-0">
+              <div className="bg-card border border-border hover:border-accent/40 transition-all duration-300 rounded-[24px] overflow-hidden shadow-sm hover:shadow-accent/5">
+                <div className="flex items-center p-5 gap-6">
+                  <div className="hidden md:block w-24 h-24 rounded-2xl bg-muted overflow-hidden flex-shrink-0 border border-border">
                     {article.coverImage ? (
                       <img src={article.coverImage} className="w-full h-full object-cover" alt="" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                        <Sparkles className="w-6 h-6 text-gray-600" />
+                      <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+                        <Sparkles className="w-6 h-6 text-muted-foreground" />
                       </div>
                     )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <Badge className={`${article.published === true ? 'bg-green-600' : 'bg-gray-700'} text-white text-[10px] font-black uppercase`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <Badge className={`${article.published === true ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'} text-[10px] font-black uppercase rounded-lg border px-3`}>
                         {article.published === true ? "Publicado" : "Rascunho"}
                       </Badge>
                     </div>
-                    <h3 className="font-black text-xl text-white group-hover:text-accent transition-colors truncate mb-1">
+                    <h3 className="font-black text-xl text-foreground group-hover:text-accent transition-colors truncate mb-2">
                       {article.title}
                     </h3>
-                    <div className="flex items-center gap-4 text-xs font-bold text-gray-500 uppercase tracking-tight">
-                      <span className="flex items-center gap-1.5">
-                        <Eye className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <span className="flex items-center gap-1.5 bg-muted px-2 py-0.5 rounded-md border border-border">
+                        <Eye className="w-3 h-3 text-accent" />
                         {article.views || 0}
                       </span>
                       <span>•</span>
-                      <span>{new Date(article.createdAt).toLocaleDateString('pt-BR')}</span>
+                      <span>{formatDate(article.createdAt)}</span>
                       <span>•</span>
-                      <span className="text-gray-400">Por {article.author}</span>
+                      <span className="text-muted-foreground">Por {article.author}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3 pr-2">
                     <Link href={`/admin/articles/${article.id}/edit`}>
-                      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-accent hover:bg-accent/10">
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl w-11 h-11 border border-transparent hover:border-accent/20">
                         <Edit2 className="w-5 h-5" />
                       </Button>
                     </Link>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="text-gray-600 hover:text-red-500 hover:bg-red-500/10"
+                      className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl w-11 h-11 border border-transparent hover:border-red-500/20"
                       onClick={() => handleDelete(String(article.id))}
                       disabled={deleteMutation.isPending}
                     >

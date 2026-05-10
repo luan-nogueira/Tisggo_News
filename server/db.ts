@@ -1,16 +1,21 @@
-import * as admin from "firebase-admin";
+import admin from "firebase-admin";
 import { ENV } from './_core/env.js';
 import type { User, Article, Category, InsertUser, InsertArticle, InsertCategory } from "../drizzle/schema";
 
 if (!admin.apps.length) {
   try {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY 
+      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') 
+      : undefined;
+
     admin.initializeApp({
       credential: admin.credential.cert({
-        projectId: "tisggo-news",
-        clientEmail: "firebase-adminsdk-fbsvc@tisggo-news.iam.gserviceaccount.com",
-        privateKey: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDDZsycxeKQ5Z+E\nAd6QHq5Ef3xnfudLr9MfviBj6NStMdsoTTDVb8xYSOaAfZkgC3Q7T5wkaWoRMc2/\nJMOzottE3+tDX9+dIK483tGOHgWSSX2VXOxsCI/vr9as2j5FWBEPNbiahnHVClzk\n8vhf/0yEUAfrr/CSh6vPdQ6+IoXR1bka+t+c8BGvEmmyrnjEf3HaUFQmJXdIN35J\n6ZHte67uvJiiwtpyQVE0ip1x9bElE+j3mjWjQvoXny3Bn3DR0H+VGG85nwYPWfRj\ne7f5A3bo8A/2Dd15ie1ygxE8+gWW5K7lGYKBr0nzGAXo969Lzv4lDt1NBWmjcbcl\nvbFM2WmtAgMBAAECggEAJdn5zGuz3CQzDpALJElhMjEs8OJ/HSUB5Y3/ucLeQe+c\nt9WeHlZiE/8JMb5CxZeabCvbgB0weAS5CawuQdPMHG8w5HQDve0Y+38hQmGz7BbS\n3jZqMPJGqaRbFlBPjEDHSzY5nKtrDR0NCie77+KlWKMlKaWDGWtxH4aaNMA8wn0I\nkyIP8E/n31wQICA3WaOedu4/ePRp5tU3LbqJoDFZAqcQh2j8U12wlsL6O5VxQBHn\nj5G0dXfEHbrTUT7QTUn3gqOopj4qrNAZpjjownHPizWWyBSsGPg/JcAdelr0CWbL\nNz/FX/FwPDNwsOZv819XBoGO8GmqKuQ/9IXJxzN/iQKBgQDw2ewvlgZno/ndiMet\n3uGwlS2wHhFUlMWPXulaX8SeCNpaqfseh4sCWQXzNix3CY+ooRjAgyClc3l+bn/S\n7arAURQ16a83MbjhZPkX6+FM3yHPPDuqJ9PGHUnvDeYB846e5FTELQzQHj8ZLzSs\nh4vUM56TKPmjwsBxld+hEIrJJQKBgQDPsRD2/YD9Kcsb7ShYMO2chK+m00tBJnQy\nUhhfYorVwQP6wyVgK0KTq+62g0cQqwm8cGRoxBOEicruZPjRfIOUOzx7xzTcHAoY\nKkCGTbNP8W7+UvXSy+O20nzwWL2Rpekfp71/J4ELMsHjautCFrI29Swpxspufxm4\nNGi7cmjL6QKBgQCHSSFNqWt3k7eqJEZk96i101WSc5EwfVBrM9jHlruOOVLNUmVn\nxKLkcrTQ5EEdrBUxlyucFwujY7V+uvq5tB4RYHmFvvlYe2lp0ZnJQgmPcFZBXYf2\nD+D4i0MYMCpeNjyKK58hglyMGjE/KDDiKFD2pPgRmRaAUchfBNxUUEJksQKBgEan\njwTnUrVNPXp/oIT4CC2B+ht/sA823LqtsPrqFB8JrafmMVXZAaopCGlwmYFzHjnL\n5my5n4YsNiwJj5f8iuqniDj3mOT0aP61iQPndQPSN5cvc89Fa28rhjNhjQP6dCc/\nsjiKoNzFZK5QFj6CaBhIKcEAjqcud/pxYdu63SnZAoGAaEa7isZzCeIjtFQSdX3b\n3+nmearEgLbrGrUExvh5wf+E/7MS5ZqwwWXVkMgTJvo4zi/8/lUTyMUsWxesFps8\nNF+QCdD/uMRxLUCYQZ7CRY/qZ4tKTtFcOeXok7pUIoFRyt2THIYCC9vjhlWwKQoW\nFbOF7VHHhIo75kj05etUMrM=\n-----END PRIVATE KEY-----\n",
+        projectId: process.env.FIREBASE_PROJECT_ID || "tisggo-news",
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@tisggo-news.iam.gserviceaccount.com",
+        privateKey: privateKey,
       }),
-      databaseURL: `https://tisggo-news.firebaseio.com`
+      databaseURL: `https://${process.env.FIREBASE_PROJECT_ID || "tisggo-news"}.firebaseio.com`,
+      storageBucket: `${process.env.FIREBASE_PROJECT_ID || "tisggo-news"}.firebasestorage.app`
     });
     console.log("[Firebase] Admin initialized successfully");
   } catch (error) {
@@ -19,9 +24,34 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+const storage = admin.storage();
+
+export async function firebaseUpload(path: string, buffer: Buffer, contentType: string) {
+  const bucket = storage.bucket();
+  const file = bucket.file(path);
+  
+  await file.save(buffer, {
+    metadata: { contentType },
+    public: true
+  });
+
+  // Torna o arquivo público e retorna a URL
+  await file.makePublic();
+  return `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+}
 
 // Helper to convert Firestore data to our types
-const toData = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+// Helper to convert Firestore data to our types and format Timestamps
+const toData = <T>(doc: any): T => {
+  const data = doc.data();
+  // Convert all Timestamps to ISO strings for the frontend
+  for (const key in data) {
+    if (data[key] && typeof data[key] === 'object' && 'seconds' in data[key]) {
+      data[key] = data[key].toDate().toISOString();
+    }
+  }
+  return { id: doc.id, ...data } as T;
+};
 
 export async function getDb() {
   return db;
@@ -55,35 +85,71 @@ export async function upsertUser(user: Partial<InsertUser> & { openId: string })
 
 // ARTICLES
 export async function getArticles(pageSize = 20) {
-  const snapshot = await db.collection("articles")
-    .where("published", "==", true)
-    .orderBy("publishedAt", "desc")
-    .limit(pageSize)
-    .get();
-  return snapshot.docs.map(toData<Article>);
+  console.log("[Firebase] Fetching articles (limit:", pageSize, ")...");
+  try {
+    const snapshot = await db.collection("articles")
+      .where("published", "==", true)
+      .orderBy("publishedAt", "desc")
+      .limit(pageSize)
+      .get();
+    console.log("[Firebase] Articles found:", snapshot.size);
+    return snapshot.docs.map(toData<Article>);
+  } catch (error: any) {
+    console.error("[Firebase] Error fetching articles:", error.message);
+    if (error.message.includes("index") || error.message.includes("FAILED_PRECONDITION")) {
+      console.warn("[Firebase] Missing index! Using fallback without order.");
+      const fallbackSnapshot = await db.collection("articles")
+        .where("published", "==", true)
+        .limit(pageSize)
+        .get();
+      console.log("[Firebase] Fallback articles found:", fallbackSnapshot.size);
+      return fallbackSnapshot.docs.map(toData<Article>);
+    }
+    return [];
+  }
 }
 
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
+  // Tenta por slug
   const snapshot = await db.collection("articles").where("slug", "==", slug).limit(1).get();
-  if (snapshot.empty) return null;
-  return toData<Article>(snapshot.docs[0]);
+  if (!snapshot.empty) return toData<Article>(snapshot.docs[0]);
+  
+  // Se falhar, tenta por ID (caso o slug seja o ID ou o slug esteja faltando no link)
+  try {
+    const docSnap = await db.collection("articles").doc(slug).get();
+    if (docSnap.exists) return toData<Article>(docSnap);
+  } catch (e) {
+    // Silently fail if slug is not a valid doc id format
+  }
+  
+  return null;
 }
 
 export async function createArticle(article: any) {
+  console.log("[Firebase] Attempting to create article:", article.title);
   const data = {
     ...article,
     createdAt: admin.firestore.Timestamp.now(),
     updatedAt: admin.firestore.Timestamp.now(),
-    publishedAt: article.publishedAt ? admin.firestore.Timestamp.fromDate(new Date(article.publishedAt)) : admin.firestore.Timestamp.now(),
+    publishedAt: (article.publishedAt && !isNaN(new Date(article.publishedAt).getTime())) 
+      ? admin.firestore.Timestamp.fromDate(new Date(article.publishedAt)) 
+      : admin.firestore.Timestamp.now(),
     views: 0,
   };
-  const docRef = await db.collection("articles").add(data);
-  return { id: docRef.id };
+  try {
+    const docRef = await db.collection("articles").add(data);
+    console.log("[Firebase] Article created successfully with ID:", docRef.id);
+    return { id: docRef.id };
+  } catch (error) {
+    console.error("[Firebase] Error creating article:", error);
+    throw error;
+  }
 }
 
 export async function updateArticle(id: string, article: Partial<Article>) {
-  const data: any = { ...article, updatedAt: admin.firestore.Timestamp.now() };
-  if (article.publishedAt) {
+  const { id: _, ...updateData } = article as any;
+  const data: any = { ...updateData, updatedAt: admin.firestore.Timestamp.now() };
+  if (article.publishedAt && !isNaN(new Date(article.publishedAt).getTime())) {
     data.publishedAt = admin.firestore.Timestamp.fromDate(new Date(article.publishedAt));
   }
   await db.collection("articles").doc(id).update(data);
@@ -96,14 +162,37 @@ export async function incrementArticleViews(id: string) {
   });
 }
 
-export async function getArticlesByCategory(categoryId: string, pageSize = 20, offset = 0, orderByField: "recent" | "popular" = "recent") {
-  const snapshot = await db.collection("articles")
-    .where("categoryId", "==", categoryId)
-    .where("published", "==", true)
-    .orderBy(orderByField === "recent" ? "publishedAt" : "views", "desc")
-    .limit(pageSize)
-    .get();
-  return snapshot.docs.map(toData<Article>);
+export async function getArticlesByCategory(categoryId: string, limitCount: number = 10, offset: number = 0, orderBy: string = "recent") {
+  console.log("[Firebase] Fetching articles for category ID:", categoryId, "(limit:", limitCount, ")");
+  try {
+    let query = db.collection("articles")
+      .where("categoryId", "==", categoryId)
+      .where("published", "==", true);
+    
+    // Tentativa de busca
+    const snapshot = await query.get();
+    console.log("[Firebase] Total articles found for this category (ignoring order):", snapshot.size);
+    
+    if (orderBy === "popular") {
+      query = query.orderBy("views", "desc");
+    } else {
+      query = query.orderBy("publishedAt", "desc");
+    }
+    
+    const orderedSnapshot = await query.limit(limitCount).offset(offset).get();
+    console.log("[Firebase] Ordered articles found:", orderedSnapshot.size);
+    return orderedSnapshot.docs.map(toData<Article>);
+  } catch (error: any) {
+    console.error("[Firebase] Error fetching articles by category:", error.message);
+    // Fallback se faltar índice
+    const fallbackSnapshot = await db.collection("articles")
+      .where("categoryId", "==", categoryId)
+      .where("published", "==", true)
+      .limit(limitCount)
+      .get();
+    console.log("[Firebase] Fallback articles found:", fallbackSnapshot.size);
+    return fallbackSnapshot.docs.map(toData<Article>);
+  }
 }
 
 export async function searchArticles(searchTerm: string) {
@@ -118,8 +207,15 @@ export async function searchArticles(searchTerm: string) {
 
 // CATEGORIES
 export async function getCategories() {
-  const snapshot = await db.collection("categories").orderBy("name", "asc").get();
-  return snapshot.docs.map(toData<Category>);
+  console.log("[Firebase] Fetching categories...");
+  try {
+    const snapshot = await db.collection("categories").orderBy("name", "asc").get();
+    console.log("[Firebase] Categories fetched:", snapshot.size);
+    return snapshot.docs.map(toData<Category>);
+  } catch (error) {
+    console.error("[Firebase] Error fetching categories:", error);
+    return [];
+  }
 }
 
 export async function createCategory(category: Partial<InsertCategory>) {

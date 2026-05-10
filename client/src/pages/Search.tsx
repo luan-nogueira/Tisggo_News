@@ -26,7 +26,7 @@ export default function SearchPage() {
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
           <Link href="/">
             <span className="text-2xl font-black cursor-pointer">
-              <span className="text-accent">TISGO</span>
+              <span className="text-accent">TISGGO</span>
               <span className="text-white">NEWS</span>
             </span>
           </Link>
@@ -95,7 +95,7 @@ export default function SearchPage() {
                         {article.title}
                       </h3>
                       <p className="text-sm text-gray-400 line-clamp-2 flex-grow">
-                        {article.excerpt || article.content.substring(0, 100)}
+                        {(article.excerpt || article.content).replace(/<[^>]*>/g, '').substring(0, 100)}...
                       </p>
                       <div className="flex items-center text-accent text-sm font-black mt-3 uppercase tracking-tighter">
                         Ler notícia <ChevronRight className="w-3 h-3 ml-1" />
@@ -128,7 +128,7 @@ export default function SearchPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <span className="text-2xl font-black">
-                <span className="text-accent">TISGO</span>
+                <span className="text-accent">TISGGO</span>
                 <span className="text-white">NEWS</span>
               </span>
               <p className="text-sm text-gray-500 mt-2">
@@ -138,7 +138,7 @@ export default function SearchPage() {
             <div>
               <h4 className="font-bold uppercase text-sm mb-4">Categorias</h4>
               <ul className="space-y-2 text-sm">
-                {categories?.slice(0, 4).map((cat) => (
+                {categories?.slice(0, 10).map((cat) => (
                   <li key={cat.id}>
                     <Link href={`/category/${cat.slug}`}>
                       <span className="text-gray-400 hover:text-accent transition-colors cursor-pointer">
@@ -167,7 +167,7 @@ export default function SearchPage() {
           </div>
           <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-8" />
           <p className="text-center text-sm text-gray-500">
-            &copy; 2026 Tisgo News. Todos os direitos reservados.
+            &copy; 2026 Tisggo News. Todos os direitos reservados.
           </p>
         </div>
       </footer>

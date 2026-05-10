@@ -5,6 +5,10 @@
       "destination": "/api"
     },
     {
+      "source": "/trpc/(.*)",
+      "destination": "/api"
+    },
+    {
       "source": "/manus-storage/(.*)",
       "destination": "/api"
     },

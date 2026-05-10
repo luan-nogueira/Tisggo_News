@@ -18,7 +18,9 @@ export default function ArticleForm() {
   const { id } = useParams<{ id?: string }>();
   const [, navigate] = useLocation();
   const { data: categories } = trpc.categories.list.useQuery();
-  const { data: existingArticle, isLoading: articleLoading } = trpc.articles.get.useQuery(id || "", { enabled: !!id });
+  const { data: existingArticle, isLoading: articleLoading } = trpc.articles.get.useQuery(id || "", { 
+    enabled: !!id && id !== "new" 
+  });
   
   const [formData, setFormData] = useState({
     title: "",
@@ -130,22 +132,22 @@ export default function ArticleForm() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-20">
       {/* Header Premium */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-black/40 p-6 rounded-3xl border border-white/5 backdrop-blur-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card p-6 rounded-3xl border border-border shadow-sm">
         <div className="flex items-center gap-6">
           <Button 
             variant="outline" 
             size="icon" 
             onClick={() => navigate("/admin/articles")}
-            className="rounded-2xl border-white/10 hover:bg-white/5 w-12 h-12"
+            className="rounded-2xl border-border hover:bg-muted w-12 h-12"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </Button>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-white uppercase">
+            <h1 className="text-3xl font-black tracking-tight text-foreground uppercase">
               {id ? "Editar Notícia" : "Nova Publicação"}
             </h1>
-            <p className="text-gray-500 text-sm font-medium mt-1">
-              {id ? "Ajuste os detalhes da sua notícia" : "Crie um novo conteúdo de impacto para o Tisgo News"}
+            <p className="text-muted-foreground text-sm font-medium mt-1">
+              {id ? "Ajuste os detalhes da sua notícia" : "Crie um novo conteúdo de impacto para o Tisggo News"}
             </p>
           </div>
         </div>
@@ -154,7 +156,7 @@ export default function ArticleForm() {
           <Button 
             variant="ghost" 
             onClick={() => navigate("/admin/articles")}
-            className="rounded-2xl px-6 font-bold text-gray-400 hover:text-white"
+            className="rounded-2xl px-6 font-bold text-muted-foreground hover:text-foreground"
           >
             Descartar
           </Button>
@@ -172,7 +174,7 @@ export default function ArticleForm() {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-8">
-          <Card className="bg-[#0A0A0A] border-white/5 rounded-[32px] overflow-hidden p-8 space-y-8">
+          <Card className="bg-card border-border rounded-[32px] overflow-hidden p-8 space-y-8">
             <div className="space-y-6">
               <div className="flex items-center gap-2 text-accent">
                 <Type className="w-4 h-4" />
@@ -184,14 +186,14 @@ export default function ArticleForm() {
                   placeholder="Título impactante da notícia..."
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="bg-transparent border-none text-3xl font-black p-0 h-auto focus-visible:ring-0 placeholder:text-gray-800 text-white"
+                  className="bg-transparent border-none text-3xl font-black p-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/40 text-foreground"
                   required
                 />
                 <Textarea
                   placeholder="Um breve resumo que chame a atenção do leitor..."
                   value={formData.excerpt}
                   onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                  className="bg-white/5 border-white/5 rounded-2xl p-4 text-gray-300 resize-none h-24 focus:border-accent/30 transition-all"
+                  className="bg-muted/50 border-border rounded-2xl p-4 text-foreground resize-none h-24 focus:border-accent/30 transition-all placeholder:text-muted-foreground/50"
                   required
                 />
               </div>
@@ -203,13 +205,49 @@ export default function ArticleForm() {
                 <span className="text-[10px] uppercase font-black tracking-widest">Conteúdo do Artigo</span>
               </div>
               
-              <div className="bg-white rounded-3xl overflow-hidden min-h-[400px]">
+              <div className="bg-muted/30 rounded-3xl overflow-hidden min-h-[400px] border border-border">
+                <style>{`
+                  .ql-toolbar.ql-snow {
+                    border: none !important;
+                    border-bottom: 1px solid var(--border) !important;
+                    background: var(--muted);
+                  }
+                  .ql-container.ql-snow {
+                    border: none !important;
+                    font-family: inherit !important;
+                    font-size: 16px !important;
+                  }
+                  .ql-editor {
+                    color: var(--foreground) !important;
+                    min-height: 350px;
+                  }
+                  .ql-editor.ql-blank::before {
+                    color: var(--muted-foreground) !important;
+                    font-style: normal !important;
+                    opacity: 0.5;
+                  }
+                  .ql-snow .ql-stroke {
+                    stroke: var(--muted-foreground) !important;
+                  }
+                  .ql-snow .ql-fill {
+                    fill: var(--muted-foreground) !important;
+                  }
+                  .ql-snow .ql-picker {
+                    color: var(--muted-foreground) !important;
+                  }
+                  .ql-snow .ql-picker-options {
+                    background-color: var(--card) !important;
+                    border: 1px solid var(--border) !important;
+                    border-radius: 12px !important;
+                    padding: 8px !important;
+                  }
+                `}</style>
                 <ReactQuill 
                   theme="snow"
                   value={formData.content}
                   onChange={(val) => setFormData({ ...formData, content: val })}
                   placeholder="Escreva aqui o corpo da sua notícia..."
-                  className="h-[350px] text-black"
+                  className="h-[350px]"
                 />
               </div>
             </div>
@@ -219,7 +257,7 @@ export default function ArticleForm() {
         {/* Sidebar Controls */}
         <div className="space-y-8">
           {/* Metadata Card */}
-          <Card className="bg-[#0A0A0A] border-white/5 rounded-[32px] p-6 space-y-6">
+          <Card className="bg-card border-border rounded-[32px] p-6 space-y-6 shadow-sm">
             <div className="flex items-center gap-2 text-accent">
               <Settings className="w-4 h-4" />
               <span className="text-[10px] uppercase font-black tracking-widest">Configurações</span>
@@ -227,14 +265,14 @@ export default function ArticleForm() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black text-gray-500 tracking-wider">Categoria</label>
+                <label className="text-[10px] uppercase font-black text-muted-foreground tracking-wider">Categoria</label>
                 <Select value={formData.categoryId} onValueChange={(val) => setFormData({ ...formData, categoryId: val })}>
-                  <SelectTrigger className="bg-white/5 border-white/5 rounded-2xl h-12">
+                  <SelectTrigger className="bg-muted border-border rounded-2xl h-12 text-foreground">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#0A0A0A] border-white/10 rounded-2xl">
+                  <SelectContent className="bg-card border-border rounded-2xl text-foreground">
                     {categories?.map((cat) => (
-                      <SelectItem key={cat.id} value={String(cat.id)} className="focus:bg-white/5 rounded-xl">
+                      <SelectItem key={cat.id} value={String(cat.id)} className="focus:bg-muted rounded-xl">
                         {cat.name}
                       </SelectItem>
                     ))}
@@ -243,23 +281,23 @@ export default function ArticleForm() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black text-gray-500 tracking-wider">Autor</label>
+                <label className="text-[10px] uppercase font-black text-muted-foreground tracking-wider">Autor</label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Nome do autor"
                     value={formData.author}
                     onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                    className="bg-white/5 border-white/5 rounded-2xl h-12 pl-12"
+                    className="bg-muted/50 border-border rounded-2xl h-12 pl-12 text-foreground placeholder:text-muted-foreground/50"
                     required
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
+              <div className="flex items-center justify-between bg-muted/50 p-4 rounded-2xl border border-border">
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold">Publicar</span>
-                  <span className="text-[10px] text-gray-500">Visível no site imediatamente</span>
+                  <span className="text-sm font-bold text-foreground">Publicar</span>
+                  <span className="text-[10px] text-muted-foreground">Visível no site imediatamente</span>
                 </div>
                 <input
                   type="checkbox"
@@ -273,7 +311,7 @@ export default function ArticleForm() {
           </Card>
 
           {/* Media Card */}
-          <Card className="bg-[#0A0A0A] border-white/5 rounded-[32px] p-6 space-y-6">
+          <Card className="bg-card border-border rounded-[32px] p-6 space-y-6 shadow-sm">
             <div className="flex items-center gap-2 text-accent">
               <ImageIcon className="w-4 h-4" />
               <span className="text-[10px] uppercase font-black tracking-widest">Capa da Notícia</span>
@@ -282,7 +320,7 @@ export default function ArticleForm() {
             <div className="space-y-4">
               <div 
                 className={`relative group h-48 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-3 overflow-hidden
-                  ${formData.coverImage ? 'border-accent/30' : 'border-white/10 hover:border-accent/50'}`}
+                  ${formData.coverImage ? 'border-accent/30' : 'border-border hover:border-accent/50'}`}
               >
                 {formData.coverImage ? (
                   <>
@@ -293,8 +331,8 @@ export default function ArticleForm() {
                   </>
                 ) : (
                   <>
-                    <Upload className="w-8 h-8 text-gray-700" />
-                    <span className="text-xs font-bold text-gray-500">Arraste ou clique</span>
+                    <Upload className="w-8 h-8 text-muted-foreground/30" />
+                    <span className="text-xs font-bold text-muted-foreground">Arraste ou clique</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -306,9 +344,9 @@ export default function ArticleForm() {
                 )}
                 
                 {isUploading && (
-                  <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-6 backdrop-blur-md">
+                  <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center p-6 backdrop-blur-md">
                     <Loader2 className="w-8 h-8 animate-spin text-accent mb-4" />
-                    <div className="w-full bg-white/10 rounded-full h-1.5 max-w-[150px]">
+                    <div className="w-full bg-muted rounded-full h-1.5 max-w-[150px]">
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${uploadProgress}%` }}
@@ -319,7 +357,7 @@ export default function ArticleForm() {
                   </div>
                 )}
               </div>
-              <p className="text-[10px] text-center text-gray-500">Recomendado: 1200x630px (máx 2MB)</p>
+              <p className="text-[10px] text-center text-muted-foreground">Recomendado: 1200x630px (máx 2MB)</p>
             </div>
           </Card>
         </div>

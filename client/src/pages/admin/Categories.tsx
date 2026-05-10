@@ -42,7 +42,7 @@ export default function AdminCategories() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
             >
-              <Card className="p-6 hover:shadow-lg transition-shadow bg-gray-900 border-gray-800">
+              <Card className="p-6 hover:shadow-lg transition-shadow bg-card border-border">
                 <div className="flex items-start justify-between mb-4">
                   <div
                     className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
@@ -65,12 +65,12 @@ export default function AdminCategories() {
                     </Button>
                   </div>
                 </div>
-                <h3 className="font-bold text-lg mb-1 text-white">{category.name}</h3>
-                <p className="text-sm text-gray-400 mb-3">
+                <h3 className="font-bold text-lg mb-1 text-foreground">{category.name}</h3>
+                <p className="text-sm text-muted-foreground mb-3">
                   {category.description || "Sem descrição"}
                 </p>
-                <div className="text-xs text-gray-500">
-                  Slug: <code className="bg-gray-800 px-2 py-1 rounded text-accent">{category.slug}</code>
+                <div className="text-xs text-muted-foreground">
+                  Slug: <code className="bg-muted px-2 py-1 rounded text-accent">{category.slug}</code>
                 </div>
               </Card>
             </motion.div>

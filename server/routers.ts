@@ -1,7 +1,7 @@
 import { COOKIE_NAME, ONE_YEAR_MS } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies.js";
 import { systemRouter } from "./_core/systemRouter.js";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc.js";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc.js";
 import { TRPCError } from "@trpc/server";
 import {
   getArticles,
@@ -14,11 +14,14 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  getDb,
 } from "./db.js";
 import { generateSitemap } from "./sitemap.js";
 import { createArticle, updateArticle, deleteArticle, createArticleSchema, updateArticleSchema } from "./articles-crud.js";
 import { automateNews } from "./automation.js";
+import { getBrasileirao, getBrasileiraoGames } from "./football.js";
 import { z } from "zod";
+import { storagePut } from "./storage.js";
 
 export const appRouter = router({
   system: systemRouter,
@@ -56,48 +59,37 @@ export const appRouter = router({
     search: publicProcedure.input(z.string()).query(async ({ input }) => {
       return searchArticles(input);
     }),
-    create: protectedProcedure.input(createArticleSchema).mutation(async ({ ctx, input }) => {
-      if (ctx.user?.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can create articles" });
-      }
+    create: adminProcedure.input(createArticleSchema).mutation(async ({ ctx, input }) => {
       return createArticle(input);
     }),
-    update: protectedProcedure.input(updateArticleSchema).mutation(async ({ ctx, input }) => {
-      if (ctx.user?.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can update articles" });
-      }
+    update: adminProcedure.input(updateArticleSchema).mutation(async ({ ctx, input }) => {
       return updateArticle(input);
     }),
-    delete: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
-      if (ctx.user?.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can delete articles" });
-      }
+    delete: adminProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
       return deleteArticle(input);
     }),
-    automate: protectedProcedure.mutation(async ({ ctx }) => {
-      if (ctx.user?.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can automate news" });
-      }
+    automate: adminProcedure.mutation(async ({ ctx }) => {
       return automateNews();
+    }),
+    cleanup: adminProcedure.mutation(async () => {
+      const { cleanupExistingArticles } = await import("./automation.js");
+      return await cleanupExistingArticles();
     }),
   }),
   categories: router({
     list: publicProcedure.query(async () => {
       return getCategories();
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       name: z.string().min(1),
       slug: z.string().min(1),
       description: z.string().optional(),
       color: z.string().optional(),
       icon: z.string().optional(),
     })).mutation(async ({ ctx, input }) => {
-      if (ctx.user?.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage categories" });
-      }
       return createCategory(input);
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.string(),
       name: z.string().optional(),
       slug: z.string().optional(),
@@ -105,16 +97,10 @@ export const appRouter = router({
       color: z.string().optional(),
       icon: z.string().optional(),
     })).mutation(async ({ ctx, input }) => {
-      if (ctx.user?.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage categories" });
-      }
       const { id, ...data } = input;
       return updateCategory(id, data);
     }),
-    delete: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
-      if (ctx.user?.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage categories" });
-      }
+    delete: adminProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
       return deleteCategory(input);
     }),
   }),
@@ -122,6 +108,70 @@ export const appRouter = router({
     generate: publicProcedure.query(async () => {
       const baseUrl = process.env.VITE_APP_URL || "https://tisgo-news.vercel.app";
       return await generateSitemap(baseUrl);
+    }),
+  }),
+  settings: router({
+    get: adminProcedure.query(async () => {
+      const db = await getDb();
+      const doc = await db.collection("settings").doc("automation").get();
+      return doc.exists ? doc.data() : { interval: "4", autoCleanup: true };
+    }),
+    update: adminProcedure.input(z.object({
+      interval: z.string(),
+      autoCleanup: z.boolean(),
+    })).mutation(async ({ input }) => {
+      const db = await getDb();
+      await db.collection("settings").doc("automation").set(input, { merge: true });
+      return { success: true };
+    }),
+  }),
+  sponsors: router({
+    list: publicProcedure.query(async () => {
+      const db = await getDb();
+      const snapshot = await db.collection("sponsors").get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }),
+    upsert: adminProcedure.input(z.object({
+      id: z.string().optional(),
+      name: z.string(),
+      image: z.string(),
+      location: z.enum(['sidebar', 'horizontal_bottom', 'top_banner']),
+      whatsapp: z.string().optional(),
+      instagram: z.string().optional(),
+      active: z.boolean()
+    })).mutation(async ({ input }) => {
+      const db = await getDb();
+      const { id, ...data } = input;
+      if (id) {
+        await db.collection("sponsors").doc(id).set(data, { merge: true });
+      } else {
+        await db.collection("sponsors").add(data);
+      }
+      return { success: true };
+    }),
+    delete: adminProcedure.input(z.string()).mutation(async ({ input }) => {
+      const db = await getDb();
+      await db.collection("sponsors").doc(input).delete();
+      return { success: true };
+    }),
+    uploadImage: adminProcedure.input(z.object({
+      base64: z.string(),
+      fileName: z.string(),
+      contentType: z.string()
+    })).mutation(async ({ input }) => {
+      const { firebaseUpload } = await import("./db.js");
+      const buffer = Buffer.from(input.base64.split(",")[1], "base64");
+      const safeName = input.fileName.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+      const url = await firebaseUpload(`sponsors/${Date.now()}_${safeName}`, buffer, input.contentType);
+      return { url };
+    })
+  }),
+  football: router({
+    table: publicProcedure.query(async () => {
+      return getBrasileirao();
+    }),
+    games: publicProcedure.query(async () => {
+      return getBrasileiraoGames();
     }),
   }),
 });

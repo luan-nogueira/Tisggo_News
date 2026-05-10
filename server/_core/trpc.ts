@@ -31,7 +31,19 @@ export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 
+    // Grant admin access automatically in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.log("[Auth] Dev mode detected, granting admin access");
+      return next({
+        ctx: {
+          ...ctx,
+          user: ctx.user || { id: "dev-admin", role: "admin", name: "Dev Admin" } as any,
+        },
+      });
+    }
+
     if (!ctx.user || ctx.user.role !== 'admin') {
+      console.warn("[Auth] Access denied: User is not admin");
       throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
     }
 

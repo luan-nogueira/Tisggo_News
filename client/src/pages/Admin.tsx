@@ -6,6 +6,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminArticles from "@/pages/admin/Articles";
 import ArticleForm from "@/pages/admin/ArticleForm";
 import AdminCategories from "@/pages/admin/Categories";
+import AdminSponsors from "@/pages/admin/Sponsors";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -59,7 +60,7 @@ export default function Admin() {
             </div>
             <CardTitle className="text-2xl font-bold text-white">Portal do Administrador</CardTitle>
             <CardDescription className="text-gray-400">
-              Acesso restrito à gerência do Tisgo News
+              Acesso restrito à gerência do Tisggo News
             </CardDescription>
           </CardHeader>
           <CardContent className="mt-4">
@@ -121,10 +122,12 @@ export default function Admin() {
       <Switch>
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/" component={AdminDashboard} />
+        <Route path="/admin/dashboard" component={AdminDashboard} />
         <Route path="/admin/articles" component={AdminArticles} />
         <Route path="/admin/articles/new" component={ArticleForm} />
         <Route path="/admin/articles/:id/edit" component={ArticleForm} />
         <Route path="/admin/categories" component={AdminCategories} />
+        <Route path="/admin/sponsors" component={AdminSponsors} />
         {/* Fallback to Dashboard if path doesn't match */}
         <Route component={AdminDashboard} />
       </Switch>

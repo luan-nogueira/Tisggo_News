@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Home, Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
@@ -25,21 +25,21 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full glass-card rounded-2xl border border-white/5">
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full bg-card rounded-2xl border border-border shadow-xl">
           <div className="flex flex-col items-center gap-6">
-            <h1 className="text-2xl font-bold tracking-tight text-center text-white">
-              Acesso Restrito
+            <h1 className="text-2xl font-black tracking-tight text-center text-foreground uppercase">
+              Acesso <span className="text-accent">Restrito</span>
             </h1>
-            <p className="text-sm text-gray-400 text-center max-w-sm">
-              Você precisa estar logado para acessar o painel administrativo.
+            <p className="text-sm text-muted-foreground text-center max-w-sm">
+              Você precisa estar logado para acessar o painel administrativo do Tisggo News.
             </p>
           </div>
           <Button
             onClick={() => {
               window.location.href = "/admin";
             }}
-            className="w-full bg-accent text-black font-bold h-12"
+            className="w-full bg-accent text-black font-black h-12 uppercase tracking-widest hover:scale-[1.02] transition-transform"
           >
             Fazer Login
           </Button>
@@ -48,36 +48,42 @@ export default function DashboardLayout({
     );
   }
 
+  const navItems = [
+    { label: "Dashboard", href: "/admin" },
+    { label: "Notícias", href: "/admin/articles" },
+    { label: "Categorias", href: "/admin/categories" },
+    { label: "Patrocinadores", href: "/admin/sponsors" },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       {/* Top Navbar Premium */}
-      <nav className="h-20 border-b border-white/5 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
+      <nav className="h-20 border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto h-full px-6 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="text-2xl font-black flex items-center gap-2">
-              <span className="text-accent">TISGO</span>
-              <span className="text-white">ADMIN</span>
+          <div className="flex items-center gap-10">
+            <Link href="/admin" className="flex items-center gap-2">
+              <span className="text-2xl font-black text-accent tracking-tighter uppercase">Tisggo</span>
+              <span className="text-2xl font-black text-foreground tracking-tighter uppercase hidden sm:inline">Admin</span>
             </Link>
             
-            <div className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/5">
-              <Link href="/admin">
-                <Button variant={location === "/admin" ? "secondary" : "ghost"} className="rounded-lg px-4 h-9 text-sm font-medium">
-                  Dashboard
-                </Button>
-              </Link>
-              <Link href="/admin/articles">
-                <Button variant={location.startsWith("/admin/articles") ? "secondary" : "ghost"} className="rounded-lg px-4 h-9 text-sm font-medium">
-                  Notícias
-                </Button>
-              </Link>
-              <Link href="/admin/categories">
-                <Button variant={location === "/admin/categories" ? "secondary" : "ghost"} className="rounded-lg px-4 h-9 text-sm font-medium">
-                  Categorias
-                </Button>
-              </Link>
-              <div className="w-px h-4 bg-white/10 mx-2" />
+            <div className="hidden lg:flex items-center gap-1 bg-muted/50 p-1 rounded-2xl border border-border">
+              {navItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <Button 
+                    variant={location === item.href || (item.href !== "/admin" && location.startsWith(item.href)) ? "secondary" : "ghost"} 
+                    className={`rounded-xl px-5 h-10 text-sm font-bold transition-all ${
+                      location === item.href || (item.href !== "/admin" && location.startsWith(item.href))
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </Button>
+                </Link>
+              ))}
+              <div className="w-px h-4 bg-border mx-2" />
               <Link href="/">
-                <Button variant="ghost" className="rounded-lg px-4 h-9 text-sm font-medium text-gray-400 hover:text-white">
+                <Button variant="ghost" className="rounded-xl px-5 h-10 text-sm font-bold text-muted-foreground hover:text-accent">
                   Ver Site
                 </Button>
               </Link>
@@ -87,30 +93,30 @@ export default function DashboardLayout({
           <div className="flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 p-1.5 pl-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all focus:outline-none">
-                  <div className="flex flex-col items-end">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">{user.displayName || "Admin"}</span>
-                    <span className="text-[10px] text-gray-500">{user.email}</span>
+                <button className="flex items-center gap-3 p-1.5 pl-4 rounded-2xl bg-muted/50 hover:bg-muted border border-border transition-all focus:outline-none">
+                  <div className="flex flex-col items-end hidden md:flex">
+                    <span className="text-xs font-black text-foreground uppercase tracking-widest">{user.displayName || "Administrador"}</span>
+                    <span className="text-[10px] text-muted-foreground">{user.email}</span>
                   </div>
-                  <Avatar className="h-9 w-9 border border-accent/20">
+                  <Avatar className="h-9 w-9 border border-accent/40 shadow-sm">
                     <AvatarFallback className="bg-accent text-black font-black text-xs">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-[#0A0A0A] border-white/10 p-2 rounded-2xl">
-                <DropdownMenuItem className="rounded-xl p-3 focus:bg-white/5 cursor-pointer">
-                  <Settings className="mr-3 h-4 w-4 text-gray-400" />
-                  <span className="text-sm font-medium">Configurações</span>
+              <DropdownMenuContent align="end" className="w-64 bg-card border-border p-2 rounded-2xl shadow-2xl">
+                <DropdownMenuItem className="rounded-xl p-3 focus:bg-muted cursor-pointer transition-colors">
+                  <Settings className="mr-3 h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-bold">Configurações</span>
                 </DropdownMenuItem>
-                <div className="h-px bg-white/5 my-2 mx-1" />
+                <div className="h-px bg-border my-2 mx-1" />
                 <DropdownMenuItem
                   onClick={logout}
-                  className="rounded-xl p-3 focus:bg-red-500/10 text-red-500 cursor-pointer"
+                  className="rounded-xl p-3 focus:bg-red-500/10 text-red-500 cursor-pointer transition-colors"
                 >
                   <LogOut className="mr-3 h-4 w-4" />
-                  <span className="text-sm font-bold">Sair do Painel</span>
+                  <span className="text-sm font-black uppercase tracking-widest">Sair do Painel</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -118,8 +124,7 @@ export default function DashboardLayout({
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="max-w-[1600px] mx-auto p-6 md:p-10">
+      <main className="max-w-[1600px] mx-auto p-6 md:p-10 animate-fade-in">
         {children}
       </main>
     </div>

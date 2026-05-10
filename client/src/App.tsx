@@ -26,9 +26,13 @@ function Router() {
         <Route path="/article/:slug" component={Article} />
         <Route path="/category/:slug" component={Category} />
         <Route path="/search/:query" component={Search} />
-        <Route path="/admin/:path*">
-          {(params) => <Admin params={params} />}
-        </Route>
+        <Route path="/admin" component={Admin} />
+        <Route path="/admin/dashboard" component={Admin} />
+        <Route path="/admin/articles" component={Admin} />
+        <Route path="/admin/articles/new" component={Admin} />
+        <Route path="/admin/articles/:id/edit" component={Admin} />
+        <Route path="/admin/categories" component={Admin} />
+        <Route path="/admin/sponsors" component={Admin} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -39,7 +43,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light" switchable>
+      <ThemeProvider defaultTheme="dark" switchable>
         <TooltipProvider>
           <Toaster />
           <Router />

@@ -8,6 +8,15 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { checkAndRunAutomation } from "../automation.js";
+
+// Inicia o agendador automático (verifica a cada 5 min)
+setInterval(() => {
+  checkAndRunAutomation().catch(console.error);
+}, 5 * 60 * 1000);
+
+// Executa uma vez no início
+checkAndRunAutomation().catch(console.error);
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
