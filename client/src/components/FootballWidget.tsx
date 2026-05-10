@@ -51,12 +51,12 @@ export function FootballWidget() {
       {/* Header */}
       <div className="football-widget-header px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-[#d4a017]" />
-          <span className="text-xs font-black uppercase tracking-widest text-white">
-            Brasileirão <span className="text-[#d4a017]">Série A</span>
+          <Trophy className="w-4 h-4 text-accent" />
+          <span className="text-xs font-black uppercase tracking-widest text-foreground">
+            Brasileirão <span className="text-accent">Série A</span>
           </span>
         </div>
-        <div className="flex items-center gap-1 bg-white/5 rounded-full p-0.5">
+        <div className="flex items-center gap-1 bg-muted rounded-full p-0.5">
           <TabButton
             label="Tabela"
             value="table"
@@ -122,8 +122,8 @@ function TabButton({
       className={`
         px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-200
         ${active
-          ? "bg-[#d4a017] text-black shadow-sm"
-          : "text-white/50 hover:text-white"
+          ? "bg-accent text-accent-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
         }
       `}
     >
@@ -136,7 +136,7 @@ function LegendItem({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className={`w-2 h-2 rounded-full ${color} flex-shrink-0`} />
-      <span className="text-[9px] text-white/40 font-medium">{label}</span>
+      <span className="text-[9px] text-muted-foreground font-medium">{label}</span>
     </div>
   );
 }
@@ -168,7 +168,7 @@ function TableView({ data }: { data: any[] }) {
   return (
     <div className="text-xs">
       {/* Column headers */}
-      <div className="flex items-center gap-1 px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-white/30 border-b border-white/5">
+      <div className="flex items-center gap-1 px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground border-b border-border">
         <span className="w-5 text-center">#</span>
         <span className="flex-1 pl-7">Clube</span>
         <span className="w-5 text-center">P</span>
@@ -182,12 +182,12 @@ function TableView({ data }: { data: any[] }) {
       {data.map((team) => (
         <div
           key={team.pos}
-          className={`flex items-center gap-1 px-3 py-1.5 border-b border-white/5 hover:bg-white/5 transition-colors ${zoneBg(team.pos)}`}
+          className={`flex items-center gap-1 px-3 py-1.5 border-b border-border hover:bg-muted transition-colors ${zoneBg(team.pos)}`}
         >
           {/* Position + zone indicator */}
           <div className="w-5 flex items-center justify-center gap-1 flex-shrink-0">
             <span className={`w-1 h-5 rounded-full flex-shrink-0 ${zoneColor(team.pos)}`} />
-            <span className="text-white/50 font-bold text-[10px] w-4 text-center">{team.pos}</span>
+            <span className="text-muted-foreground font-bold text-[10px] w-4 text-center">{team.pos}</span>
           </div>
 
           {/* Shield */}
@@ -202,24 +202,24 @@ function TableView({ data }: { data: any[] }) {
                 }}
               />
             ) : (
-              <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center text-[7px] font-black text-white/50">
+              <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[7px] font-black text-muted-foreground">
                 {team.shortName?.charAt(0)}
               </div>
             )}
           </div>
 
           {/* Name */}
-          <span className="flex-1 font-semibold text-white/80 truncate pl-1 text-[11px]">
+          <span className="flex-1 font-semibold text-foreground truncate pl-1 text-[11px]">
             {team.shortName || team.name}
           </span>
 
           {/* Stats */}
-          <span className="w-5 text-center font-black text-[#d4a017]">{team.points}</span>
-          <span className="w-5 text-center text-white/40">{team.games}</span>
-          <span className="w-5 text-center text-white/40">{team.wins}</span>
-          <span className="w-5 text-center text-white/40">{team.draws}</span>
-          <span className="w-5 text-center text-white/40">{team.losses}</span>
-          <span className={`w-6 text-center font-semibold text-[10px] ${team.gd > 0 ? "text-emerald-400" : team.gd < 0 ? "text-red-400" : "text-white/40"}`}>
+          <span className="w-5 text-center font-black text-accent">{team.points}</span>
+          <span className="w-5 text-center text-muted-foreground">{team.games}</span>
+          <span className="w-5 text-center text-muted-foreground">{team.wins}</span>
+          <span className="w-5 text-center text-muted-foreground">{team.draws}</span>
+          <span className="w-5 text-center text-muted-foreground">{team.losses}</span>
+          <span className={`w-6 text-center font-semibold text-[10px] ${team.gd > 0 ? "text-emerald-500" : team.gd < 0 ? "text-red-500" : "text-muted-foreground"}`}>
             {team.gd > 0 ? `+${team.gd}` : team.gd}
           </span>
         </div>
@@ -243,21 +243,21 @@ function GamesView({ data }: { data: any[] }) {
   return (
     <div>
       {round && (
-        <div className="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-white/30 border-b border-white/5">
+        <div className="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground border-b border-border">
           {round}ª Rodada
         </div>
       )}
       {data.map((game) => (
         <div
           key={game.id}
-          className={`px-3 py-2.5 border-b border-white/5 hover:bg-white/5 transition-colors
-            ${game.status === "live" ? "bg-red-600/5" : ""}
+          className={`px-3 py-2.5 border-b border-border hover:bg-muted transition-colors
+            ${game.status === "live" ? "bg-red-500/5" : ""}
           `}
         >
           <div className="flex items-center gap-2">
             {/* Home team */}
             <div className="flex items-center gap-1.5 flex-1 justify-end min-w-0">
-              <span className="text-[11px] font-bold text-white/80 truncate">
+              <span className="text-[11px] font-bold text-foreground truncate">
                 {game.homeTeam.shortName}
               </span>
               {game.homeTeam.shield && (
@@ -275,35 +275,35 @@ function GamesView({ data }: { data: any[] }) {
               {game.status === "live" ? (
                 <>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-base font-black text-white">
+                    <span className="text-base font-black text-foreground">
                       {game.homeTeam.score ?? 0}
                     </span>
-                    <span className="text-white/30 text-sm">–</span>
-                    <span className="text-base font-black text-white">
+                    <span className="text-muted-foreground text-sm">–</span>
+                    <span className="text-base font-black text-foreground">
                       {game.awayTeam.score ?? 0}
                     </span>
                   </div>
-                  <span className="text-[9px] font-black text-red-400 uppercase tracking-widest animate-pulse">
+                  <span className="text-[9px] font-black text-red-600 uppercase tracking-widest animate-pulse">
                     AO VIVO
                   </span>
                 </>
               ) : game.status === "finished" ? (
                 <>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-base font-black text-white/70">
+                    <span className="text-base font-black text-foreground/70">
                       {game.homeTeam.score ?? "–"}
                     </span>
-                    <span className="text-white/30 text-sm">×</span>
-                    <span className="text-base font-black text-white/70">
+                    <span className="text-muted-foreground text-sm">×</span>
+                    <span className="text-base font-black text-foreground/70">
                       {game.awayTeam.score ?? "–"}
                     </span>
                   </div>
-                  <span className="text-[9px] text-white/30 uppercase">Encerrado</span>
+                  <span className="text-[9px] text-muted-foreground uppercase">Encerrado</span>
                 </>
               ) : (
                 <>
-                  <span className="text-sm font-black text-[#d4a017]">{game.time}</span>
-                  <span className="text-[9px] text-white/30">Agendado</span>
+                  <span className="text-sm font-black text-accent">{game.time}</span>
+                  <span className="text-[9px] text-muted-foreground">Agendado</span>
                 </>
               )}
             </div>
@@ -318,7 +318,7 @@ function GamesView({ data }: { data: any[] }) {
                   onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
                 />
               )}
-              <span className="text-[11px] font-bold text-white/80 truncate">
+              <span className="text-[11px] font-bold text-foreground truncate">
                 {game.awayTeam.shortName}
               </span>
             </div>

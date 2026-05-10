@@ -182,7 +182,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card rounded-2xl p-6 border border-border hover:border-accent/30 transition-all">
             <div className="flex items-center justify-between">
               <div>
@@ -443,73 +443,126 @@ export default function Dashboard() {
               <Loader2 className="w-8 h-8 animate-spin text-accent" />
             </div>
           ) : articles && articles.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b border-border bg-muted/30">
-                  <tr>
-                    <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest">Título</th>
-                    <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest">Categoria</th>
-                    <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest">Views</th>
-                    <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest">Data</th>
-                    <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {articles.map((article) => (
-                    <tr key={article.id} className="border-b border-border hover:bg-accent/5 transition-colors">
-                      <td className="py-2 px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 bg-muted">
-                            {article.coverImage ? (
-                              <img src={article.coverImage} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center"><Eye className="w-3 h-3 text-muted-foreground" /></div>
-                            )}
+            <div className="w-full">
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="border-b border-border bg-muted/30">
+                    <tr>
+                      <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest">Título</th>
+                      <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest">Categoria</th>
+                      <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest">Views</th>
+                      <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest">Data</th>
+                      <th className="text-left px-6 py-4 font-bold uppercase text-[10px] text-muted-foreground tracking-widest text-center">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {articles.map((article) => (
+                      <tr key={article.id} className="border-b border-border hover:bg-accent/5 transition-colors">
+                        <td className="py-2 px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 bg-muted">
+                              {article.coverImage ? (
+                                <img src={article.coverImage} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center"><Eye className="w-3 h-3 text-muted-foreground" /></div>
+                              )}
+                            </div>
+                            <div className="max-w-[200px] lg:max-w-[400px]">
+                              <p className="font-black text-sm text-foreground truncate">{article.title}</p>
+                            </div>
                           </div>
-                          <div className="max-w-[200px] md:max-w-[400px]">
-                            <p className="font-black text-sm text-foreground truncate">{article.title}</p>
+                        </td>
+                        <td className="py-2 px-4 whitespace-nowrap">
+                          <Badge variant="secondary" className="bg-accent/10 text-accent border-none font-black text-[10px]">
+                            {categories?.find(c => String(c.id) === String(article.categoryId))?.name || "Geral"}
+                          </Badge>
+                        </td>
+                        <td className="py-2 px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 text-xs font-bold">
+                            <Eye className="w-3 h-3 text-accent" />
+                            {article.views || 0}
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-2 px-4 whitespace-nowrap">
-                        <Badge variant="secondary" className="bg-accent/10 text-accent border-none font-black text-[10px]">
-                          {categories?.find(c => String(c.id) === String(article.categoryId))?.name || "Geral"}
-                        </Badge>
-                      </td>
-                      <td className="py-2 px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-xs font-bold">
-                          <Eye className="w-3 h-3 text-accent" />
-                          {article.views || 0}
-                        </div>
-                      </td>
-                      <td className="py-2 px-4 whitespace-nowrap text-muted-foreground text-xs font-bold">
-                        {formatDate(article.publishedAt || article.createdAt)}
-                      </td>
-                      <td className="py-2 px-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Link href={`/admin/articles/${article.id}/edit`}>
+                        </td>
+                        <td className="py-2 px-4 whitespace-nowrap text-muted-foreground text-xs font-bold">
+                          {formatDate(article.publishedAt || article.createdAt)}
+                        </td>
+                        <td className="py-2 px-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Link href={`/admin/articles/${article.id}/edit`}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-border hover:border-accent text-muted-foreground hover:text-accent"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                            </Link>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="border-border hover:border-accent text-muted-foreground hover:text-accent"
+                              className="border-border hover:border-red-600 text-muted-foreground hover:text-red-600"
+                              onClick={() => setDeleteId(String(article.id))}
                             >
-                              <Edit2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4 text-red-500" />
                             </Button>
-                          </Link>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-border hover:border-red-600 text-muted-foreground hover:text-red-600"
-                            onClick={() => setDeleteId(String(article.id))}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card List */}
+              <div className="md:hidden divide-y divide-border">
+                {articles.map((article) => (
+                  <div key={article.id} className="p-4 bg-card active:bg-accent/5 transition-colors">
+                    <div className="flex gap-4 mb-3">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
+                        {article.coverImage ? (
+                          <img src={article.coverImage} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center"><Eye className="w-4 h-4 text-muted-foreground" /></div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge variant="secondary" className="mb-1 bg-accent/10 text-accent border-none font-black text-[9px] uppercase">
+                          {categories?.find(c => String(c.id) === String(article.categoryId))?.name || "Geral"}
+                        </Badge>
+                        <h4 className="font-black text-sm text-foreground line-clamp-2 leading-tight">
+                          {article.title}
+                        </h4>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-3 h-3 text-accent" />
+                          {article.views || 0}
+                        </span>
+                        <span>{formatDate(article.publishedAt || article.createdAt)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/admin/articles/${article.id}/edit`}>
+                          <Button size="sm" variant="ghost" className="h-9 w-9 p-0 rounded-lg border border-border">
+                            <Edit2 className="w-4 h-4" />
                           </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </Link>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-9 w-9 p-0 rounded-lg border border-border text-red-500 hover:text-red-600"
+                          onClick={() => setDeleteId(String(article.id))}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
               {/* Custom Delete Modal */}
               {deleteId && (

@@ -6,10 +6,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, Menu, ExternalLink } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 export default function DashboardLayout({
   children,
@@ -61,6 +62,48 @@ export default function DashboardLayout({
       <nav className="h-20 border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-10">
+            {/* Mobile Menu Trigger */}
+            <div className="lg:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted">
+                    <Menu className="w-6 h-6 text-foreground" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] bg-card border-border p-6">
+                  <SheetHeader className="mb-8">
+                    <SheetTitle className="text-left flex items-center gap-2">
+                      <span className="text-2xl font-black text-accent tracking-tighter uppercase">Tisgo</span>
+                      <span className="text-2xl font-black text-foreground tracking-tighter uppercase">Admin</span>
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-2">
+                    {navItems.map((item) => (
+                      <Link key={item.href} href={item.href}>
+                        <Button 
+                          variant={location === item.href || (item.href !== "/admin" && location.startsWith(item.href)) ? "secondary" : "ghost"} 
+                          className={`w-full justify-start rounded-xl px-4 h-12 text-sm font-bold transition-all ${
+                            location === item.href || (item.href !== "/admin" && location.startsWith(item.href))
+                              ? "bg-muted text-foreground"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          }`}
+                        >
+                          {item.label}
+                        </Button>
+                      </Link>
+                    ))}
+                    <div className="h-px bg-border my-4" />
+                    <Link href="/">
+                      <Button variant="ghost" className="w-full justify-start rounded-xl px-4 h-12 text-sm font-bold text-muted-foreground hover:text-accent hover:bg-accent/5">
+                        <ExternalLink className="w-4 h-4 mr-3" />
+                        Ver Site Público
+                      </Button>
+                    </Link>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
             <Link href="/admin" className="flex items-center gap-2">
               <span className="text-2xl font-black text-accent tracking-tighter uppercase">Tisgo</span>
               <span className="text-2xl font-black text-foreground tracking-tighter uppercase hidden sm:inline">Admin</span>

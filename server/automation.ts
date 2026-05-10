@@ -1,6 +1,7 @@
 import * as db from "./db.js";
 import * as cheerio from "cheerio";
 import { createArticle } from "./articles-crud.js";
+import { invokeLLM } from "./_core/llm.js";
 
 // Limpa notícias com mais de 7 dias
 async function cleanupOldArticles() {
@@ -133,6 +134,97 @@ const FORBIDDEN_WORDS = [
   /ESPN/g, /espn\.com\.br/gi, /Siga a ESPN.*?no WhatsApp/gi
 ];
 
+async function rewriteArticleWithAI(title: string, content: string) {
+  try {
+    console.log("[Robô] Re-escrevendo notícia com IA para originalidade...");
+    
+    // Clean content from HTML tags for the prompt, but we'll use them in the output
+    const textOnly = content.replace(/<[^>]*>/g, ' ').trim();
+    
+    const response = await invokeLLM({
+      messages: [
+        {
+          role: "system",
+          content: `Você é um editor sênior do portal Tisgo News, um jornal digital premium de Campos dos Goytacazes.
+          Sua tarefa é reescrever notícias coletadas de outras fontes para garantir que o texto seja ÚNICO, PROFISSIONAL e EDITORIAL.
+          
+          REGRAS:
+          1. Mantenha 100% dos fatos, nomes, locais e dados originais.
+          2. Mude a estrutura das frases e o vocabulário para um tom mais sofisticado e elegante (Estilo Premium).
+          3. O texto final deve ser em Português do Brasil.
+          4. Não invente informações.
+          5. Formate o conteúdo em parágrafos usando a tag <p>.
+          6. Retorne um JSON com os campos "title" e "content".`
+        },
+        {
+          role: "user",
+          content: `Título Original: ${title}\n\nConteúdo Original: ${textOnly}`
+        }
+      ],
+      responseFormat: { type: "json_object" }
+    });
+
+    const result = JSON.parse(response.choices[0].message.content as string);
+    if (result.title && result.content) {
+      console.log("[Robô] Notícia re-escrita com sucesso.");
+      return {
+        title: result.title.trim(),
+        content: result.content.trim()
+      };
+    }
+    return { title, content };
+  } catch (error) {
+    console.error("[Robô] Erro ao re-escreve com IA:", error);
+    return { title, content }; // Fallback para o original em caso de erro
+  }
+}
+
+async function processRetroactiveRewrites() {
+  try {
+    console.log("[Robô] Verificando notícias antigas para re-escrita retroativa...");
+    const dbInstance = db.getDb() as any;
+    if (dbInstance.error) return;
+
+    // Fetch articles from the last 3 days
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    const snapshot = await dbInstance.collection("articles")
+      .where("publishedAt", ">=", threeDaysAgo)
+      .get();
+
+    const articles = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    
+    // Filter articles that have a sourceUrl but haven't been rewritten yet
+    const toRewrite = articles.filter((a: any) => a.sourceUrl && !a.aiRewritten);
+
+    if (toRewrite.length === 0) {
+      console.log("[Robô] Nenhuma notícia antiga pendente de re-escrita.");
+      return;
+    }
+
+    console.log(`[Robô] Encontradas ${toRewrite.length} notícias para re-escrita retroativa.`);
+
+    for (const article of toRewrite) {
+      const { title, content } = await rewriteArticleWithAI(article.title, article.content);
+      
+      await db.updateArticle(article.id, {
+        title,
+        content,
+        excerpt: title.substring(0, 250), // Basic excerpt for update
+        aiRewritten: true,
+        updatedAt: new Date() as any
+      });
+      
+      console.log(`[Robô] Notícia "${article.id}" atualizada retroativamente.`);
+      // Small delay to avoid rate limits
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  } catch (error) {
+    console.error("[Robô] Erro no processamento retroativo:", error);
+  }
+}
+
 const STOP_WORDS = [
   /Leia tambm/i,
   /Veja mais/i,
@@ -163,7 +255,12 @@ async function getOrCreateCategory(name: string) {
 }
 
 export async function automateNews() {
-  console.log("[Robô] Verificando fontes...");
+  console.log("[Automation] Starting news automation cycle...");
+  
+  // 1. Process retroactive rewrites for existing articles
+  await processRetroactiveRewrites();
+
+  let progress = 0;
   const firestore = await db.getDb();
   const updateStatus = async (msg: string, prog: number, active: boolean) => {
     await firestore.collection("automation_status").doc("current").set({
@@ -299,6 +396,13 @@ export async function automateNews() {
             
             if (!artRes.ok) continue;
 
+            // Blacklist check
+            const isBlacklisted = await db.isUrlBlacklisted(link);
+            if (isBlacklisted) {
+              console.log(`[Automation] Skipping blacklisted URL: ${link}`);
+              continue;
+            }
+
             const artHtml = await artRes.text();
             const $art = cheerio.load(artHtml);
 
@@ -432,23 +536,26 @@ export async function automateNews() {
 
             await updateStatus(`Finalizando ajustes e classificando...`, progress, true);
 
+            // AI Rewrite for originality
+            const { title: finalTitle, content: finalContent } = await rewriteArticleWithAI(title, cleanContent);
+
             let categoryId;
             let categoryName = "";
             if (source.forcedCategory) {
               categoryName = source.forcedCategory;
               categoryId = await getOrCreateCategory(source.forcedCategory);
             } else {
-              categoryId = await classifyAndGetCategoryId(title, cleanContent, link);
+              categoryId = await classifyAndGetCategoryId(finalTitle, finalContent, link);
               const categories = await db.getCategories();
               const cat = categories.find(c => c.id === categoryId);
               categoryName = cat ? cat.name : "Geral";
             }
 
             await db.createArticle({
-              title,
+              title: finalTitle,
               slug,
-              excerpt: $art('meta[name="description"]').attr('content')?.substring(0, 250) || cleanContent.substring(0, 250),
-              content: cleanContent,
+              excerpt: $art('meta[name="description"]').attr('content')?.substring(0, 250) || finalContent.substring(0, 250),
+              content: finalContent,
               author: "Equipe Editorial",
               categoryId,
               coverImage: coverImage || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800",
@@ -456,11 +563,12 @@ export async function automateNews() {
               publishedAt: new Date(),
               published: true,
               sourceUrl: link,
+              aiRewritten: true,
             });
 
             await updateStatus(`Postada com sucesso em ${categoryName}!`, progress, true);
 
-            results.push({ title, status: "success", source: source.name });
+            results.push({ title: finalTitle, status: "success", source: source.name });
           } catch (err) { }
         }
       } catch (err) {

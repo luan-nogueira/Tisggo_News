@@ -59,6 +59,15 @@ export async function updateArticle(data: z.infer<typeof updateArticleSchema>) {
 }
 
 export async function deleteArticle(id: string) {
-  await db.deleteArticle(id);
-  return { success: true };
+  try {
+    const article = await db.getArticleById(id);
+    if (article?.sourceUrl) {
+      await db.blacklistUrl(article.sourceUrl);
+    }
+    await db.deleteArticle(id);
+    return { success: true };
+  } catch (error: any) {
+    console.error("[CRUD] Error deleting article:", error.message);
+    throw error;
+  }
 }

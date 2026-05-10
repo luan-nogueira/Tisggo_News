@@ -316,6 +316,35 @@ export async function deleteFromStorage(url: string) {
   }
 }
 
+// BLACKLIST
+export async function blacklistUrl(url: string) {
+  try {
+    const db = ensureDb();
+    // Use URL as document ID to avoid duplicates and allow easy checking
+    // We sanitize the URL to use as ID (replace non-alphanumeric with _)
+    const sanitizedId = Buffer.from(url).toString('base64');
+    await db.collection("deleted_urls").doc(sanitizedId).set({
+      url,
+      deletedAt: admin.firestore.Timestamp.now()
+    });
+    console.log("[Firebase] URL blacklisted:", url);
+  } catch (error: any) {
+    console.error("[Firebase] ERROR blacklisting URL:", error.message);
+  }
+}
+
+export async function isUrlBlacklisted(url: string): Promise<boolean> {
+  try {
+    const db = ensureDb();
+    const sanitizedId = Buffer.from(url).toString('base64');
+    const doc = await db.collection("deleted_urls").doc(sanitizedId).get();
+    return doc.exists;
+  } catch (error: any) {
+    console.error("[Firebase] ERROR checking blacklist:", error.message);
+    return false;
+  }
+}
+
 // USER FUNCTIONS
 export async function getUserByOpenId(openId: string) {
   const db = ensureDb();
