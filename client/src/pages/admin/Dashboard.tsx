@@ -22,7 +22,9 @@ export default function Dashboard() {
   const { data: categories } = trpc.categories.list.useQuery();
   const deleteArticle = trpc.articles.delete.useMutation();
   const automateNews = trpc.articles.automate.useMutation();
+  const stopAutomate = trpc.articles.stopAutomate.useMutation();
   const [isAutomating, setIsAutomating] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   
   const runCleanup = trpc.articles.cleanup.useMutation({
@@ -116,6 +118,10 @@ export default function Dashboard() {
   };
 
   const handleAutomate = async () => {
+    if (automationStatus?.isAutomating) {
+      handleStopAutomate();
+      return;
+    }
     try {
       setIsAutomating(true);
       await automateNews.mutateAsync();
@@ -126,6 +132,18 @@ export default function Dashboard() {
       console.error("Erro na automação:", error);
     } finally {
       setIsAutomating(false);
+    }
+  };
+
+  const handleStopAutomate = async () => {
+    try {
+      setIsStopping(true);
+      await stopAutomate.mutateAsync();
+      toast.info("Solicitação de parada enviada...");
+    } catch (error: any) {
+      toast.error("Erro ao parar o robô.");
+    } finally {
+      setIsStopping(false);
     }
   };
 
@@ -393,15 +411,19 @@ export default function Dashboard() {
               </Button>
               <Button
                 onClick={handleAutomate}
-                disabled={isAutomating || automationStatus?.isAutomating}
-                className="bg-background text-foreground hover:bg-accent/10 font-bold flex items-center gap-2 border border-border"
+                disabled={isStopping}
+                className={`font-bold flex items-center gap-2 border transition-all ${
+                  automationStatus?.isAutomating 
+                  ? "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20" 
+                  : "bg-background text-foreground hover:bg-accent/10 border-border"
+                }`}
               >
-                {(isAutomating || automationStatus?.isAutomating) ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                {automationStatus?.isAutomating ? (
+                  isStopping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />
                 ) : (
-                  <Sparkles className="w-4 h-4 text-accent" />
+                  (isAutomating) ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Sparkles className="w-4 h-4 text-accent" />
                 )}
-                {automationStatus?.isAutomating ? "Puxando..." : "Buscar Agora"}
+                {automationStatus?.isAutomating ? "PARAR ROBÔ" : "Buscar Agora"}
               </Button>
               <Link href="/admin/articles/new">
                 <Button className="bg-accent text-black hover:bg-yellow-500 font-black flex items-center gap-2">

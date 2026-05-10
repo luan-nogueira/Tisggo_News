@@ -140,8 +140,14 @@ export async function automateNews() {
       message: msg,
       progress: prog,
       updatedAt: new Date().toISOString(),
-      isAutomating: active
-    });
+      isAutomating: active,
+      stopRequested: false // Garante que comece como false
+    }, { merge: true });
+  };
+
+  const checkStop = async () => {
+    const doc = await firestore.collection("automation_status").doc("current").get();
+    return doc.exists && doc.data()?.stopRequested === true;
   };
 
   try {
@@ -198,6 +204,10 @@ export async function automateNews() {
     const results: any[] = [];
 
     for (let i = 0; i < SOURCES.length; i++) {
+      if (await checkStop()) {
+        await updateStatus("Automação interrompida pelo usuário.", 0, false);
+        return results;
+      }
       const source = SOURCES[i];
       const progress = Math.round(10 + (i / SOURCES.length) * 85);
       try {
@@ -228,6 +238,10 @@ export async function automateNews() {
         const uniqueLinks = [...new Set(links)].slice(0, 5);
 
         for (const link of uniqueLinks) {
+          if (await checkStop()) {
+            await updateStatus("Automação interrompida pelo usuário.", 0, false);
+            return results;
+          }
           try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de limite

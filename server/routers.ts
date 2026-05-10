@@ -71,6 +71,15 @@ export const appRouter = router({
     automate: publicProcedure.mutation(async ({ ctx }) => {
       return automateNews();
     }),
+    stopAutomate: adminProcedure.mutation(async () => {
+      const db = await import("./db.js");
+      const firestore = await db.getDb();
+      await firestore.collection("automation_status").doc("current").update({
+        stopRequested: true,
+        message: "Solicitando interrupção..."
+      });
+      return { success: true };
+    }),
     cleanup: protectedProcedure.mutation(async () => {
       const automation = await import("./automation.js");
       return await automation.cleanupExistingArticles();
