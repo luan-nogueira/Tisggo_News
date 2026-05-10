@@ -119,6 +119,32 @@ export async function upsertUser(user: Partial<InsertUser> & { openId: string })
       role: user.role || "user",
     });
   }
+// Helper to ensure we have a valid DB instance or throw clear error
+function ensureDb() {
+  const db = getDb();
+  if ((db as any).error) {
+    throw new Error(`Firebase not initialized: ${(db as any).error}`);
+  }
+  return db as admin.firestore.Firestore;
+}
+
+// ARTICLES
+export async function getArticles(pageSize = 20) {
+  console.log("[Firebase] Fetching articles (ultra-simplified)...");
+  try {
+    const db = ensureDb();
+    const snapshot = await db.collection("articles")
+      .orderBy("publishedAt", "desc")
+      .limit(pageSize)
+      .get();
+    
+    const articles = snapshot.docs.map(toData<Article>);
+    console.log("[Firebase] Articles found:", articles.length);
+    return articles;
+  } catch (error: any) {
+    console.error("[Firebase] ERROR fetching articles:", error.message);
+    return [];
+  }
 }
 
 // ARTICLES
@@ -263,7 +289,7 @@ export async function getCategories() {
 }
 
 export async function createCategory(category: Partial<InsertCategory>) {
-  const db = getDb();
+  const db = ensureDb();
   const docRef = await db.collection("categories").add({
     ...category,
     createdAt: admin.firestore.Timestamp.now(),
