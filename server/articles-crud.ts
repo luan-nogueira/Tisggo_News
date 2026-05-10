@@ -48,7 +48,8 @@ export async function updateArticle(data: z.infer<typeof updateArticleSchema>) {
   try {
     console.log("[CRUD] Attempting to update article:", data.id);
     const { id, ...articleData } = data;
-    await db.updateArticle(id, articleData);
+    // Marca como categorizado manualmente para proteger da recategorização automática
+    await db.updateArticle(id, { ...articleData, manualCategory: true });
     console.log("[CRUD] Article updated successfully");
     return { success: true };
   } catch (error: any) {

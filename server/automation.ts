@@ -476,13 +476,15 @@ export async function cleanupExistingArticles() {
  */
 async function classifyAndGetCategoryId(title: string, content: string, link: string = "") {
   const text = (title + " " + content + " " + link).toLowerCase();
+  const titleLower = title.toLowerCase();
   
-  const keywords = {
-    "Esportes": ["futebol", "série a", "brasileirão", "flamengo", "vasco", "fluminense", "botafogo", "campeonato", "gol", "partida", "jogo", "atleta", "esporte", "estádio", "taça", "libertadores", "copa", "seleção", "vôlei", "basquete", "surf", "wsl", "golfe", "olimpíadas"],
-    "Polícia": ["preso", "apreendido", "polícia", "pm", "civil", "tiro", "assalto", "crime", "delegacia", "investigação", "droga", "tráfico", "homicídio", "acidente", "atropelamento", "bombeiros", "resgate", "guarnição", "flagrante", "suspeito", "mandado", "arma", "revólver", "pistola", "corpo", "vítima", "morte"],
-    "Economia": ["dólar", "pib", "inflação", "mercado", "dinheiro", "investimento", "taxa", "selic", "lucro", "empresa", "economia", "petróleo", "royalties", "emprego", "vaga", "contratação", "orçamento", "icms", "imposto", "banco", "finanças"],
-    "Cidades": ["prefeitura", "prefeito", "câmara", "vereador", "obras", "trânsito", "interdição", "saúde", "educação", "escola", "evento", "show", "cultura", "feriado", "festival", "carnaval", "réveillon", "campos dos goytacazes", "farol de são thomé", "guarus", "pelinca"],
-    "Geral": ["notícia", "informação", "portal", "acontece", "região"]
+  const keywords: Record<string, string[]> = {
+    "Esportes": ["futebol", "série a", "brasileirão", "flamengo", "vasco", "fluminense", "botafogo", "campeonato estadual", "campeonato carioca", "campeonato brasileiro", "gol", "partida", "atleta", "esporte", "estádio", "taça", "libertadores", "copa do brasil", "copa do mundo", "seleção brasileira", "vôlei", "basquete", "surf", "wsl", "circuito mundial de surfe", "golfe", "olimpíadas", "tênis", "ranking esportivo"],
+    "Polícia": ["preso", "apreendido", "polícia militar", "policia civil", "pm preso", "tiro", "assalto", "crime", "delegacia", "tráfico", "homicídio", "acidente fatal", "bombeiros", "resgate", "flagrante", "suspeito preso", "mandado de prisão", "arma de fogo", "revólver", "pistola", "vítima fatal", "morte violenta", "operação policial"],
+    "Economia": ["dólar", "pib", "inflação", "mercado financeiro", "investimento", "taxa selic", "lucro", "economia", "royalties do petróleo", "emprego", "vaga de emprego", "orçamento público", "icms", "imposto de renda", "banco central", "finanças públicas", "licitação", "concurso público"],
+    "Cidades": ["prefeitura de campos", "prefeito de campos", "câmara municipal", "vereador de campos", "obras públicas", "trânsito", "interdição", "saúde pública", "educação pública", "campos dos goytacazes", "farol de são thomé", "guarus", "pelinca", "avenida", "bairro"],
+    "Política": ["deputado", "senador", "habeas corpus", "tribunal", "ministro", "governo federal", "governo estadual", "eleição", "candidato", "partido", "pt", "pf", "polícia federal", "inquérito", "operação", "investigação federal", "quaquá", "maicon cruz"],
+    "Geral": ["notícia", "informação", "portal", "região"]
   };
 
   let bestCategory = "Geral";
@@ -491,12 +493,12 @@ async function classifyAndGetCategoryId(title: string, content: string, link: st
   for (const [category, words] of Object.entries(keywords)) {
     let score = 0;
     words.forEach(word => {
-      if (text.includes(word.toLowerCase())) score++;
+      if (text.includes(word.toLowerCase())) score += 1;
     });
     
-    // Weight title words more
+    // Título pesa 3x mais
     words.forEach(word => {
-      if (title.toLowerCase().includes(word.toLowerCase())) score += 2;
+      if (titleLower.includes(word.toLowerCase())) score += 3;
     });
 
     if (score > maxScore) {
@@ -504,6 +506,9 @@ async function classifyAndGetCategoryId(title: string, content: string, link: st
       bestCategory = category;
     }
   }
+
+  // Só classifica se tiver confiança suficiente
+  if (maxScore < 2) bestCategory = "Geral";
 
   return await getOrCreateCategory(bestCategory);
 }
@@ -529,10 +534,12 @@ export async function recategorizeExistingArticles() {
       const title = data.title || "";
       const content = data.content || "";
       
-      // Simple heuristic: if it's in "Geral" or if it's a new article, try to find a better fit
+      // Protege notícias categorizadas manualmente pelo editor
+      if (data.manualCategory === true) continue;
+      
       const newCategoryId = await classifyAndGetCategoryId(title, content);
 
-      if (newCategoryId !== currentCategoryId) {
+      if (newCategoryId && newCategoryId !== currentCategoryId) {
         await doc.ref.update({ categoryId: newCategoryId });
         updatedCount++;
       }
