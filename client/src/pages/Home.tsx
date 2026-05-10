@@ -112,8 +112,8 @@ export default function Home() {
 
   // Filter remaining articles for other sections
   const remainingArticles = uniqueArticles.filter(a => !featuredArticles.find(f => f.id === a.id));
-  const sidebarArticles = remainingArticles.slice(0, 4);
-  const gridArticles = remainingArticles.slice(4, 16);
+  const sidebarArticles = remainingArticles.slice(0, 5);
+  const gridArticles = remainingArticles.slice(5, 30);
 
   useEffect(() => {
     if (featuredArticles.length > 0) {
@@ -334,81 +334,128 @@ export default function Home() {
       />
 
       <main className="max-w-[1600px] mx-auto px-4 py-8">
-        {/* Main Article + Sidebar Layout */}
+        {/* Main 2-column layout: Left (slider + news) | Right (sidebar) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12 items-start">
-          {/* Main Slider */}
-          {featuredArticles.length > 0 && (
-            <div className="lg:col-span-2 relative h-[400px] md:h-[500px] rounded-xl overflow-hidden group shadow-2xl">
-            {featuredArticles.map((article, index) => (
-              <motion.div
-                key={article.id}
-                className="absolute inset-0"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: currentSlide === index ? 1 : 0 }}
-                transition={{ duration: 0.8 }}
-                style={{ pointerEvents: currentSlide === index ? 'auto' : 'none' }}
-              >
-                <Link 
-                  href={`/article/${article.slug || article.id}`} 
-                  className="block h-full relative"
-                  onMouseEnter={() => {
-                    utils.articles.getBySlug.prefetch({ slug: article.slug || article.id });
-                  }}
+
+          {/* LEFT COLUMN: Slider + Grid Articles */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Main Slider */}
+            {featuredArticles.length > 0 && (
+              <div className="relative h-[400px] md:h-[500px] rounded-xl overflow-hidden group shadow-2xl">
+                {featuredArticles.map((article, index) => (
+                  <motion.div
+                    key={article.id}
+                    className="absolute inset-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: currentSlide === index ? 1 : 0 }}
+                    transition={{ duration: 0.8 }}
+                    style={{ pointerEvents: currentSlide === index ? 'auto' : 'none' }}
+                  >
+                    <Link 
+                      href={`/article/${article.slug || article.id}`} 
+                      className="block h-full relative"
+                      onMouseEnter={() => {
+                        utils.articles.getBySlug.prefetch({ slug: article.slug || article.id });
+                      }}
+                    >
+                      {renderMedia(article.coverImage || "", article.title, "absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700", !!(article as any).videoUrl)}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+                        <div className="flex gap-2 mb-4">
+                          <Badge className="bg-red-600 text-white border-none font-bold">DESTAQUE</Badge>
+                        </div>
+                        <h1 className="text-xl md:text-3xl font-serif font-black text-white leading-tight mb-3 drop-shadow-lg">
+                          {article.title}
+                        </h1>
+                        <p className="text-white/80 text-xs md:text-sm line-clamp-2 mb-6 max-w-xl leading-relaxed hidden md:block drop-shadow">
+                          {(article.excerpt || article.content).replace(/<[^>]*>/g, '').substring(0, 140)}...
+                        </p>
+                        <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-white/60">
+                          <span>{formatDate(article.publishedAt || article.createdAt)}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+
+                {/* Slider Arrows */}
+                <button 
+                  onClick={(e) => { e.preventDefault(); setCurrentSlide((prev) => (prev - 1 + featuredArticles.length) % featuredArticles.length); }}
+                  className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/50 hover:bg-accent hover:text-black text-white rounded-full transition-all backdrop-blur-md flex items-center justify-center"
                 >
-                  {/* Background Media */}
-                  {renderMedia(article.coverImage || "", article.title, "absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700", !!(article as any).videoUrl)}
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                  
-                  {/* Content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
-                    <div className="flex gap-2 mb-4">
-                      <Badge className="bg-red-600 text-white border-none font-bold">DESTAQUE</Badge>
-                    </div>
-                    <h1 className="text-xl md:text-3xl font-serif font-black text-white leading-tight mb-3 drop-shadow-lg">
-                      {article.title}
-                    </h1>
-                    <p className="text-white/80 text-xs md:text-sm line-clamp-2 mb-6 max-w-xl leading-relaxed hidden md:block drop-shadow">
-                      {(article.excerpt || article.content).replace(/<[^>]*>/g, '').substring(0, 140)}...
-                    </p>
-                    <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-white/60">
-                      <span>{formatDate(article.publishedAt || article.createdAt)}</span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                  <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
+                </button>
+                <button 
+                  onClick={(e) => { e.preventDefault(); setCurrentSlide((prev) => (prev + 1) % featuredArticles.length); }}
+                  className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/50 hover:bg-accent hover:text-black text-white rounded-full transition-all backdrop-blur-md flex items-center justify-center"
+                >
+                  <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                </button>
 
-            {/* Slider Arrows */}
-            <button 
-              onClick={(e) => { e.preventDefault(); setCurrentSlide((prev) => (prev - 1 + featuredArticles.length) % featuredArticles.length); }}
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/50 hover:bg-accent hover:text-black text-white rounded-full transition-all backdrop-blur-md flex items-center justify-center"
-            >
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
-            </button>
-            <button 
-              onClick={(e) => { e.preventDefault(); setCurrentSlide((prev) => (prev + 1) % featuredArticles.length); }}
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/50 hover:bg-accent hover:text-black text-white rounded-full transition-all backdrop-blur-md flex items-center justify-center"
-            >
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-            </button>
+                {/* Slider Dots */}
+                <div className="absolute bottom-6 right-10 flex gap-2 z-20">
+                  {featuredArticles.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentSlide(i)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        currentSlide === i ? "bg-accent w-8" : "bg-white/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-            {/* Slider Dots */}
-            <div className="absolute bottom-6 right-10 flex gap-2 z-20">
-              {featuredArticles.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentSlide(i)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    currentSlide === i ? "bg-accent w-8" : "bg-white/30"
-                  }`}
-                />
-              ))}
-            </div>
+            {/* Grid of Articles - directly below slider */}
+            {gridArticles.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-black uppercase mb-6">Últimas Notícias</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {gridArticles.map((article: any) => (
+                    <Link 
+                      key={article.id} 
+                      href={`/article/${article.slug || article.id}`} 
+                      className="group block"
+                      onMouseEnter={() => {
+                        utils.articles.getBySlug.prefetch({ slug: article.slug || article.id });
+                      }}
+                    >
+                      <div className="bg-card border border-border hover:border-accent transition-all duration-300 rounded overflow-hidden hover:shadow-lg hover:shadow-accent/20">
+                        <div className="relative overflow-hidden bg-gray-800 aspect-video">
+                          {article.coverImage || article.videoUrl ? (
+                            renderMedia(article.coverImage || "", article.title, "w-full h-full object-cover group-hover:scale-110 transition-transform duration-500", !!article.videoUrl)
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5" />
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <Badge className="bg-accent text-black hover:bg-yellow-500 text-xs font-bold mb-2">
+                            {categories?.find(c => String(c.id) === String(article.categoryId))?.name}
+                          </Badge>
+                          <h3 className="text-base font-bold font-sans text-foreground mb-2 line-clamp-2 group-hover:text-accent transition-colors leading-tight">
+                            {article.title}
+                          </h3>
+                          <p className="text-xs text-gray-400 line-clamp-2 mb-3">
+                            {(article.excerpt || article.content).replace(/<[^>]*>/g, '').substring(0, 100)}...
+                          </p>
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>{formatDate(article.publishedAt || article.createdAt)}</span>
+                            <div className="flex items-center gap-1">
+                              <Eye className="w-3 h-3" />
+                              <span>{article.views || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
 
-          {/* Sidebar - Featured Articles & Sponsor */}
+          {/* RIGHT COLUMN: Sidebar */}
           <div className="space-y-6">
             {/* Sidebar Sponsor Card */}
             {sidebarSponsor ? (
@@ -465,6 +512,7 @@ export default function Home() {
                 </div>
               </div>
             )}
+
             <h3 className="text-lg font-black uppercase text-foreground mb-4">Esportes</h3>
             <FootballWidget />
             
@@ -516,55 +564,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Grid of Articles */}
-        {gridArticles.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-black uppercase mb-6">Últimas Notícias</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {gridArticles.map((article: any) => (
-                <Link 
-                  key={article.id} 
-                  href={`/article/${article.slug || article.id}`} 
-                  className="group block"
-                  onMouseEnter={() => {
-                    utils.articles.getBySlug.prefetch({ slug: article.slug || article.id });
-                  }}
-                >
-                  <div className="bg-card border border-border hover:border-accent transition-all duration-300 rounded overflow-hidden hover:shadow-lg hover:shadow-accent/20">
-                    {/* Media */}
-                    <div className="relative overflow-hidden bg-gray-800 aspect-video">
-                      {article.coverImage || article.videoUrl ? (
-                        renderMedia(article.coverImage || "", article.title, "w-full h-full object-cover group-hover:scale-110 transition-transform duration-500", !!article.videoUrl)
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5" />
-                      )}
-                    </div>
 
-                    {/* Content */}
-                    <div className="p-4">
-                      <Badge className="bg-accent text-black hover:bg-yellow-500 text-xs font-bold mb-2">
-                        {categories?.find(c => String(c.id) === String(article.categoryId))?.name}
-                      </Badge>
-                      <h3 className="text-lg font-bold font-sans text-foreground mb-2 line-clamp-2 group-hover:text-accent transition-colors leading-tight">
-                        {article.title}
-                      </h3>
-                      <p className="text-xs text-gray-400 line-clamp-2 mb-3">
-                        {(article.excerpt || article.content).replace(/<[^>]*>/g, '').substring(0, 120)}...
-                      </p>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{formatDate(article.publishedAt || article.createdAt)}</span>
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          <span>{article.views || 0}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Horizontal Sponsor Banner */}
         <div className="mt-12">

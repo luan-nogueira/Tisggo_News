@@ -472,7 +472,7 @@
 
   .news-ticker-content {
     display: inline-block;
-    animation: marquee 40s linear infinite;
+    animation: marquee 90s linear infinite;
     will-change: transform;
     transform: translateZ(0);
   }

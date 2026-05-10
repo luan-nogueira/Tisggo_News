@@ -134,6 +134,33 @@ const FORBIDDEN_WORDS = [
   /ESPN/g, /espn\.com\.br/gi, /Siga a ESPN.*?no WhatsApp/gi
 ];
 
+// Palavras/frases que indicam conteúdo patrocinado/pago — esses artigos são ignorados completamente
+const PAID_CONTENT_SIGNALS = [
+  /conteúdo patrocinado/i,
+  /conteudo patrocinado/i,
+  /publicidade/i,
+  /publieditorial/i,
+  /\binforme publicitário\b/i,
+  /\binforme publicitar[^a]/i,
+  /\bpatrocinado por\b/i,
+  /sponsored content/i,
+  /\bpubli\b/i,
+  /\bads?\b/i,
+  /anúncio/i,
+  /parceria comercial/i,
+  /branded content/i,
+  /apoio institucional/i,
+  /nota\s+de\s+imprensa/i,
+  /press\s+release/i,
+  /assessoria de imprensa/i,
+  /em parceria com/i,
+];
+
+function isPaidContent(title: string, content: string, url: string): boolean {
+  const combined = `${title} ${content} ${url}`.toLowerCase();
+  return PAID_CONTENT_SIGNALS.some(pattern => pattern.test(combined));
+}
+
 async function rewriteArticleWithAI(title: string, content: string) {
   try {
     console.log("[Robô] Re-escrevendo notícia com IA para originalidade...");
@@ -408,6 +435,34 @@ export async function automateNews() {
 
             let title = $art(source.titleSelector).first().text().trim();
             if (!title || title.length < 20 || title.includes("Autor:") || title.includes("Destaque")) continue;
+
+            // ── Filtro de conteúdo pago/patrocinado ────────────────────────────
+            // Detecta sinais de publieditorial, assessoria ou elogio a gestores
+            const pageTitleAndMeta = [
+              title,
+              $art('meta[name="description"]').attr('content') || '',
+              $art('meta[property="og:description"]').attr('content') || '',
+              $art('.author, .by, .byline').first().text() || ''
+            ].join(' ');
+
+            if (isPaidContent(title, pageTitleAndMeta, link)) {
+              console.log(`[Automation] Ignorando conteúdo patrocinado/publieditorial: "${title}"`);
+              continue;
+            }
+
+            // Padrões de títulos laudatórios típicos de assessoria de imprensa
+            const laudatoryPatterns = [
+              /governo .{2,30} (vira|é|se torna|conquista|lidera) exemplo/i,
+              /prefeito.{0,20}(inaugura|entrega|garante|assina)/i,
+              /governadora?.{0,20}(visita|anuncia|lança|beneficia)/i,
+              /gestão .{2,20}(avança|destaca|comemora|celebra)/i,
+              /\bpor \w+ \w+\b.*assessoria/i,
+            ];
+            if (laudatoryPatterns.some(p => p.test(title + ' ' + pageTitleAndMeta))) {
+              console.log(`[Automation] Ignorando artigo laudatório de assessoria: "${title}"`);
+              continue;
+            }
+            // ──────────────────────────────────────────────────────────────────
 
             const slug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').trim();
             const existing = await db.getArticleBySlug(slug);
