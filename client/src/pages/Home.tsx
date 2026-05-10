@@ -207,20 +207,19 @@ export default function Home() {
 
         {/* Mobile Category Scroll Bar */}
         <div className="xl:hidden border-b border-border bg-card/50 overflow-x-auto no-scrollbar touch-pan-x">
-          <div className="flex items-center gap-8 px-6 py-4 whitespace-nowrap">
+          <div className="flex items-center gap-4 px-4 py-3 whitespace-nowrap">
             {categories?.map((cat) => (
               <Link 
                 key={cat.id} 
                 href={`/category/${cat.slug}`} 
-                className="text-xs font-black uppercase text-muted-foreground hover:text-accent transition-all hover:scale-105 flex items-center gap-2.5"
+                className="flex flex-col items-center justify-center gap-1 min-w-[80px] p-2 hover:bg-accent/10 rounded-lg transition-all active:scale-95"
               > 
-                <span className="text-lg leading-none">{getCategoryEmoji(cat.name)}</span>
-                {cat.name}
+                <span className="text-2xl leading-none mb-1">{getCategoryEmoji(cat.name)}</span>
+                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-tighter">{cat.name}</span>
               </Link>
             ))}
           </div>
         </div>
-
         {/* Mobile Menu Overlay */}
         <AnimatePresence>
           {isMobileMenuOpen && (

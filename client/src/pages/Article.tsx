@@ -214,8 +214,11 @@ export default function Article() {
         )}
 
         {/* Article Body */}
-        <div className="mt-12 flex flex-col items-center">
-          <div className="article-body-content max-w-[760px] w-full px-4 mx-auto">
+        <div className="mt-12 flex flex-col items-center w-full">
+          <div 
+            className="article-body-content px-4"
+            style={{ maxWidth: '780px', width: '100%', margin: '0 auto', fontSize: '21px', lineHeight: '1.8', textAlign: 'left' }}
+          >
             <div 
               dangerouslySetInnerHTML={{ 
                 __html: article.content.includes('<p') ? article.content : `<p>${article.content.replace(/\n/g, '</p><p>')}</p>` 
