@@ -91,25 +91,29 @@ export async function upsertUser(user: Partial<InsertUser> & { openId: string })
 export async function getArticles(pageSize = 20) {
   console.log("[Firebase] Fetching articles (limit:", pageSize, ")...");
   try {
+    // Try the ideal query first
     const snapshot = await db.collection("articles")
       .where("published", "==", true)
       .orderBy("publishedAt", "desc")
       .limit(pageSize)
       .get();
-    console.log("[Firebase] Articles found:", snapshot.size);
+    
+    console.log("[Firebase] Articles found (ordered):", snapshot.size);
     return snapshot.docs.map(toData<Article>);
   } catch (error: any) {
-    console.error("[Firebase] Error fetching articles:", error.message);
-    if (error.message.includes("index") || error.message.includes("FAILED_PRECONDITION")) {
-      console.warn("[Firebase] Missing index! Using fallback without order.");
-      const fallbackSnapshot = await db.collection("articles")
-        .where("published", "==", true)
-        .limit(pageSize)
-        .get();
+    console.error("[Firebase] ERROR fetching articles:", error.message);
+    
+    // EMERGENCY FALLBACK: Just get everything without filters/ordering
+    // This bypasses the need for Firestore Indexes which might not be created yet in production
+    try {
+      console.warn("[Firebase] Trying emergency fallback query...");
+      const fallbackSnapshot = await db.collection("articles").limit(pageSize).get();
       console.log("[Firebase] Fallback articles found:", fallbackSnapshot.size);
       return fallbackSnapshot.docs.map(toData<Article>);
+    } catch (fallbackError: any) {
+      console.error("[Firebase] CRITICAL: Fallback also failed:", fallbackError.message);
+      return [];
     }
-    return [];
   }
 }
 
