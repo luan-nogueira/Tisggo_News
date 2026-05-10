@@ -275,15 +275,7 @@ export async function automateNews() {
 
             if (cleanContent.length < 300) continue;
 
-            let categoryName = "Geral";
-            const lowerLink = link.toLowerCase();
-            const lowerTitle = title.toLowerCase();
-            if (source.name.includes("Esportes") || lowerLink.includes("esporte") || lowerTitle.includes("futebol") || lowerTitle.includes("playoff")) categoryName = "Esportes";
-            else if (lowerLink.includes("policia") || lowerTitle.includes("preso") || lowerTitle.includes("crime")) categoryName = "Polícia";
-            else if (lowerLink.includes("cidade") || lowerTitle.includes("campos")) categoryName = "Cidades";
-            else if (lowerLink.includes("economia") || lowerTitle.includes("vaga")) categoryName = "Economia";
-
-            const categoryId = await getOrCreateCategory(categoryName);
+            const categoryId = await classifyAndGetCategoryId(title, cleanContent, link);
 
             await db.createArticle({
               title,
@@ -416,6 +408,77 @@ export async function cleanupExistingArticles() {
     return cleanedCount;
   } catch (error) {
     console.error("[Automation] Erro na faxina:", error);
+    throw error;
+  }
+}
+
+/**
+ * Helper to classify articles based on keywords in title, content and link
+ */
+async function classifyAndGetCategoryId(title: string, content: string, link: string = "") {
+  const text = (title + " " + content + " " + link).toLowerCase();
+  
+  const keywords = {
+    "Esportes": ["futebol", "série a", "brasileirão", "flamengo", "vasco", "fluminense", "botafogo", "campeonato", "gol", "partida", "jogo", "atleta", "esporte", "estádio", "taça", "libertadores", "copa", "seleção", "vôlei", "basquete", "surf", "wsl", "golfe", "olimpíadas"],
+    "Polícia": ["preso", "apreendido", "polícia", "pm", "civil", "tiro", "assalto", "crime", "delegacia", "investigação", "droga", "tráfico", "homicídio", "acidente", "atropelamento", "bombeiros", "resgate", "guarnição", "flagrante", "suspeito", "mandado", "arma", "revólver", "pistola", "corpo", "vítima", "morte"],
+    "Economia": ["dólar", "pib", "inflação", "mercado", "dinheiro", "investimento", "taxa", "selic", "lucro", "empresa", "economia", "petróleo", "royalties", "emprego", "vaga", "contratação", "orçamento", "icms", "imposto", "banco", "finanças"],
+    "Cidades": ["prefeitura", "prefeito", "câmara", "vereador", "obras", "trânsito", "interdição", "saúde", "educação", "escola", "evento", "show", "cultura", "feriado", "festival", "carnaval", "réveillon", "campos dos goytacazes", "farol de são thomé", "guarus", "pelinca"],
+    "Geral": ["notícia", "informação", "portal", "acontece", "região"]
+  };
+
+  let bestCategory = "Geral";
+  let maxScore = 0;
+
+  for (const [category, words] of Object.entries(keywords)) {
+    let score = 0;
+    words.forEach(word => {
+      if (text.includes(word.toLowerCase())) score++;
+    });
+    
+    // Weight title words more
+    words.forEach(word => {
+      if (title.toLowerCase().includes(word.toLowerCase())) score += 2;
+    });
+
+    if (score > maxScore) {
+      maxScore = score;
+      bestCategory = category;
+    }
+  }
+
+  return await getOrCreateCategory(bestCategory);
+}
+
+/**
+ * Retroactively recategorize all articles based on content analysis
+ */
+export async function recategorizeExistingArticles() {
+  try {
+    const firestore = await db.getDb();
+    console.log("[Automation] Iniciando re-categorização de notícias...");
+    
+    const snapshot = await firestore.collection("articles").get();
+    let updatedCount = 0;
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const currentCategoryId = data.categoryId;
+      const title = data.title || "";
+      const content = data.content || "";
+      
+      // Simple heuristic: if it's in "Geral" or if it's a new article, try to find a better fit
+      const newCategoryId = await classifyAndGetCategoryId(title, content);
+
+      if (newCategoryId !== currentCategoryId) {
+        await doc.ref.update({ categoryId: newCategoryId });
+        updatedCount++;
+      }
+    }
+
+    console.log(`[Automation] Re-categorização concluída! ${updatedCount} notícias movidas.`);
+    return updatedCount;
+  } catch (error) {
+    console.error("[Automation] Erro na re-categorização:", error);
     throw error;
   }
 }

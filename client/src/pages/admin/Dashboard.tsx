@@ -33,6 +33,16 @@ export default function Dashboard() {
     }
   });
   
+  const runRecategorize = trpc.articles.recategorize.useMutation({
+    onSuccess: (count) => {
+      toast.success(`Organização concluída! ${count} notícias foram movidas.`);
+      utils.articles.list.invalidate();
+    },
+    onError: (err) => {
+      toast.error(`Erro na organização: ${err.message}`);
+    }
+  });
+  
   // Settings State
   const { data: savedSettings } = trpc.settings.get.useQuery();
   const updateSettings = trpc.settings.update.useMutation();
@@ -351,6 +361,18 @@ export default function Dashboard() {
                   <ShieldCheck className="w-4 h-4 text-red-500" />
                 )}
                 Faxina Geral
+              </Button>
+              <Button
+                onClick={() => runRecategorize.mutate()}
+                disabled={runRecategorize.isPending}
+                className="bg-background text-foreground hover:bg-accent/10 font-bold flex items-center gap-2 border border-border"
+              >
+                {runRecategorize.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                ) : (
+                  <Plus className="w-4 h-4 text-accent" />
+                )}
+                Organizar Categorias
               </Button>
               <Button
                 onClick={handleAutomate}

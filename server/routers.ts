@@ -71,9 +71,13 @@ export const appRouter = router({
     automate: publicProcedure.mutation(async ({ ctx }) => {
       return automateNews();
     }),
-    cleanup: publicProcedure.mutation(async () => {
-      const { cleanupExistingArticles } = await import("./automation.js");
-      return await cleanupExistingArticles();
+    cleanup: protectedProcedure.mutation(async () => {
+      const automation = await import("./automation.js");
+      return await automation.cleanupExistingArticles();
+    }),
+    recategorize: protectedProcedure.mutation(async () => {
+      const automation = await import("./automation.js");
+      return await automation.recategorizeExistingArticles();
     }),
   }),
   categories: router({
