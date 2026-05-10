@@ -282,3 +282,30 @@ export async function deleteFromStorage(url: string) {
     console.error("[Firebase] Error deleting from storage:", error.message);
   }
 }
+
+// USER FUNCTIONS
+export async function getUserByOpenId(openId: string) {
+  const db = ensureDb();
+  const snapshot = await db.collection("users").where("openId", "==", openId).get();
+  if (snapshot.empty) return null;
+  return toData<any>(snapshot.docs[0]);
+}
+
+export async function upsertUser(data: any) {
+  const db = ensureDb();
+  const user = await getUserByOpenId(data.openId);
+  if (user) {
+    await db.collection("users").doc(user.id).update({
+      ...data,
+      updatedAt: admin.firestore.Timestamp.now()
+    });
+    return { id: user.id };
+  } else {
+    const docRef = await db.collection("users").add({
+      ...data,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now()
+    });
+    return { id: docRef.id };
+  }
+}

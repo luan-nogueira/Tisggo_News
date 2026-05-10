@@ -1,23 +1,51 @@
 import * as db from "./db.js";
-import fetch from "node-fetch";
 import * as cheerio from "cheerio";
-import https from "https";
-import sharp from "sharp";
 import { createArticle } from "./articles-crud.js";
 
-const agent = new https.Agent({
-  rejectUnauthorized: false
-});
+// Limpa notícias com mais de 7 dias
+async function cleanupOldArticles() {
+  try {
+    const firestore = await db.getDb();
+    const settingsDoc = await firestore.collection("settings").doc("automation").get();
+    const settings = settingsDoc.exists ? settingsDoc.data() : { autoCleanup: true };
+    if (!settings?.autoCleanup) return;
 
-const SOURCES = [
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const snapshot = await firestore.collection("articles")
+      .where("createdAt", "<", sevenDaysAgo.toISOString())
+      .get();
+
+    if (snapshot.empty) return;
+    const batch = firestore.batch();
+    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    console.log(`[Faxina] ${snapshot.size} notícias antigas removidas.`);
+  } catch (error) {
+    console.error("[Faxina] Erro:", error);
+  }
+}
+
+interface NewsSource {
+  name: string;
+  url: string;
+  linkSelector: string;
+  titleSelector: string;
+  contentSelector: string;
+  imageSelector?: string;
+  baseUrl: string;
+}
+
+const SOURCES: NewsSource[] = [
   {
     name: "GE Globo",
-    url: "https://ge.globo.com/",
-    linkSelector: 'a[href*=".ghtml"]',
-    titleSelector: 'h1.content-head__title',
-    contentSelector: '.content-text__container',
-    baseUrl: "https://ge.globo.com",
-    category: "Esportes"
+    url: "https://ge.globo.com/rj/",
+    linkSelector: 'a',
+    titleSelector: 'h1.content-head__title, .content-head__title',
+    contentSelector: '.content-text__container, .content-text, .entry-content',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://ge.globo.com"
   },
   {
     name: "g1 Norte Fluminense",
@@ -25,106 +53,70 @@ const SOURCES = [
     linkSelector: 'a[href*="/noticia/"]',
     titleSelector: 'h1.content-head__title',
     contentSelector: '.content-text__container, .content-text',
-    baseUrl: "https://g1.globo.com",
-    category: "Geral"
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://g1.globo.com"
   },
   {
     name: "Ururau",
-    url: "https://www.ururau.com.br/noticias/cidades/",
-    linkSelector: "h3.post-title a",
-    titleSelector: "h1.post-title",
-    contentSelector: ".entry-content",
-    baseUrl: "https://www.ururau.com.br",
-    category: "Cidades"
+    url: "https://www.ururau.com.br/",
+    linkSelector: 'a[href*="/noticias/"]',
+    titleSelector: 'h1, h2.titulo',
+    contentSelector: 'article, .content-article, .post-content, .texto-materia, #texto-materia',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://www.ururau.com.br"
   },
   {
     name: "Campos Ocorrências",
     url: "https://camposocorrencias.com.br/",
-    linkSelector: "article.post a.post-title, .mag-box-container a",
-    titleSelector: "h1.single-post-title",
-    contentSelector: ".entry-content",
-    dateSelector: "time, .post-date",
-    baseUrl: "https://camposocorrencias.com.br",
-    category: "Polícia"
+    linkSelector: 'a',
+    titleSelector: 'h1, .entry-title',
+    contentSelector: '.elementor-widget-theme-post-content, .entry-content, article',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://camposocorrencias.com.br"
   }
 ];
 
 const FORBIDDEN_WORDS = [
-  /ururau\.com\.br/gi, /camposocorrencias\.com\.br/gi, /Globo\.com/gi, /GE\.com/gi, /ge\.globo/gi,
-  /Reprodução/gi, /Foto:\s*[^<]*/gi, /Fonte:\s*[^<]*/gi, /Imagens:\s*[^<]*/gi,
-  /Leia também:[^<]*/gi, /Veja também:[^<]*/gi, /Clique aqui[^<]*/gi,
-  /Siga o g1[^<]*/gi, /Siga o canal.*?no WhatsApp/gi,
-  /Confira no vídeo acima/gi, /Veja o vídeo/gi, /Clique na imagem para ampliar/gi,
-  /Assista à reportagem/gi, /O texto continua após a publicidade/gi,
-  /Matéria em atualização/gi, /Mais informações em breve/gi
+  /Ururau/gi, /Portal Ururau/gi, /ururau\.com\.br/gi,
+  /Campos Ocorrências/gi, /camposocorrencias\.com\.br/gi,
+  /Prefeitura de Campos/gi, /campos\.rj\.gov\.br/gi,
+  /Globo Esporte/gi, /Globo\.com/gi, /GE\.com/gi, /GE/g, /Globo/g,
+  /Reprodução/gi, /Foto:\s*[^<]*/gi, /Fonte:\s*[^<]*/gi,
+  /Leia também:[^<]*/gi, /Confira abaixo:[^<]*/gi,
+  /Inscreva-se no canal[^<]*/gi, /Siga o g1[^<]*/gi,
+  /Siga o canal.*?no WhatsApp/gi, /📱[^<]*/gi,
+  /Veja também:[^<]*/gi, /LEIA TAMBÉM:[^<]*/gi,
+  /Aviso importante: a total ou parcial[^.]*/gi,
+  /reproduzir nosso conteúdo, entre em contato[^.]*/gi,
+  /comercial@[^.]*/gi
 ];
 
-function cleanText(text: string): string {
-  let cleaned = text;
-  for (const regex of FORBIDDEN_WORDS) {
-    cleaned = cleaned.replace(regex, "");
-  }
-  return cleaned.trim();
+async function getOrCreateCategory(name: string) {
+  const categories = await db.getCategories();
+  const existing = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+  if (existing) return existing.id;
+
+  const slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  const newCat = await db.createCategory({ name, slug });
+  return newCat.id;
 }
 
-async function processAndUploadImage(imageUrl: string, sourceName: string): Promise<string> {
+export async function automateNews() {
+  console.log("[Robô] Verificando fontes...");
   try {
-    console.log(`[Automation] Processing image from ${sourceName}...`);
-    const res = await fetch(imageUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
-    if (!res.ok) throw new Error("Failed to download image");
-    
-    const buffer = await res.buffer();
-    let pipeline = sharp(buffer);
-    const metadata = await pipeline.metadata();
-
-    if (metadata.width && metadata.height) {
-      // SMART CROP: Cut the bottom 6% of the image to remove watermarks/credits
-      const cropHeight = Math.round(metadata.height * 0.94);
-      pipeline = pipeline.extract({ left: 0, top: 0, width: metadata.width, height: cropHeight });
-      console.log(`[Automation] Smart Crop applied: ${metadata.height}px -> ${cropHeight}px`);
-    }
-
-    // Convert to optimized WebP
-    const processedBuffer = await pipeline.webp({ quality: 80 }).toBuffer();
-    const fileName = `${sourceName.toLowerCase().replace(/\s+/g, '-')}_${Date.now()}.webp`;
-    
-    return await db.uploadImageToStorage(processedBuffer, fileName, "image/webp");
-  } catch (error: any) {
-    console.error(`[Automation] Image processing failed for ${imageUrl}:`, error.message);
-    return imageUrl; // Fallback
-  }
-}
-
-export async function automateNews(limitPerSource = 2) {
-  console.log("[Automation] Starting news fetch with Smart Image Processing...");
-  const stats = { added: 0, skipped: 0, errors: 0 };
-  
-  try {
-    let categories = await db.getCategories();
-    
-    // Ensure essential categories exist
-    const requiredCategories = ["Geral", "Esportes", "Cidades", "Polícia"];
-    for (const catName of requiredCategories) {
-      if (!categories.find(c => c.name === catName)) {
-        console.log(`[Automation] Creating missing category: ${catName}`);
-        await db.createCategory({
-          name: catName,
-          slug: catName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ""),
-          description: `Notícias de ${catName}`,
-          color: catName === "Esportes" ? "#22c55e" : "#fbbf24"
-        });
-      }
-    }
-    // Refresh categories after potential creation
-    categories = await db.getCategories();
+    await cleanupOldArticles();
+    const results: any[] = [];
 
     for (const source of SOURCES) {
-      console.log(`[Automation] Scraping: ${source.name}`);
       try {
-        const res = await fetch(source.url, { 
-          headers: { 'User-Agent': 'Mozilla/5.0' },
-          timeout: 10000 
+        console.log(`[Automation] Scraping source: ${source.name}`);
+        const res = await fetch(source.url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          }
         });
+        if (!res.ok) continue;
+
         const html = await res.text();
         const $ = cheerio.load(html);
         const links: string[] = [];
@@ -133,176 +125,137 @@ export async function automateNews(limitPerSource = 2) {
           let href = $(el).attr('href');
           if (href) {
             if (!href.startsWith('http')) href = source.baseUrl + (href.startsWith('/') ? '' : '/') + href;
+            if (source.name === "Ururau" && !href.match(/\/\d+\/$/)) return;
+            if ((source.name === "GE Globo" || source.name === "g1 Norte Fluminense") && !href.includes(".ghtml")) return;
+            if (source.name === "Campos Ocorrências" && !href.match(/\/\d{4}\/\d{2}\/\d{2}\//)) return;
             links.push(href);
           }
         });
 
-        const uniqueLinks = [...new Set(links)].slice(0, limitPerSource);
-        
+        const uniqueLinks = [...new Set(links)].slice(0, 5);
+
         for (const link of uniqueLinks) {
           try {
-            const artRes = await fetch(link, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
+            const artRes = await fetch(link, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+              }
+            });
+            if (!artRes.ok) continue;
+
             const artHtml = await artRes.text();
             const $art = cheerio.load(artHtml);
-            
-            const title = cleanText($art(source.titleSelector).first().text());
-            if (!title || title.length < 15) continue;
+
+            let title = $art(source.titleSelector).first().text().trim();
+            if (!title || title.length < 20 || title.includes("Autor:") || title.includes("Destaque")) continue;
 
             const slug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').trim();
-            
-            // DEDUPLICATION: Check by slug AND source URL
             const existing = await db.getArticleBySlug(slug);
-            const dbInstance = db.getDb();
-            const urlExists = await dbInstance.collection("articles").where("sourceUrl", "==", link).get();
+            if (existing) continue;
 
-            if (existing || !urlExists.empty) {
-              console.log(`[Automation] Article already exists (slug/url), skipping: ${title}`);
-              stats.skipped++;
-              continue;
+            console.log(`[Automation] Extracting details for: "${title}"`);
+
+            let coverImage = $art('meta[property="og:image"]').attr('content') || "";
+            if (coverImage.includes('video-thumb') || !coverImage) {
+              const imgTag = $art(source.contentSelector).find('img').first().attr('src');
+              if (imgTag) coverImage = imgTag.startsWith('http') ? imgTag : source.baseUrl + imgTag;
             }
 
-            let content = "";
-            $art(source.contentSelector).find('p').each((i, p) => {
-              const text = cleanText($(p).text());
-              if (text.length > 40) content += `<p>${text}</p>\n`;
-            });
+            $art('script, style, iframe, .adsbygoogle, .banners, .whatsapp-button, .social-share, footer, nav, header').remove();
 
-            if (content.length < 200) continue;
-
-            // Check if article is from 2026 or later
-            const lowerTitle = title.toLowerCase();
-            const lowerContent = content.toLowerCase();
-            const isOld = link.includes("/2025/") || link.includes("/2024/") || 
-                          lowerTitle.includes("2025") || lowerTitle.includes("2024") || 
-                          lowerContent.includes("julho de 2025") || lowerContent.includes("julho de 2024");
-            
-            if (isOld) {
-              console.log(`[Automation] Skipping old article: ${title}`);
-              stats.skipped++;
-              continue;
-            }
-
-            const ogImage = $art('meta[property="og:image"]').attr('content') || "";
-            let finalImageUrl = ogImage;
-            
-            // Process image to remove watermarks if it's from a known source
-            if (ogImage) {
-              finalImageUrl = await processAndUploadImage(ogImage, source.name);
-            }
-
-            // SMART CATEGORIZATION LOGIC
-            let targetCategoryName = source.category;
-            
-            // Keyword-based override for better accuracy
-            
-            if (lowerTitle.includes("futebol") || lowerTitle.includes("jogo") || lowerTitle.includes("flamengo") || 
-                lowerTitle.includes("vasco") || lowerTitle.includes("botafogo") || lowerTitle.includes("fluminense") ||
-                lowerTitle.includes("campeonato") || lowerTitle.includes("brasileirao")) {
-              targetCategoryName = "Esportes";
-            } else if (lowerTitle.includes("preso") || lowerTitle.includes("crime") || lowerTitle.includes("policia") || 
-                       lowerTitle.includes("assalto") || lowerTitle.includes("tiroteio") || lowerTitle.includes("trafico")) {
-              targetCategoryName = "Polícia";
-            }
-
-            const sourceCategory = categories.find(c => 
-              c.name.toLowerCase() === targetCategoryName.toLowerCase() ||
-              c.name.toLowerCase().includes(targetCategoryName.toLowerCase())
-            ) || categories.find(c => c.name === "Geral") || categories[0];
-            
-            // Extract original publication date if available
-            let publishedAt = new Date().toISOString();
-            if (source.dateSelector) {
-              const rawDate = $art(source.dateSelector).attr('datetime') || $art(source.dateSelector).first().text();
-              if (rawDate) {
-                const parsed = new Date(rawDate);
-                if (!isNaN(parsed.getTime())) {
-                  publishedAt = parsed.toISOString();
+            let contentHtml = "";
+            const contentBlocks = $art(source.contentSelector);
+            if (contentBlocks.length > 0) {
+              const uniqueParagraphs = new Set<string>();
+              contentBlocks.each((i, block) => {
+                const items = $art(block).find('p, h2, h3, h4, li');
+                if (items.length > 0) {
+                  items.each((j, item) => {
+                    const text = $art(item).text().trim();
+                    if (text.length > 40 && !uniqueParagraphs.has(text)) {
+                      uniqueParagraphs.add(text);
+                      contentHtml += `<p>${text}</p>\n`;
+                    }
+                  });
                 } else {
-                  // Try to parse BR date format DD/MM/YYYY
-                  const match = rawDate.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-                  if (match) {
-                    publishedAt = new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1])).toISOString();
+                  const text = $art(block).text().trim();
+                  if (text.length > 50 && !uniqueParagraphs.has(text)) {
+                    uniqueParagraphs.add(text);
+                    contentHtml += `<p>${text}</p>\n`;
                   }
                 }
-              }
+              });
             }
 
-            await createArticle({
+            if (contentHtml.length < 300) {
+              contentHtml = $art('p').map((i, el) => `<p>${$art(el).text().trim()}</p>`).get().join('\n');
+            }
+
+            let cleanContent = contentHtml.replace(/<a\b[^>]*>(.*?)<\/a>/gi, '$1');
+            for (const regex of FORBIDDEN_WORDS) {
+              cleanContent = cleanContent.replace(regex, "");
+              title = title.replace(regex, "");
+            }
+
+            if (cleanContent.length < 300) continue;
+
+            let categoryName = "Geral";
+            const lowerLink = link.toLowerCase();
+            const lowerTitle = title.toLowerCase();
+            if (source.name.includes("Esportes") || lowerLink.includes("esporte") || lowerTitle.includes("futebol") || lowerTitle.includes("playoff")) categoryName = "Esportes";
+            else if (lowerLink.includes("policia") || lowerTitle.includes("preso") || lowerTitle.includes("crime")) categoryName = "Polícia";
+            else if (lowerLink.includes("cidade") || lowerTitle.includes("campos")) categoryName = "Cidades";
+            else if (lowerLink.includes("economia") || lowerTitle.includes("vaga")) categoryName = "Economia";
+
+            const categoryId = await getOrCreateCategory(categoryName);
+
+            await db.createArticle({
               title,
               slug,
-              excerpt: content.substring(0, 200).replace(/<[^>]*>/g, ""),
-              content,
-              author: "Equipe Tisggo",
-              categoryId: sourceCategory.id,
-              coverImage: finalImageUrl,
-              sourceUrl: link,
-              publishedAt,
+              excerpt: $art('meta[name="description"]').attr('content')?.substring(0, 250) || cleanContent.substring(0, 250),
+              content: cleanContent,
+              author: "Equipe Editorial",
+              categoryId,
+              coverImage: coverImage || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800",
+              publishedAt: new Date(),
               published: true,
             });
-            stats.added++;
-          } catch (e) {
-            console.error(`[Automation] Error on link ${link}:`, e);
-          }
+
+            results.push({ title, status: "success", source: source.name });
+          } catch (err) { }
         }
-      } catch (sourceError: any) {
-        console.error(`[Automation] Error on source ${source.name}:`, sourceError.message);
-        stats.errors++;
+      } catch (err) {
+        console.error(`[Automation] Error ${source.name}:`, err);
       }
     }
 
-    return { 
-      success: true, 
-      message: `Concluído: ${stats.added} novas, ${stats.skipped} puladas.`,
-      stats 
+    return {
+      success: true,
+      processed: SOURCES.length,
+      timestamp: new Date().toISOString()
     };
-  } catch (error: any) {
-    console.error("[Automation] Global Error:", error.message);
+  } catch (error) {
+    console.error("[Robô] Erro:", error);
     throw error;
   }
 }
 
-export async function cleanupExistingArticles() {
-  console.log("[Automation] Running 7-day cleanup...");
+export async function checkAndRunAutomation() {
   try {
-    const dbInstance = db.getDb();
-    if ((dbInstance as any).error) throw new Error("DB not initialized");
-    
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const snapshot = await dbInstance.collection("articles")
-      .where("createdAt", "<", admin.firestore.Timestamp.fromDate(sevenDaysAgo))
-      .get();
-      
-    console.log(`[Automation] Found ${snapshot.size} old articles to delete.`);
-    
-    let deletedCount = 0;
-    for (const doc of snapshot.docs) {
-      const data = doc.data();
-      
-      // Safety check: only delete if it's actually old or from previous years
-      const lowerTitle = (data.title || "").toLowerCase();
-      const isActuallyOld = lowerTitle.includes("2025") || lowerTitle.includes("2024") || 
-                            lowerTitle.includes("julho de 2025") || lowerTitle.includes("julho de 2024");
-      
-      // If it's more than 7 days old OR it's from 2025/2024, delete it
-      // The snapshot already filtered by 7 days, so we just add the extra year check for absolute certainty
-      
-      // 1. Delete image from storage if it's our hosted image
-      if (data.coverImage) {
-        await db.deleteFromStorage(data.coverImage);
-      }
-      
-      // 2. Delete article from firestore
-      await doc.ref.delete();
-      deletedCount++;
+    const firestore = await db.getDb();
+    const settingsDoc = await firestore.collection("settings").doc("automation").get();
+    const settings = settingsDoc.exists ? settingsDoc.data() : { interval: "4", lastRun: null };
+
+    const intervalHours = parseInt(settings.interval || "4");
+    const lastRun = settings.lastRun ? new Date(settings.lastRun) : new Date(0);
+    const now = new Date();
+
+    if ((now.getTime() - lastRun.getTime()) / (1000 * 60 * 60) >= intervalHours) {
+      console.log(`[Agendador] Iniciando execução automática (${intervalHours}h)...`);
+      await firestore.collection("settings").doc("automation").set({ lastRun: now.toISOString() }, { merge: true });
+      automateNews().catch(console.error);
     }
-    
-    return { success: true, deleted: deletedCount };
-  } catch (error: any) {
-    console.error("[Automation] Cleanup Error:", error.message);
-    return { success: false, error: error.message };
+  } catch (error) {
+    console.error("[Agendador] Erro:", error);
   }
 }
-
-import admin from "firebase-admin";
