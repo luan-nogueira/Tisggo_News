@@ -53,7 +53,10 @@ const FORBIDDEN_WORDS = [
   /ururau\.com\.br/gi, /camposocorrencias\.com\.br/gi, /Globo\.com/gi, /GE\.com/gi, /ge\.globo/gi,
   /Reprodução/gi, /Foto:\s*[^<]*/gi, /Fonte:\s*[^<]*/gi, /Imagens:\s*[^<]*/gi,
   /Leia também:[^<]*/gi, /Veja também:[^<]*/gi, /Clique aqui[^<]*/gi,
-  /Siga o g1[^<]*/gi, /Siga o canal.*?no WhatsApp/gi
+  /Siga o g1[^<]*/gi, /Siga o canal.*?no WhatsApp/gi,
+  /Confira no vídeo acima/gi, /Veja o vídeo/gi, /Clique na imagem para ampliar/gi,
+  /Assista à reportagem/gi, /O texto continua após a publicidade/gi,
+  /Matéria em atualização/gi, /Mais informações em breve/gi
 ];
 
 function cleanText(text: string): string {
@@ -146,8 +149,14 @@ export async function automateNews(limitPerSource = 2) {
             if (!title || title.length < 15) continue;
 
             const slug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').trim();
+            
+            // DEDUPLICATION: Check by slug AND source URL
             const existing = await db.getArticleBySlug(slug);
-            if (existing) {
+            const dbInstance = db.getDb();
+            const urlExists = await dbInstance.collection("articles").where("sourceUrl", "==", link).get();
+
+            if (existing || !urlExists.empty) {
+              console.log(`[Automation] Article already exists (slug/url), skipping: ${title}`);
               stats.skipped++;
               continue;
             }
