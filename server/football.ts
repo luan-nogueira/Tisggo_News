@@ -47,9 +47,10 @@ const ESPN_BASE = "https://site.api.espn.com/apis/v2/sports/soccer/bra.1";
 
 async function getEspnScoreboardUrl() {
   const now = new Date();
+  // We use 4 days range to be safe (today + 3)
   const start = now.toISOString().split('T')[0].replace(/-/g, '');
   const endArr = new Date();
-  endArr.setDate(now.getDate() + 3);
+  endArr.setDate(now.getDate() + 4);
   const end = endArr.toISOString().split('T')[0].replace(/-/g, '');
   return `https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/scoreboard?dates=${start}-${end}`;
 }

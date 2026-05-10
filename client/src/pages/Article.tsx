@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdvertiseModal } from "@/components/AdvertiseModal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Share2, ArrowLeft, Calendar, User, Eye, Link as LinkIcon } from "lucide-react";
+import { Loader2, Share2, ArrowLeft, Calendar, User, Eye, Link as LinkIcon, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -149,18 +149,18 @@ export default function Article() {
             <span className="text-sm font-bold text-gray-400">Compartilhar:</span>
             <Button
               size="sm"
-              className="bg-accent text-black hover:bg-yellow-500 transition-all duration-300 font-bold"
+              className="bg-[#25D366] text-white hover:bg-[#128C7E] transition-all duration-300 font-bold border-none"
               onClick={() => {
                 const url = window.location.href;
-                const text = article.title;
+                const text = `Confira esta notícia no Tisggo News: ${article.title}`;
                 window.open(
-                  `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
+                  `https://api.whatsapp.com/send?text=${encodeURIComponent(text + " " + url)}`,
                   '_blank'
                 );
               }}
             >
-              <Share2 className="w-4 h-4 mr-2" />
-              Twitter
+              <MessageCircle className="w-4 h-4 mr-2" />
+              WhatsApp
             </Button>
             <Button
               size="sm"
@@ -223,9 +223,9 @@ export default function Article() {
             <User className="w-4 h-4 text-accent" />
           </div>
           <div className="min-w-0">
-            <h4 className="text-[10px] font-black uppercase text-accent mb-0.5 tracking-widest">Sobre o autor</h4>
-            <p className="text-xs text-muted-foreground leading-tight truncate md:whitespace-normal">
-              <span className="font-bold text-foreground">{article.author}</span> • Equipe Editorial Tisggo. Compromisso com a informação real.
+            <h4 className="text-[10px] font-black uppercase text-accent mb-0.5 tracking-widest">Postado por</h4>
+            <p className="text-xs text-muted-foreground leading-tight">
+              <span className="font-bold text-foreground">{article.author || "Equipe Tisggo"}</span>
             </p>
           </div>
         </div>

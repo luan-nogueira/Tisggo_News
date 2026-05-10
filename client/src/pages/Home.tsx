@@ -317,16 +317,14 @@ export default function Home() {
                       <Badge className="bg-red-600 text-white border-none font-bold">DESTAQUE</Badge>
                       <Badge className="bg-accent text-black border-none font-bold">URGENTE</Badge>
                     </div>
-                    <h1 className="text-2xl md:text-5xl font-serif font-black text-white leading-[0.9] mb-4 drop-shadow-lg">
+                    <h1 className="text-2xl md:text-4xl font-serif font-black text-white leading-tight mb-4 drop-shadow-lg">
                       {article.title}
                     </h1>
-                    <p className="text-white/80 text-sm md:text-base line-clamp-2 mb-6 max-w-2xl leading-relaxed hidden md:block">
+                    <p className="text-white/90 text-sm md:text-base line-clamp-2 mb-6 max-w-2xl leading-relaxed hidden md:block drop-shadow">
                       {(article.excerpt || article.content).replace(/<[^>]*>/g, '').substring(0, 180)}...
                     </p>
-                    <div className="flex items-center gap-4 text-xs text-white/60">
+                    <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-white/60">
                       <span>{formatDate(article.publishedAt || article.createdAt)}</span>
-                      <span>•</span>
-                      <span>Equipe Editorial</span>
                     </div>
                   </div>
                 </Link>

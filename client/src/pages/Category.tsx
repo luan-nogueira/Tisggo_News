@@ -482,17 +482,60 @@ function getZone(pos: number) {
 // ── GE-style Sport Football Section ──────────────────────────────────────────
 // Tabela completa (esq) + Jogos da rodada (dir), dados ao vivo da API Globo.
 function SportFootballSection() {
+  const [activeDay, setActiveDay] = useState<string | null>(null);
+  
   const { data: table, isLoading: tLoading } = trpc.football.table.useQuery(undefined, {
     refetchInterval: 5 * 60 * 1000,
     retry: 2,
   });
   const { data: games, isLoading: gLoading } = trpc.football.games.useQuery(undefined, {
-    refetchInterval: 30 * 1000, // 30 seconds for live updates
+    refetchInterval: 30 * 1000,
     retry: 2,
   });
 
   const round = (games as any[])?.[0]?.round;
   const hasLive = (games as any[])?.some((g) => g.status === "live");
+
+  // Group games by date
+  const gamesByDate = (games as any[])?.reduce((acc: any, game) => {
+    const date = game.date;
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(game);
+    return acc;
+  }, {}) || {};
+
+  const dates = Object.keys(gamesByDate).sort((a, b) => {
+    const [da, ma] = a.split('/').map(Number);
+    const [db, mb] = b.split('/').map(Number);
+    return (ma * 100 + da) - (mb * 100 + db);
+  });
+
+  // Set initial active day
+  if (!activeDay && dates.length > 0) {
+    const today = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    if (dates.includes(today)) {
+      setActiveDay(today);
+    } else {
+      setActiveDay(dates[0]);
+    }
+  }
+
+  const getDayLabel = (dateStr: string) => {
+    const now = new Date();
+    const today = now.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    const tomorrowDate = new Date();
+    tomorrowDate.setDate(now.getDate() + 1);
+    const tomorrow = tomorrowDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+
+    if (dateStr === today) return "Hoje";
+    if (dateStr === tomorrow) return "Amanhã";
+    
+    try {
+      const [d, m] = dateStr.split('/');
+      const gameDate = new Date(now.getFullYear(), parseInt(m) - 1, parseInt(d));
+      return gameDate.toLocaleDateString("pt-BR", { weekday: 'short' }).replace('.', '').toUpperCase();
+    } catch { return dateStr; }
+  };
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-5 gap-0 rounded-xl overflow-hidden border border-border shadow-lg">
@@ -546,13 +589,10 @@ function SportFootballSection() {
                   className={`grid items-center px-4 py-2 gap-x-1 hover:bg-muted/40 transition-colors ${zone.row}`}
                   style={{ gridTemplateColumns: "28px 28px 1fr 32px 28px 28px 28px 28px 38px" }}
                 >
-                  {/* Pos + zone bar */}
                   <div className="flex items-center gap-1 justify-center">
                     <span className={`w-[3px] h-5 rounded-full flex-shrink-0 ${zone.bar}`} />
                     <span className="text-[11px] text-muted-foreground font-bold">{team.pos}</span>
                   </div>
-
-                  {/* Shield */}
                   <div className="flex justify-center">
                     {team.shield ? (
                       <img src={team.shield} alt={team.shortName} className="w-6 h-6 object-contain"
@@ -563,11 +603,7 @@ function SportFootballSection() {
                       </div>
                     )}
                   </div>
-
-                  {/* Name */}
                   <span className="font-semibold text-foreground text-[13px] truncate pl-1">{team.name}</span>
-
-                  {/* Stats */}
                   <span className="text-center font-black text-accent text-[13px]">{team.points}</span>
                   <span className="text-center text-muted-foreground text-[12px]">{team.games}</span>
                   <span className="text-center text-muted-foreground text-[12px]">{team.wins}</span>
@@ -598,7 +634,7 @@ function SportFootballSection() {
       </div>
 
       {/* ── Jogos da Rodada (2 cols) ────────────────────────────────────── */}
-      <div className="xl:col-span-2">
+      <div className="xl:col-span-2 bg-card/30">
         {/* Header */}
         <div className="bg-card px-4 py-3 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -615,126 +651,96 @@ function SportFootballSection() {
           )}
         </div>
 
-        {/* Games */}
+        {/* Date Tabs Navigation */}
+        <div className="flex border-b border-border bg-muted/20">
+          {dates.map((date) => (
+            <button
+              key={date}
+              onClick={() => setActiveDay(date)}
+              className={`flex-1 py-3 px-1 text-center transition-all duration-200 border-b-2 ${
+                activeDay === date 
+                ? "border-accent bg-accent/5 text-accent font-black" 
+                : "border-transparent text-muted-foreground hover:text-foreground font-bold text-[10px]"
+              }`}
+            >
+              <div className="text-[11px] uppercase tracking-tighter">{getDayLabel(date)}</div>
+              <div className="text-[9px] opacity-60 tabular-nums">{date}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Games List for Active Day */}
         {gLoading ? (
           <div className="divide-y divide-border">
-            {[...Array(7)].map((_, i) => (
-              <div key={i} className="px-4 py-3.5 flex items-center gap-2 animate-pulse">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="px-4 py-4 flex items-center gap-2 animate-pulse">
                 <div className="flex-1 h-3 bg-muted rounded" />
                 <div className="w-14 h-5 bg-muted rounded" />
                 <div className="flex-1 h-3 bg-muted rounded" />
               </div>
             ))}
           </div>
-        ) : !(games as any[])?.length ? (
-          <div className="py-12 text-center text-muted-foreground text-sm flex flex-col items-center gap-2">
-            <Zap className="w-6 h-6 opacity-20" />
-            Nenhum jogo encontrado
+        ) : !activeDay || !gamesByDate[activeDay] ? (
+          <div className="py-20 text-center text-muted-foreground text-sm flex flex-col items-center gap-2">
+            <Zap className="w-8 h-8 opacity-10" />
+            Nenhum jogo nesta data
           </div>
         ) : (
-          <div className="divide-y divide-border overflow-y-auto max-h-[600px] custom-scrollbar">
-            {Object.entries(
-              (games as any[]).reduce((acc: any, game) => {
-                const date = game.date;
-                if (!acc[date]) acc[date] = [];
-                acc[date].push(game);
-                return acc;
-              }, {})
-            ).map(([date, dayGames]: [string, any]) => {
-              // Helper to label the date
-              const getDayLabel = (dateStr: string) => {
-                const now = new Date();
-                const today = now.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-                
-                const tomorrowDate = new Date();
-                tomorrowDate.setDate(now.getDate() + 1);
-                const tomorrow = tomorrowDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-
-                if (dateStr === today) return "Hoje";
-                if (dateStr === tomorrow) return "Amanhã";
-                
-                // For other days, show weekday if within the same week, else just date
-                try {
-                  const [d, m] = dateStr.split('/');
-                  const gameDate = new Date(now.getFullYear(), parseInt(m) - 1, parseInt(d));
-                  return gameDate.toLocaleDateString("pt-BR", { weekday: 'long' }).split('-')[0];
-                } catch {
-                  return dateStr;
-                }
-              };
-
-              const label = getDayLabel(date);
-
-              return (
-                <div key={date}>
-                  {/* Date Header */}
-                  <div className="bg-muted/30 px-4 py-1.5 border-y border-border">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                      {label} <span className="opacity-50 ml-1">• {date}</span>
+          <div className="divide-y divide-border overflow-y-auto max-h-[500px] custom-scrollbar animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {gamesByDate[activeDay].map((game: any) => (
+              <div
+                key={game.id}
+                className={`px-4 py-4 transition-colors hover:bg-muted/40 ${game.status === "live" ? "bg-red-500/5 border-l-[3px] border-red-500" : ""}`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
+                    <span className="text-[12px] font-black text-foreground truncate text-right leading-tight">
+                      {game.homeTeam.shortName || game.homeTeam.name}
                     </span>
+                    {game.homeTeam.shield && (
+                      <img src={game.homeTeam.shield} alt="" className="w-6 h-6 object-contain flex-shrink-0"
+                        onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
+                    )}
                   </div>
 
-                  {dayGames.map((game: any) => (
-                    <div
-                      key={game.id}
-                      className={`px-4 py-3 transition-colors hover:bg-muted/40 ${game.status === "live" ? "bg-red-500/5 border-l-[3px] border-red-500" : ""}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        {/* Home */}
-                        <div className="flex items-center gap-1.5 flex-1 justify-end min-w-0">
-                          <span className="text-[13px] font-bold text-foreground truncate text-right leading-tight">
-                            {game.homeTeam.shortName || game.homeTeam.name}
-                          </span>
-                          {game.homeTeam.shield && (
-                            <img src={game.homeTeam.shield} alt="" className="w-6 h-6 object-contain flex-shrink-0"
-                              onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
-                          )}
+                  <div className="flex flex-col items-center w-[64px] flex-shrink-0">
+                    {game.status === "live" ? (
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-lg font-black text-foreground tabular-nums">{game.homeTeam.score ?? 0}</span>
+                          <span className="text-muted-foreground text-sm font-bold">:</span>
+                          <span className="text-lg font-black text-foreground tabular-nums">{game.awayTeam.score ?? 0}</span>
                         </div>
-
-                        {/* Score / Time */}
-                        <div className="flex flex-col items-center w-[72px] flex-shrink-0">
-                          {game.status === "live" ? (
-                            <>
-                              <div className="flex items-center gap-1">
-                                <span className="text-xl font-black text-foreground tabular-nums">{game.homeTeam.score ?? 0}</span>
-                                <span className="text-muted-foreground text-sm">–</span>
-                                <span className="text-xl font-black text-foreground tabular-nums">{game.awayTeam.score ?? 0}</span>
-                              </div>
-                              <span className="text-[9px] font-black text-red-500 uppercase tracking-widest animate-pulse">Ao vivo</span>
-                            </>
-                          ) : game.status === "finished" ? (
-                            <>
-                              <div className="flex items-center gap-1">
-                                <span className="text-xl font-black text-foreground tabular-nums">{game.homeTeam.score ?? "–"}</span>
-                                <span className="text-muted-foreground text-sm">×</span>
-                                <span className="text-xl font-black text-foreground tabular-nums">{game.awayTeam.score ?? "–"}</span>
-                              </div>
-                              <span className="text-[9px] text-muted-foreground uppercase">Encerrado</span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-base font-black text-accent tabular-nums">{game.time}</span>
-                              <span className="text-[9px] text-muted-foreground uppercase tracking-tight">Agendado</span>
-                            </>
-                          )}
-                        </div>
-
-                        {/* Away */}
-                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                          {game.awayTeam.shield && (
-                            <img src={game.awayTeam.shield} alt="" className="w-6 h-6 object-contain flex-shrink-0"
-                              onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
-                          )}
-                          <span className="text-[13px] font-bold text-foreground truncate leading-tight">
-                            {game.awayTeam.shortName || game.awayTeam.name}
-                          </span>
-                        </div>
+                        <span className="text-[8px] font-black text-red-500 uppercase tracking-widest animate-pulse">Ao vivo</span>
                       </div>
-                    </div>
-                  ))}
+                    ) : game.status === "finished" ? (
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-1.5 opacity-80">
+                          <span className="text-lg font-black text-foreground tabular-nums">{game.homeTeam.score ?? "0"}</span>
+                          <span className="text-muted-foreground text-sm">×</span>
+                          <span className="text-lg font-black text-foreground tabular-nums">{game.awayTeam.score ?? "0"}</span>
+                        </div>
+                        <span className="text-[8px] text-muted-foreground uppercase font-bold">Fim</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <span className="text-sm font-black text-accent tabular-nums bg-accent/10 px-2 py-0.5 rounded border border-accent/20">{game.time}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {game.awayTeam.shield && (
+                      <img src={game.awayTeam.shield} alt="" className="w-6 h-6 object-contain flex-shrink-0"
+                        onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
+                    )}
+                    <span className="text-[12px] font-black text-foreground truncate leading-tight">
+                      {game.awayTeam.shortName || game.awayTeam.name}
+                    </span>
+                  </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </div>

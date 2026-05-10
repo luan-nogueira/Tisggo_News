@@ -251,3 +251,34 @@ export async function getAllArticlesAdmin() {
   const snapshot = await db.collection("articles").orderBy("createdAt", "desc").get();
   return snapshot.docs.map(toData<Article>);
 }
+
+// STORAGE HELPERS
+export async function uploadImageToStorage(buffer: Buffer, fileName: string, contentType: string): Promise<string> {
+  const bucket = getStorage().bucket();
+  const file = bucket.file(`articles/${Date.now()}_${fileName}`);
+  
+  await file.save(buffer, {
+    metadata: { contentType },
+    public: true
+  });
+
+  // Make it public and return URL
+  // Note: For Firebase Admin, we can use the simple URL format if bucket is public
+  return `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+}
+
+export async function deleteFromStorage(url: string) {
+  try {
+    if (!url || !url.includes("storage.googleapis.com")) return;
+    
+    const bucket = getStorage().bucket();
+    const parts = url.split(`${bucket.name}/`);
+    if (parts.length < 2) return;
+    
+    const fileName = parts[1];
+    await bucket.file(fileName).delete();
+    console.log("[Firebase] Image deleted from storage:", fileName);
+  } catch (error: any) {
+    console.error("[Firebase] Error deleting from storage:", error.message);
+  }
+}
