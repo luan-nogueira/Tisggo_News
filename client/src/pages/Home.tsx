@@ -418,7 +418,7 @@ export default function Home() {
                 }}
               >
                 <div className="bg-accent/10 px-4 py-2 border-b border-accent/20 flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase text-accent tracking-widest">Patrocínio Master</span>
+                  <span className="text-[10px] font-black uppercase text-accent tracking-widest">Patrocínio</span>
                   <div className="flex gap-2">
                     {sidebarSponsor.instagram && <Instagram className="w-3 h-3 text-accent" />}
                     {sidebarSponsor.whatsapp && <MessageCircle className="w-3 h-3 text-accent" />}
@@ -446,7 +446,7 @@ export default function Home() {
                 onClick={() => setIsAdvertiseOpen(true)}
               >
                 <div className="bg-accent/10 px-4 py-2 border-b border-accent/20 flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase text-accent tracking-widest">Patrocínio Master</span>
+                  <span className="text-[10px] font-black uppercase text-accent tracking-widest">Patrocínio</span>
                   <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                 </div>
                 <div className="p-6 text-center">
