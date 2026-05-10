@@ -18,19 +18,34 @@ export function getDb() {
         throw new Error("FIREBASE_PRIVATE_KEY is missing from environment variables");
       }
 
-      // Handle common formatting issues with private keys in environment variables
-      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-        privateKey = privateKey.substring(1, privateKey.length - 1);
-      }
+      // ADVANCED PEM REPAIR LOGIC
+      let formattedKey = privateKey;
       
-      // Convert literal \n to actual newlines if present
-      privateKey = privateKey.replace(/\\n/g, '\n');
+      // 1. Remove surrounding quotes if they exist
+      if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
+        formattedKey = formattedKey.substring(1, formattedKey.length - 1);
+      }
+      if (formattedKey.startsWith("'") && formattedKey.endsWith("'")) {
+        formattedKey = formattedKey.substring(1, formattedKey.length - 1);
+      }
+
+      // 2. Handle literal \n characters (common when pasting JSON values into UI)
+      formattedKey = formattedKey.replace(/\\n/g, '\n');
+
+      // 3. Ensure the key has the correct PEM headers/footers
+      const header = "-----BEGIN PRIVATE KEY-----";
+      const footer = "-----END PRIVATE KEY-----";
+      
+      if (!formattedKey.includes(header)) {
+        // If it's just the base64 content, wrap it
+        formattedKey = `${header}\n${formattedKey}\n${footer}`;
+      }
 
       admin.initializeApp({
         credential: admin.credential.cert({
           projectId,
           clientEmail,
-          privateKey,
+          privateKey: formattedKey,
         }),
         storageBucket: `${projectId}.firebasestorage.app`
       });
