@@ -78,12 +78,12 @@ const SOURCES: NewsSource[] = [
   {
     name: "ESPN Brasileirão",
     url: "https://www.espn.com.br/futebol/liga/_/nome/bra.1",
-    linkSelector: 'section.Card a[href*="/noticia/"]',
-    titleSelector: 'h1.article-header__title, .article-header h1',
-    contentSelector: '.article-body p',
+    linkSelector: 'a.realStory',
+    titleSelector: 'h1.article-header__title, .article-header h1, h1',
+    contentSelector: '.article-body p, .article-body',
     imageSelector: 'meta[property="og:image"]',
     baseUrl: "https://www.espn.com.br",
-    forcedCategory: "Esportes" // Força tudo da ESPN para Esportes
+    forcedCategory: "Esportes"
   }
 ];
 
@@ -391,10 +391,11 @@ export async function automateNews() {
             // Detect ESPN Video
             if (source.name.includes("ESPN")) {
               const videoIdMatch = artHtml.match(/["']videoId["']\s*:\s*["'](\d+)["']/i) || 
-                                  artHtml.match(/\/video\/clipe\/_\/id\/(\d+)/i) ||
-                                  artHtml.match(/["']id["']\s*:\s*["'](\d+)["']/i);
+                                  artHtml.match(/\/video\/clip\/_\/id\/(\d+)/i) ||
+                                  artHtml.match(/["']id["']\s*:\s*["'](\d+)["']/i) ||
+                                  link.match(/\/id\/(\d+)/);
               if (videoIdMatch && videoIdMatch[1]) {
-                videoUrl = `https://www.espn.com.br/watch/syndicatedplayer?id=${videoIdMatch[1]}`;
+                videoUrl = `https://www.espn.com.br/core/video/iframe?id=${videoIdMatch[1]}`;
                 console.log(`[Automation] Video detected for ESPN: ${videoUrl}`);
               }
             }

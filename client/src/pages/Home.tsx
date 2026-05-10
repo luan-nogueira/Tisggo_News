@@ -23,7 +23,7 @@ const getCategoryEmoji = (name: string) => {
   return '🗞️';
 };
 
-const renderMedia = (url: string, alt: string, className: string, hasVideo?: boolean) => {
+const renderMedia = (url: string, alt: string, className: string, hasVideo?: boolean, hideIcon?: boolean) => {
   const isVideo = url.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i);
   if (isVideo) {
     return (
@@ -36,11 +36,13 @@ const renderMedia = (url: string, alt: string, className: string, hasVideo?: boo
           loop 
           playsInline 
         />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-12 bg-accent/80 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <Zap className="w-6 h-6 text-black fill-black" />
+        {!hideIcon && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 bg-accent/80 rounded-full flex items-center justify-center backdrop-blur-sm">
+              <Zap className="w-6 h-6 text-black fill-black" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -407,7 +409,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="p-0 h-48 relative">
-                  {renderMedia(sidebarSponsor.image, sidebarSponsor.name, "w-full h-full object-cover group-hover:scale-105 transition-transform duration-500")}
+                  {renderMedia(sidebarSponsor.image, sidebarSponsor.name, "w-full h-full object-cover group-hover:scale-105 transition-transform duration-500", false, true)}
                 </div>
                 <div className="p-3 bg-accent/5 flex justify-center gap-4">
                    {sidebarSponsor.instagram && (
@@ -532,7 +534,7 @@ export default function Home() {
                 else if (horizontalSponsor.instagram) window.open(horizontalSponsor.instagram, '_blank');
               }}
             >
-              {renderMedia(horizontalSponsor.image, horizontalSponsor.name, "absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity")}
+              {renderMedia(horizontalSponsor.image, horizontalSponsor.name, "absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity", false, true)}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               <div className="relative z-10 w-full px-8 flex justify-between items-center">
                 <div>
