@@ -120,10 +120,10 @@ export default function Home() {
     try {
       if (!dateStr) return "";
       const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return "";
+      if (isNaN(d.getTime())) return new Date().toLocaleDateString('pt-BR');
       return d.toLocaleDateString('pt-BR');
     } catch (e) {
-      return "";
+      return new Date().toLocaleDateString('pt-BR');
     }
   };
 
