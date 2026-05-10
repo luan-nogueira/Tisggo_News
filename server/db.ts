@@ -61,10 +61,13 @@ export function getDb() {
     return { error: err.message } as any;
   }
 }
-const storage = admin.storage();
+export function getStorage() {
+  getDb(); // Ensure Firebase is initialized
+  return admin.storage();
+}
 
 export async function firebaseUpload(path: string, buffer: Buffer, contentType: string) {
-  const bucket = storage.bucket();
+  const bucket = getStorage().bucket();
   const file = bucket.file(path);
   
   await file.save(buffer, {
