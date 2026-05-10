@@ -508,7 +508,7 @@ async function classifyAndGetCategoryId(title: string, content: string, link: st
       "crime", "criminoso", "bandido", "marginal", "quadrilha", "gangue", "milícia",
       "tráfico", "droga", "cocaína", "maconha", "crack", "entorpecente", "boca de fumo",
       // Forças de segurança
-      "polícia militar", "pm", "polícia civil", "polícia federal", "delegacia",
+      "polícia", "policial", "policiais", "polícia militar", "pm", "polícia civil", "polícia federal", "delegacia",
       "bombeiros", "corpo de bombeiros", "samu", "guarda municipal",
       // Ações policiais
       "flagrante", "prisão em flagrante", "mandado de prisão", "mandado de busca",
