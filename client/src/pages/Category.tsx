@@ -447,7 +447,6 @@ export default function Category() {
                     Anuncie
                   </button>
                 </li>
-                <li><Link href="/admin" className="hover:text-accent transition-colors italic">Portal de notícias adm</Link></li>
               </ul>
             </div>
             <div>

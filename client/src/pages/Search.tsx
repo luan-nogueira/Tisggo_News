@@ -154,7 +154,6 @@ export default function SearchPage() {
               <ul className="space-y-2 text-sm">
                 <li><a href="#" className="text-gray-400 hover:text-accent transition-colors">Sobre nós</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-accent transition-colors">Contato</a></li>
-                <li><Link href="/admin/dashboard"><span className="text-gray-400 hover:text-accent transition-colors cursor-pointer">Portal de notícias adm</span></Link></li>
               </ul>
             </div>
             <div>

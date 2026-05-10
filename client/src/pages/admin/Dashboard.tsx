@@ -360,7 +360,7 @@ export default function Dashboard() {
                 ) : (
                   <ShieldCheck className="w-4 h-4 text-red-500" />
                 )}
-                Faxina Geral
+                Faxina Profunda (Remover Marcas/Erros)
               </Button>
               <Button
                 onClick={() => runRecategorize.mutate()}

@@ -92,15 +92,16 @@ const FORBIDDEN_WORDS = [
 ];
 
 const STOP_WORDS = [
-  /Um post compartilhado por/gi,
-  /Leia também:/gi,
-  /Veja também:/gi,
-  /Confira abaixo:/gi,
-  /Aviso importante:/gi,
-  /A programação organizada pela/gi,
-  /O vereador de Campos/gi,
-  /A concessionária Águas do Paraíba/gi,
-  /A fabricante Ypê/gi
+  /Leia tambm/i,
+  /Veja mais/i,
+  /Confira tambm/i,
+  /Publicidade/i,
+  /Continua aps a publicidade/i,
+  /Faa parte do nosso grupo/i,
+  /Receba as principais notcias/i,
+  /ururau\.com\.br/i,
+  /Foto:/i,
+  /VDEO:/i,
 ];
 
 async function getOrCreateCategory(name: string) {
@@ -153,9 +154,31 @@ export async function automateNews() {
             if (stopped) break;
             newContent += `<p>${cleanP}</p>\n`;
          }
-         if (newContent.trim() !== content.trim()) {
-            await doc.ref.update({ content: newContent });
-         }
+          if (newContent.trim() !== content.trim()) {
+             // Final polish: remove double spaces and triple newlines
+             const polished = newContent
+                .replace(/<p>\s*<\/p>/g, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+             
+             // If content is too short after cleaning, it's probably broken
+             if (polished.length < 300) {
+                console.log(`[Automation] Deletando notícia curta/quebrada: ${data.title}`);
+                await doc.ref.delete();
+                continue;
+             }
+
+             await doc.ref.update({ content: polished });
+          }
+          
+          // Remove branding from titles too
+          let cleanTitle = data.title || "";
+          for (const regex of FORBIDDEN_WORDS) {
+            cleanTitle = cleanTitle.replace(regex, "").trim();
+          }
+          if (cleanTitle !== data.title) {
+            await doc.ref.update({ title: cleanTitle });
+          }
       }
     }
 
@@ -217,6 +240,12 @@ export async function automateNews() {
               const imgTag = $art(source.contentSelector).find('img').first().attr('src');
               if (imgTag) coverImage = imgTag.startsWith('http') ? imgTag : source.baseUrl + imgTag;
             }
+            
+            // Branded image fallback (Ururau often watermarks their main OG image)
+            if (coverImage.includes('ururau')) {
+               const alternative = $art(source.contentSelector).find('img').map((i, el) => $art(el).attr('src')).get().find(src => src && !src.includes('ururau'));
+               if (alternative) coverImage = alternative.startsWith('http') ? alternative : source.baseUrl + alternative;
+            }
 
             $art('script, style, iframe, .adsbygoogle, .banners, .whatsapp-button, .social-share, footer, nav, header, .related-posts, .recommended-posts, .post-navigation').remove();
 
@@ -234,7 +263,12 @@ export async function automateNews() {
                 if (items.length > 0) {
                   items.each((j, item) => {
                     const text = $art(item).text().trim();
+                    const html = $art(item).html() || "";
                     
+                    // Detect and skip "Related Posts" or "Ads" blocks that use lists or specific classes
+                    if (html.includes('href') && (text.includes('Leia também') || text.includes('Veja mais') || text.includes('Confira'))) return;
+                    if ($art(item).closest('.related, .recommended, .ads, .sidebar').length > 0) return;
+
                     // Check for stop words
                     for (const regex of STOP_WORDS) {
                       if (regex.test(text)) {
@@ -293,6 +327,7 @@ export async function automateNews() {
               coverImage: coverImage || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800",
               publishedAt: new Date(),
               published: true,
+              sourceUrl: link,
             });
 
             results.push({ title, status: "success", source: source.name });
