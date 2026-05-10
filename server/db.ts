@@ -4,7 +4,7 @@ import type { User, Article, Category, InsertUser, InsertArticle, InsertCategory
 
 let dbInstance: admin.firestore.Firestore | null = null;
 
-function getDb() {
+export function getDb() {
   if (dbInstance) return dbInstance;
 
   if (!admin.apps.length) {
