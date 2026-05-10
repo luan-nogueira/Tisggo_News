@@ -72,6 +72,7 @@ export default function Home() {
   const sidebarSponsor = sponsors?.find(s => s.location === 'sidebar' && s.active);
   const horizontalSponsor = sponsors?.find(s => s.location === 'horizontal_bottom' && s.active);
   const topSponsor = sponsors?.find(s => s.location === 'top_banner' && s.active);
+  const middleSponsor = sponsors?.find(s => s.location === 'horizontal_middle' && s.active);
 
 
   const { data: articles, isLoading: articlesLoading } = trpc.articles.list.useQuery();
@@ -250,19 +251,6 @@ export default function Home() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="fixed inset-0 bg-black/60 z-[60] backdrop-blur-sm xl:hidden"
               />
-              <style>{`
-                .news-ticker-content {
-                  display: inline-block;
-                  animation: marquee 40s linear infinite;
-                  will-change: transform;
-                  transform: translateZ(0);
-                }
-
-                @keyframes marquee {
-                  0% { transform: translate3d(100%, 0, 0); }
-                  100% { transform: translate3d(-100%, 0, 0); }
-                }
-              `}</style>
               <motion.div 
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
@@ -475,6 +463,25 @@ export default function Home() {
             ))}
           </div>
         </div>
+
+        {/* Middle Sponsor Banner - NEW */}
+        {middleSponsor && (
+          <div className="mb-12">
+            <div 
+              className="w-full h-32 md:h-48 bg-card border border-accent/20 rounded-xl flex items-center justify-center group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg"
+              onClick={() => {
+                if (middleSponsor.whatsapp) window.open(middleSponsor.whatsapp, '_blank');
+                else if (middleSponsor.instagram) window.open(middleSponsor.instagram, '_blank');
+              }}
+            >
+              {renderMedia(middleSponsor.image, middleSponsor.name, "absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700", false, true)}
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm">
+                Patrocinador Master
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Grid of Articles */}
         <div className="mb-12">

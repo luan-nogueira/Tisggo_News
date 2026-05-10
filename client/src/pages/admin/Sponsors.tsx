@@ -39,7 +39,7 @@ export default function AdminSponsors() {
   const [formState, setFormState] = useState({
     name: "",
     image: "",
-    location: "sidebar" as 'sidebar' | 'horizontal_bottom' | 'top_banner',
+    location: "sidebar" as 'sidebar' | 'horizontal_bottom' | 'top_banner' | 'horizontal_middle',
     whatsapp: "",
     instagram: ""
   });
@@ -66,6 +66,7 @@ export default function AdminSponsors() {
     switch (formState.location) {
       case 'sidebar': return 1;
       case 'horizontal_bottom': return 16 / 4;
+      case 'horizontal_middle': return 16 / 5;
       case 'top_banner': return 21 / 5;
       default: return 1;
     }
@@ -227,6 +228,7 @@ export default function AdminSponsors() {
                     <SelectContent className="bg-card border-border text-foreground">
                       <SelectItem value="sidebar">Barra Lateral (Quadrado)</SelectItem>
                       <SelectItem value="horizontal_bottom">Banner Inferior (Horizontal)</SelectItem>
+                      <SelectItem value="horizontal_middle">Banner Central (Home)</SelectItem>
                       <SelectItem value="top_banner">Topo da Página (Abaixo do Menu)</SelectItem>
                     </SelectContent>
                   </Select>

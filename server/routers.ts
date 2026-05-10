@@ -150,7 +150,7 @@ export const appRouter = router({
       id: z.string().optional(),
       name: z.string(),
       image: z.string(),
-      location: z.enum(['sidebar', 'horizontal_bottom', 'top_banner']),
+      location: z.enum(['sidebar', 'horizontal_bottom', 'top_banner', 'horizontal_middle']),
       whatsapp: z.string().optional(),
       instagram: z.string().optional(),
       active: z.boolean()
