@@ -91,6 +91,18 @@ const FORBIDDEN_WORDS = [
   /comercial@[^.]*/gi
 ];
 
+const STOP_WORDS = [
+  /Um post compartilhado por/gi,
+  /Leia também:/gi,
+  /Veja também:/gi,
+  /Confira abaixo:/gi,
+  /Aviso importante:/gi,
+  /A programação organizada pela/gi,
+  /O vereador de Campos/gi,
+  /A concessionária Águas do Paraíba/gi,
+  /A fabricante Ypê/gi
+];
+
 async function getOrCreateCategory(name: string) {
   const categories = await db.getCategories();
   const existing = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
@@ -202,17 +214,6 @@ export async function automateNews() {
 
             $art('script, style, iframe, .adsbygoogle, .banners, .whatsapp-button, .social-share, footer, nav, header, .related-posts, .recommended-posts, .post-navigation').remove();
 
-            const STOP_WORDS = [
-              /Um post compartilhado por/gi,
-              /Leia também:/gi,
-              /Veja também:/gi,
-              /Confira abaixo:/gi,
-              /Aviso importante:/gi,
-              /A programação organizada pela/gi,
-              /O vereador de Campos/gi,
-              /A concessionária Águas do Paraíba/gi,
-              /A fabricante Ypê/gi
-            ];
 
             let contentHtml = "";
             const contentBlocks = $art(source.contentSelector);

@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { onSnapshot, doc } from "firebase/firestore";
 import { db as firestoreDb } from "@/lib/firebase";
 import { Progress } from "@/components/ui/progress";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -40,6 +41,8 @@ export default function Dashboard() {
   const [autoCleanup, setAutoCleanup] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [automationStatus, setAutomationStatus] = useState<any>(null);
+
+  const { data: stats } = trpc.analytics.getStats.useQuery();
 
   // Listener for real-time progress
   useEffect(() => {
@@ -290,6 +293,47 @@ export default function Dashboard() {
             </div>
           </motion.div>
         )}
+
+        {/* Audience Analytics */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-card border border-border rounded-2xl p-6 mb-12 shadow-xl overflow-hidden relative"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+          <div className="flex items-center gap-3 mb-8 relative z-10">
+            <div className="p-2 bg-accent/10 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-accent" />
+            </div>
+            <h2 className="text-xl font-black text-foreground uppercase tracking-tight">Top Notícias (Mais Lidas)</h2>
+          </div>
+          
+          <div className="h-[300px] w-full relative z-10">
+            {stats?.topArticles && (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.topArticles} layout="vertical" margin={{ left: 10, right: 40 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" horizontal={false} />
+                  <XAxis type="number" hide />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    width={160} 
+                    tick={{ fill: '#888', fontSize: 11, fontWeight: '600' }} 
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(214, 158, 46, 0.05)' }}
+                    contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px', fontSize: '12px' }}
+                  />
+                  <Bar dataKey="views" radius={[0, 6, 6, 0]} barSize={24}>
+                    {stats.topArticles.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={index === 0 ? '#D69E2E' : '#2D3748'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </motion.div>
 
         {/* Articles Management */}
         <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl">

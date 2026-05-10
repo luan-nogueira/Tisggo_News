@@ -173,6 +173,19 @@ export const appRouter = router({
     games: publicProcedure.query(async () => {
       return getBrasileiraoGames();
     }),
+  analytics: router({
+    getStats: adminProcedure.query(async () => {
+      const articles = await getArticles(100);
+      const topArticles = articles
+        .sort((a, b) => (b.views || 0) - (a.views || 0))
+        .slice(0, 5)
+        .map(a => ({
+          name: a.title.length > 25 ? a.title.substring(0, 22) + "..." : a.title,
+          views: a.views || 0
+        }));
+        
+      return { topArticles };
+    }),
   }),
 });
 
