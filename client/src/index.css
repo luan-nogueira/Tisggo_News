@@ -352,6 +352,16 @@
     margin-right: auto !important;
   }
 
+  .article-body-content,
+  .article-body-content * {
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+    box-sizing: border-box !important;
+  }
+
   .article-body-content p, 
   .article-body-content div, 
   .article-body-content span, 
