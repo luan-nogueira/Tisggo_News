@@ -10,7 +10,7 @@ import AdminSponsors from "@/pages/admin/Sponsors";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { auth } from "@/lib/firebase";
@@ -23,6 +23,27 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Robust Icon switcher for Admin
+  useEffect(() => {
+    const updateIcons = () => {
+      const link: any = document.querySelector("link[rel*='icon']");
+      const appleLink: any = document.querySelector("link[rel='apple-touch-icon']");
+      if (link && link.href !== "/admin-icon.png") link.href = "/admin-icon.png";
+      if (appleLink && appleLink.href !== "/admin-icon.png") appleLink.href = "/admin-icon.png";
+    };
+    
+    updateIcons();
+    const interval = setInterval(updateIcons, 1000);
+    
+    return () => {
+      clearInterval(interval);
+      const link: any = document.querySelector("link[rel*='icon']");
+      const appleLink: any = document.querySelector("link[rel='apple-touch-icon']");
+      if (link) link.href = "/news-icon.png";
+      if (appleLink) appleLink.href = "/news-icon.png";
+    };
+  }, [user]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

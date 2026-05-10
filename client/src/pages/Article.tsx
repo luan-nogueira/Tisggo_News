@@ -200,7 +200,7 @@ export default function Article() {
         {/* Featured Image */}
         {article.coverImage && (
           <motion.div
-            className="mb-12 rounded-lg overflow-hidden"
+            className="mb-12 rounded-lg overflow-hidden max-w-4xl mx-auto"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -214,8 +214,8 @@ export default function Article() {
         )}
 
         {/* Article Body */}
-        <div className="mt-12 flex justify-center">
-          <div className="article-body-content max-w-2xl w-full">
+        <div className="mt-12 flex flex-col items-center">
+          <div className="article-body-content max-w-[760px] w-full px-4 mx-auto">
             <div 
               dangerouslySetInnerHTML={{ 
                 __html: article.content.includes('<p') ? article.content : `<p>${article.content.replace(/\n/g, '</p><p>')}</p>` 

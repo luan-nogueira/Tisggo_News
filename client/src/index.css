@@ -346,11 +346,22 @@
 
   .article-body-content p, 
   .article-body-content div, 
+  .article-body-content span, 
   .article-body-content {
-    font-size: 1.25rem;
-    color: var(--foreground);
-    line-height: 1.8;
-    font-family: 'Merriweather', serif;
+    font-size: 1.25rem !important;
+    color: var(--foreground) !important;
+    line-height: 1.8 !important;
+    font-family: 'Merriweather', serif !important;
+    background-color: transparent !important;
+  }
+
+  @media (min-width: 768px) {
+    .article-body-content p, 
+    .article-body-content div, 
+    .article-body-content span, 
+    .article-body-content {
+      font-size: 1.4rem !important;
+    }
   }
 
   .article-body-content p {

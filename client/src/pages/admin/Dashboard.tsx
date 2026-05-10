@@ -56,27 +56,6 @@ export default function Dashboard() {
 
   const { data: stats } = trpc.analytics.getStats.useQuery();
 
-  // Robust Icon switcher for Admin
-  useEffect(() => {
-    const updateIcons = () => {
-      const link: any = document.querySelector("link[rel*='icon']");
-      const appleLink: any = document.querySelector("link[rel='apple-touch-icon']");
-      if (link && link.href !== "/admin-icon.png") link.href = "/admin-icon.png";
-      if (appleLink && appleLink.href !== "/admin-icon.png") appleLink.href = "/admin-icon.png";
-    };
-    
-    updateIcons();
-    const interval = setInterval(updateIcons, 1000);
-    
-    return () => {
-      clearInterval(interval);
-      const link: any = document.querySelector("link[rel*='icon']");
-      const appleLink: any = document.querySelector("link[rel='apple-touch-icon']");
-      if (link) link.href = "/news-icon.png";
-      if (appleLink) appleLink.href = "/news-icon.png";
-    };
-  }, []);
-
   // Listener for real-time progress
   useEffect(() => {
     const unsub = onSnapshot(doc(firestoreDb, "automation_status", "current"), (doc) => {
