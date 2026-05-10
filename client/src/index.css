@@ -1,8 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap');
-
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -45,6 +43,8 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", ui-serif, Georgia, serif;
 }
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
   /* Tisgo Brand Colors: Black and Yellow */
@@ -169,7 +169,7 @@
 
   p {
     @apply text-base md:text-lg leading-relaxed;
-    font-family: 'Merriweather', serif;
+    font-family: 'Inter', sans-serif;
   }
 
   button:not(:disabled),

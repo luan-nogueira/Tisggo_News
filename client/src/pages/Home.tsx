@@ -614,6 +614,18 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {uniqueArticles.length === 0 && !articlesLoading && (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
+              <Zap className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-2xl font-black mb-2">Portal em Atualização</h2>
+            <p className="text-muted-foreground max-w-md">
+              Estamos preparando as notícias mais recentes para você. Volte em instantes!
+            </p>
+          </div>
+        )}
       </main>
 
       {/* Footer */}
