@@ -153,14 +153,18 @@ export default function Home() {
               </button>
 
               {/* Logo */}
-              <Link href="/" className="flex flex-col">
-                <span className="text-2xl sm:text-3xl font-black leading-none tracking-tighter">
-                  <span className="text-accent">TISGGO</span>
-                  <span className="text-foreground">NEWS</span>
+              <Link href="/" className="flex flex-col group">
+                <span className="text-2xl sm:text-4xl font-black leading-none tracking-tighter italic">
+                  <span className="text-accent drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">TISGGO</span>
+                  <span className="text-foreground drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">NEWS</span>
                 </span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">
-                  Campos dos Goytacazes
-                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="h-[1px] w-4 bg-accent/50" />
+                  <span className="text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] whitespace-nowrap">
+                    Campos dos Goytacazes
+                  </span>
+                  <div className="h-[1px] w-4 bg-accent/50" />
+                </div>
               </Link>
             </div>
 

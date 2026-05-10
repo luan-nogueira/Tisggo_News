@@ -173,6 +173,7 @@ export const appRouter = router({
     games: publicProcedure.query(async () => {
       return getBrasileiraoGames();
     }),
+  }),
   analytics: router({
     getStats: adminProcedure.query(async () => {
       const articles = await getArticles(100);
