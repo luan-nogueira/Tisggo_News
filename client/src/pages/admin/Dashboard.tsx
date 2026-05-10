@@ -431,24 +431,35 @@ export default function Dashboard() {
                 <tbody>
                   {articles.map((article) => (
                     <tr key={article.id} className="border-b border-border hover:bg-accent/5 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {article.published && (
-                            <Badge className="bg-green-600 text-white hover:bg-green-700 text-[10px] font-bold">
-                              PUBLICADO
-                            </Badge>
-                          )}
-                          <span className="font-bold text-foreground line-clamp-1">{article.title}</span>
+                      <td className="py-2 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 bg-muted">
+                            {article.coverImage ? (
+                              <img src={article.coverImage} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center"><Eye className="w-3 h-3 text-muted-foreground" /></div>
+                            )}
+                          </div>
+                          <div className="max-w-[200px] md:max-w-[400px]">
+                            <p className="font-black text-sm text-foreground truncate">{article.title}</p>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground text-sm font-medium">
-                        {categories?.find(c => String(c.id) === String(article.categoryId))?.name}
+                      <td className="py-2 px-4 whitespace-nowrap">
+                        <Badge variant="secondary" className="bg-accent/10 text-accent border-none font-black text-[10px]">
+                          {categories?.find(c => String(c.id) === String(article.categoryId))?.name || "Geral"}
+                        </Badge>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground text-sm">{article.views || 0}</td>
-                      <td className="px-6 py-4 text-muted-foreground text-sm">
+                      <td className="py-2 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-xs font-bold">
+                          <Eye className="w-3 h-3 text-accent" />
+                          {article.views || 0}
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 whitespace-nowrap text-muted-foreground text-xs font-bold">
                         {formatDate(article.publishedAt || article.createdAt)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="py-2 px-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Link href={`/admin/articles/${article.id}/edit`}>
                             <Button
@@ -509,12 +520,21 @@ export default function Dashboard() {
                 </div>
               )}
               
-              {articles.length >= limit && (
-                <div className="p-6 border-t border-border flex justify-center">
+              {articles.length >= 20 && (
+                <div className="p-4 border-t border-border flex justify-center gap-4">
+                  {limit > 20 && (
+                    <Button 
+                      onClick={() => setLimit(prev => Math.max(20, prev - 20))}
+                      variant="ghost"
+                      className="text-muted-foreground hover:text-foreground font-bold text-xs uppercase"
+                    >
+                      Ver menos
+                    </Button>
+                  )}
                   <Button 
                     onClick={() => setLimit(prev => prev + 20)}
                     variant="outline"
-                    className="border-accent text-accent hover:bg-accent hover:text-black font-bold"
+                    className="border-accent text-accent hover:bg-accent hover:text-black font-black text-xs uppercase px-8"
                   >
                     Carregar mais notícias
                   </Button>
