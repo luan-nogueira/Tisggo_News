@@ -109,21 +109,17 @@ export async function upsertUser(user: Partial<InsertUser> & { openId: string })
 
 // ARTICLES
 export async function getArticles(pageSize = 20) {
-  console.log("[Firebase] Fetching articles (simplified)...");
+  console.log("[Firebase] Fetching articles (ultra-simplified)...");
   try {
     const db = getDb();
     if ((db as any).error) throw new Error((db as any).error);
 
-    // Simplified query to avoid composite index requirement
     const snapshot = await (db as admin.firestore.Firestore).collection("articles")
       .orderBy("publishedAt", "desc")
       .limit(pageSize)
       .get();
     
-    let articles = snapshot.docs.map(toData<Article>);
-    // Filter by published in memory if needed
-    articles = articles.filter(a => a.published !== false);
-
+    const articles = snapshot.docs.map(toData<Article>);
     console.log("[Firebase] Articles found:", articles.length);
     return articles;
   } catch (error: any) {
