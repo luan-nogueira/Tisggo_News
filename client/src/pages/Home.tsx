@@ -54,12 +54,6 @@ export default function Home() {
   const horizontalSponsor = sponsors?.find(s => s.location === 'horizontal_bottom' && s.active);
   const topSponsor = sponsors?.find(s => s.location === 'top_banner' && s.active);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % (featuredArticles.length || 6));
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
 
   const { data: articles, isLoading: articlesLoading } = trpc.articles.list.useQuery();
   const { data: categories, isLoading: categoriesLoading } = trpc.categories.list.useQuery();
@@ -112,6 +106,15 @@ export default function Home() {
   const featuredArticles = uniqueArticles?.slice(0, 6) || [];
   const sidebarArticles = uniqueArticles?.slice(6, 10) || [];
   const gridArticles = uniqueArticles?.slice(10, 20) || [];
+
+  useEffect(() => {
+    if (featuredArticles.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % featuredArticles.length);
+      }, 6000);
+      return () => clearInterval(timer);
+    }
+  }, [featuredArticles.length]);
 
   const formatDate = (dateStr: any) => {
     try {
