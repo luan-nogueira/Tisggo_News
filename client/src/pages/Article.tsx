@@ -31,7 +31,7 @@ export default function Article() {
 
   if (isLoading) {
     return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
@@ -101,13 +101,13 @@ export default function Article() {
 
       {/* Article Content */}
       <motion.article
-        className="max-w-4xl mx-auto px-4 py-12"
+        className="max-w-7xl mx-auto px-4 py-12"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         {/* Article Header */}
-        <div className="mb-8">
+        <div className="max-w-4xl mx-auto mb-8">
           {/* Breadcrumb & Category */}
           <div className="flex items-center gap-3 mb-6">
             <Badge className="bg-accent text-black hover:bg-yellow-500 font-bold">
@@ -200,7 +200,7 @@ export default function Article() {
         {/* Featured Image */}
         {article.coverImage && (
           <motion.div
-            className="mb-12 rounded-lg overflow-hidden max-w-4xl mx-auto"
+            className="mb-12 rounded-lg overflow-hidden max-w-4xl mx-auto shadow-2xl"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -208,16 +208,22 @@ export default function Article() {
             <img
               src={article.coverImage}
               alt={article.title}
-              className="w-full h-auto object-cover"
+              className="w-full h-auto object-cover max-h-[600px]"
             />
           </motion.div>
         )}
 
         {/* Article Body */}
-        <div className="mt-12 flex flex-col items-center w-full">
+        <div className="w-full flex flex-col items-center">
           <div 
-            className="article-body-content px-4"
-            style={{ maxWidth: '780px', width: '100%', margin: '0 auto', fontSize: '21px', lineHeight: '1.8', textAlign: 'left' }}
+            className="article-body-content px-4 w-full"
+            style={{ 
+              maxWidth: '700px', 
+              margin: '0 auto', 
+              fontSize: '22px', 
+              lineHeight: '1.8',
+              textAlign: 'left'
+            }}
           >
             <div 
               dangerouslySetInnerHTML={{ 
@@ -228,23 +234,23 @@ export default function Article() {
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-12" />
+        <div className="max-w-4xl mx-auto h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-12" />
 
         {/* Author Box - Compact version */}
-        <div className="bg-muted/30 border border-border rounded-lg p-3 mb-10 flex items-center gap-4">
-          <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-            <User className="w-4 h-4 text-accent" />
+        <div className="max-w-4xl mx-auto bg-muted/30 border border-border rounded-lg p-4 mb-16 flex items-center gap-4">
+          <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <User className="w-5 h-5 text-accent" />
           </div>
           <div className="min-w-0">
             <h4 className="text-[10px] font-black uppercase text-accent mb-0.5 tracking-widest">Postado por</h4>
-            <p className="text-xs text-muted-foreground leading-tight">
-              <span className="font-bold text-foreground">{article.author || "Equipe Tisgo"}</span>
+            <p className="text-sm text-muted-foreground leading-tight">
+              <span className="font-bold text-foreground text-base">{article.author || "Equipe Tisgo"}</span>
             </p>
           </div>
         </div>
 
         {/* Related Articles Section */}
-        <section className="border-t border-gray-800 pt-12">
+        <section className="max-w-4xl mx-auto border-t border-gray-800 pt-12">
           <h2 className="text-3xl font-black mb-8">Artigos Relacionados</h2>
 
           {isLoadingRelated ? (
@@ -267,7 +273,7 @@ export default function Article() {
                 .slice(0, 2)
                 .map((relatedArticle) => (
                   <Link key={relatedArticle.id} href={`/article/${relatedArticle.slug}`} className="group block">
-                    <div className="bg-card border border-border rounded-lg overflow-hidden hover:border-accent transition-all duration-300 hover:shadow-lg hover:shadow-accent/20">
+                    <div className="bg-card border border-border rounded-lg overflow-hidden hover:border-accent transition-all duration-300 hover:shadow-lg hover:shadow-accent/20 h-full">
                       <div className="relative overflow-hidden bg-gray-800 aspect-video">
                         {relatedArticle.coverImage ? (
                           <img

@@ -24,24 +24,41 @@ export default function Admin() {
   const [error, setError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Robust Icon switcher for Admin
+  // Robust Icon and Manifest switcher for Admin
   useEffect(() => {
-    const updateIcons = () => {
+    const updatePWA = () => {
+      // Manifest Switcher (Crucial for separate installation)
+      const manifest: any = document.querySelector("link[rel='manifest']");
+      if (manifest && !manifest.href.includes("/admin-manifest.json")) {
+        manifest.href = "/admin-manifest.json";
+      }
+
+      // Icon Switcher
       const link: any = document.querySelector("link[rel*='icon']");
       const appleLink: any = document.querySelector("link[rel='apple-touch-icon']");
-      if (link && link.href !== "/admin-icon.png") link.href = "/admin-icon.png";
-      if (appleLink && appleLink.href !== "/admin-icon.png") appleLink.href = "/admin-icon.png";
+      if (link && !link.href.includes("/admin-icon.png")) link.href = "/admin-icon.png";
+      if (appleLink && !appleLink.href.includes("/admin-icon.png")) appleLink.href = "/admin-icon.png";
+      
+      // Title Switcher (Controls the name on the home screen)
+      if (document.title !== "Tisgo Administrador") {
+        document.title = "Tisgo Administrador";
+      }
     };
     
-    updateIcons();
-    const interval = setInterval(updateIcons, 1000);
+    updatePWA();
+    const interval = setInterval(updatePWA, 1000);
     
     return () => {
       clearInterval(interval);
+      const manifest: any = document.querySelector("link[rel='manifest']");
+      if (manifest) manifest.href = "/manifest.json";
+      
       const link: any = document.querySelector("link[rel*='icon']");
       const appleLink: any = document.querySelector("link[rel='apple-touch-icon']");
       if (link) link.href = "/news-icon.png";
       if (appleLink) appleLink.href = "/news-icon.png";
+      
+      document.title = "Tisgo News - O seu portal de notícias";
     };
   }, [user]);
 
@@ -52,7 +69,6 @@ export default function Admin() {
     
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // O hook useAuth vai detectar a mudanca e recarregar a tela
     } catch (err: any) {
       console.error(err);
       setError("E-mail ou senha incorretos.");
@@ -69,8 +85,6 @@ export default function Admin() {
     );
   }
 
-  // Firebase user returns a user object. Se tem user logado pelo Firebase,
-  // permitimos acesso ao painel de admin.
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black p-4">
@@ -85,53 +99,22 @@ export default function Admin() {
             </CardDescription>
           </CardHeader>
           <CardContent className="mt-4">
-            <form 
-              onSubmit={handleLogin}
-              className="flex flex-col gap-4"
-            >
+            <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-300">E-mail</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="admin@tisgo.com"
-                  className="bg-gray-800 border-gray-700 text-white"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Input id="email" type="email" placeholder="admin@tisgo.com" className="bg-gray-800 border-gray-700 text-white" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-gray-300">Senha</Label>
-                <Input 
-                  id="password" 
-                  type="password"
-                  className="bg-gray-800 border-gray-700 text-white"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <Input id="password" type="password" className="bg-gray-800 border-gray-700 text-white" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
-
               {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
-
-              <Button 
-                type="submit"
-                className="w-full bg-accent text-black hover:bg-yellow-500 font-bold py-6 text-lg mt-2"
-                disabled={isLoggingIn}
-              >
+              <Button type="submit" className="w-full bg-accent text-black hover:bg-yellow-500 font-bold py-6 text-lg mt-2" disabled={isLoggingIn}>
                 {isLoggingIn ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
                 Entrar no Painel
               </Button>
             </form>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full text-gray-400 hover:text-white mt-4"
-              onClick={() => navigate("/")}
-            >
-              Voltar para o site
-            </Button>
+            <Button variant="ghost" className="w-full text-gray-400 hover:text-white mt-4" onClick={() => navigate("/")}>Voltar para o site</Button>
           </CardContent>
         </Card>
       </div>
@@ -149,7 +132,6 @@ export default function Admin() {
         <Route path="/admin/articles/:id/edit" component={ArticleForm} />
         <Route path="/admin/categories" component={AdminCategories} />
         <Route path="/admin/sponsors" component={AdminSponsors} />
-        {/* Fallback to Dashboard if path doesn't match */}
         <Route component={AdminDashboard} />
       </Switch>
     </DashboardLayout>

@@ -353,6 +353,16 @@
     line-height: 1.8 !important;
     font-family: 'Merriweather', serif !important;
     background-color: transparent !important;
+    display: block !important;
+  }
+
+  .article-body-content ul, 
+  .article-body-content ol, 
+  .article-body-content li {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 0 1.5rem 0 !important;
+    display: block !important;
   }
 
   @media (min-width: 768px) {
@@ -360,7 +370,7 @@
     .article-body-content div, 
     .article-body-content span, 
     .article-body-content {
-      font-size: 1.4rem !important;
+      font-size: 1.45rem !important;
     }
   }
 
