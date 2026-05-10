@@ -322,13 +322,13 @@ export default function Dashboard() {
             {stats?.topArticles && (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.topArticles} layout="vertical" margin={{ left: 10, right: 40 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#222" horizontal={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                   <XAxis type="number" hide />
                   <YAxis 
                     dataKey="name" 
                     type="category" 
                     width={160} 
-                    tick={{ fill: '#888', fontSize: 11, fontWeight: '600' }} 
+                    tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: '700' }} 
                   />
                   <Tooltip 
                     cursor={{ fill: 'rgba(214, 158, 46, 0.05)' }}

@@ -186,7 +186,28 @@ export async function getArticlesByCategory(categoryId: string, limit = 20, offs
     const snapshot = await query.limit(limit).get();
     return snapshot.docs.map(toData<Article>);
   } catch (error: any) {
-    return [];
+    console.error("[Firebase] ERROR fetching articles by category:", error.message);
+    
+    // FALLBACK: If orderBy fails (likely due to missing index), try without it
+    try {
+      console.log("[Firebase] Attempting fallback query without orderBy...");
+      const db = ensureDb();
+      const snapshot = await db.collection("articles")
+        .where("categoryId", "==", categoryId)
+        .limit(limit)
+        .get();
+      
+      const articles = snapshot.docs.map(toData<Article>);
+      // Sort in memory as a temporary fix
+      return articles.sort((a: any, b: any) => {
+        const dateA = a.publishedAt ? (a.publishedAt.toDate?.() || new Date(a.publishedAt)).getTime() : 0;
+        const dateB = b.publishedAt ? (b.publishedAt.toDate?.() || new Date(b.publishedAt)).getTime() : 0;
+        return dateB - dateA;
+      });
+    } catch (fallbackError: any) {
+      console.error("[Firebase] Fallback query also failed:", fallbackError.message);
+      return [];
+    }
   }
 }
 
