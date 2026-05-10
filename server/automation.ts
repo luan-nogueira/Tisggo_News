@@ -462,9 +462,9 @@ export async function recategorizeExistingArticles() {
   try {
     const firestore = await db.getDb();
     
-    // First, merge any duplicates (e.g., Policia and Polícia)
-    await mergeDuplicateCategories();
-    
+    // 1. Standardize categories and fix slugs/duplicates
+    await fixCategoriesAndSlugs();
+
     console.log("[Automation] Iniciando re-categorização de notícias...");
     
     const snapshot = await firestore.collection("articles").get();
@@ -534,5 +534,72 @@ export async function mergeDuplicateCategories() {
   } catch (error) {
     console.error("[Automation] Erro na unificação:", error);
     throw error;
+  }
+}
+
+/**
+ * Ensures all standard categories exist with correct slugs and merges others into them.
+ */
+export async function fixCategoriesAndSlugs() {
+  try {
+    const firestore = await db.getDb();
+    console.log("[Automation] Padronizando categorias e slugs...");
+
+    const standardCategories = [
+      { name: "Cidades", slug: "cidades" },
+      { name: "Economia", slug: "economia" },
+      { name: "Esportes", slug: "esportes" },
+      { name: "Polícia", slug: "policia" },
+      { name: "Geral", slug: "geral" },
+    ];
+
+    const existingCategories = await db.getCategories();
+    const nameToId = new Map<string, string>();
+
+    // 1. Ensure standards exist and are correct
+    for (const std of standardCategories) {
+      const normalizedStd = std.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+      let cat = existingCategories.find(c => 
+        c.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "") === normalizedStd
+      );
+
+      if (!cat) {
+        console.log(`[Automation] Criando categoria padrão: ${std.name}`);
+        const newCat = await db.createCategory(std);
+        nameToId.set(normalizedStd, newCat.id);
+      } else {
+        // Update name/slug if they are slightly off
+        if (cat.name !== std.name || cat.slug !== std.slug) {
+          console.log(`[Automation] Corrigindo categoria: ${cat.name} -> ${std.name}`);
+          await db.updateCategory(cat.id, { name: std.name, slug: std.slug });
+        }
+        nameToId.set(normalizedStd, cat.id);
+      }
+    }
+
+    // 2. Merge everything else into Geral or their closest match
+    for (const cat of existingCategories) {
+      const normalized = cat.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+      
+      if (!nameToId.has(normalized)) {
+        // It's a non-standard category. If it matches one of our keywords, move it.
+        // For now, let's just move them to "Geral" if they aren't one of the standards.
+        const targetId = nameToId.get("geral")!;
+        
+        console.log(`[Automation] Movendo notícias de "${cat.name}" para "Geral"...`);
+        
+        const articlesSnapshot = await firestore.collection("articles").where("categoryId", "==", cat.id).get();
+        for (const doc of articlesSnapshot.docs) {
+           await doc.ref.update({ categoryId: targetId });
+        }
+
+        // Delete the non-standard category
+        await firestore.collection("categories").doc(cat.id).delete();
+      }
+    }
+
+    console.log("[Automation] Padronização concluída.");
+  } catch (error) {
+    console.error("[Automation] Erro na padronização:", error);
   }
 }
