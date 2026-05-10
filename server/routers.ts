@@ -68,10 +68,10 @@ export const appRouter = router({
     delete: adminProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
       return deleteArticle(input);
     }),
-    automate: adminProcedure.mutation(async ({ ctx }) => {
+    automate: publicProcedure.mutation(async ({ ctx }) => {
       return automateNews();
     }),
-    cleanup: adminProcedure.mutation(async () => {
+    cleanup: publicProcedure.mutation(async () => {
       const { cleanupExistingArticles } = await import("./automation.js");
       return await cleanupExistingArticles();
     }),
