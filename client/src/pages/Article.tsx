@@ -115,10 +115,10 @@ export default function Article() {
             </Badge>
             <span className="text-sm text-gray-400">
               {publishDate.toLocaleDateString('pt-BR', {
-                year: 'numeric',
+                day: 'numeric',
                 month: 'long',
-                day: 'numeric'
-              })}
+                year: 'numeric'
+              })} às {publishDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </span>
             <span className="text-sm text-gray-400">•</span>
             <span className="text-sm text-gray-400">{readingTime} min de leitura</span>

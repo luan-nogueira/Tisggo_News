@@ -121,7 +121,7 @@ export default function Home() {
       if (!dateStr) return "";
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return new Date().toLocaleDateString('pt-BR');
-      return d.toLocaleDateString('pt-BR');
+      return `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     } catch (e) {
       return new Date().toLocaleDateString('pt-BR');
     }

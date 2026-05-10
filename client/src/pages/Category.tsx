@@ -317,10 +317,10 @@ export default function Category() {
                               {category.name}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
-                              {new Date(article.publishedAt || article.createdAt).toLocaleDateString('pt-BR', {
-                                month: 'short',
-                                day: 'numeric'
-                              })}
+                                {new Date(article.publishedAt || article.createdAt).toLocaleDateString('pt-BR', {
+                                  day: 'numeric',
+                                  month: 'long'
+                                })} às {new Date(article.publishedAt || article.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
                           <h3 className="text-lg font-black text-foreground mb-2 group-hover:text-accent transition-colors duration-300 line-clamp-2 leading-tight">
