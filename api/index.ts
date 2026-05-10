@@ -1,4 +1,6 @@
-// Vercel Entry Point - Extreme Lazy Loading
+import app from "../server/index.js";
+
+// Vercel Entry Point
 export default async (req: any, res: any) => {
   try {
     // Basic CORS
@@ -11,15 +13,12 @@ export default async (req: any, res: any) => {
       return;
     }
 
-    // Dynamic import with absolute-like path for Vercel
-    const { default: app } = await import("./../server/index.ts");
     return app(req, res);
   } catch (err: any) {
     console.error("[Vercel Handler Error]:", err.message);
     res.status(500).json({ 
-      error: "Critical Boot Error", 
-      message: err.message,
-      detail: "O servidor falhou ao inicializar os módulos principais. Verifique o formato da sua chave do Firebase."
+      error: "Critical Error", 
+      message: err.message 
     });
   }
 };
