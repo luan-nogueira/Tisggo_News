@@ -69,7 +69,9 @@ export const appRouter = router({
       return deleteArticle(input);
     }),
     automate: publicProcedure.mutation(async ({ ctx }) => {
-      return automateNews();
+      // Roda em segundo plano para evitar timeout da página
+      automateNews().catch(err => console.error("[Background Automation] Error:", err));
+      return { success: true, message: "Automação iniciada em segundo plano" };
     }),
     stopAutomate: adminProcedure.mutation(async () => {
       const db = await import("./db.js");

@@ -141,7 +141,8 @@ export default function Dashboard() {
       await stopAutomate.mutateAsync();
       toast.info("Solicitação de parada enviada...");
     } catch (error: any) {
-      toast.error("Erro ao parar o robô.");
+      toast.error("Erro ao parar o robô. Tentando reset forçado...");
+      setIsAutomating(false); // Destrava o botão localmente
     } finally {
       setIsStopping(false);
     }
