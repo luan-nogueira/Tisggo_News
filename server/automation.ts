@@ -259,9 +259,17 @@ export async function automateNews() {
               contentBlocks.each((i, block) => {
                 if (stopReading) return;
                 
-                const items = $art(block).find('p, h2, h3, h4, li');
+                const items = $art(block).find('p, h2, h3, h4, li, table');
                 if (items.length > 0) {
                   items.each((j, item) => {
+                    if (item.name === 'table') {
+                       // Basic table cleanup
+                       $art(item).find('script, style').remove();
+                       $art(item).addClass('w-full border-collapse my-4 text-sm');
+                       $art(item).find('th, td').addClass('border border-gray-700 p-2 text-left');
+                       contentHtml += $art(item).prop('outerHTML') + '\n';
+                       return;
+                    }
                     const text = $art(item).text().trim();
                     const html = $art(item).html() || "";
                     

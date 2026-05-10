@@ -23,6 +23,7 @@ export default function Dashboard() {
   const deleteArticle = trpc.articles.delete.useMutation();
   const automateNews = trpc.articles.automate.useMutation();
   const [isAutomating, setIsAutomating] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   
   const runCleanup = trpc.articles.cleanup.useMutation({
     onSuccess: (count) => {
@@ -101,8 +102,6 @@ export default function Dashboard() {
       return new Date().toLocaleDateString('pt-BR');
     }
   };
-
-  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const handleDelete = async (id: string) => {
     try {
