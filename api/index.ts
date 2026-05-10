@@ -23,11 +23,28 @@ registerOAuthRoutes(app);
 // Registra a API tRPC
 app.use(
   "/trpc",
-  createExpressMiddleware({
-    router: appRouter,
-    createContext,
-  })
+  (req, res, next) => {
+    try {
+      return createExpressMiddleware({
+        router: appRouter,
+        createContext,
+        onError: ({ path, error }) => {
+          console.error(`[tRPC Error] path: ${path}, error: ${error.message}`);
+        }
+      })(req, res, next);
+    } catch (err: any) {
+      res.status(500).json({ error: "tRPC Crash", message: err.message });
+    }
+  }
 );
 
-// Exporta o aplicativo Express para ser consumido pela Vercel Serverless Functions
+// Global Error Handler for Express
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error("[Express Global Error]:", err.message);
+  res.status(500).json({ 
+    error: "Internal Server Error", 
+    message: err.message 
+  });
+});
+
 export default app;
