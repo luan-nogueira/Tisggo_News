@@ -18,36 +18,48 @@ export function getDb() {
         throw new Error("FIREBASE_PRIVATE_KEY is missing from environment variables");
       }
 
+      let finalProjectId = projectId;
+      let finalClientEmail = clientEmail;
+      let finalPrivateKey = privateKey;
+
+      // SMART JSON AUTO-DETECTION
+      if (privateKey.trim().startsWith('{')) {
+        try {
+          console.log("[Firebase] Full JSON detected in FIREBASE_PRIVATE_KEY. Parsing...");
+          const config = JSON.parse(privateKey);
+          finalProjectId = config.project_id || finalProjectId;
+          finalClientEmail = config.client_email || finalClientEmail;
+          finalPrivateKey = config.private_key || finalPrivateKey;
+        } catch (e) {
+          console.warn("[Firebase] Detected JSON-like string but failed to parse. Falling back to raw key.");
+        }
+      }
+
       // ADVANCED PEM REPAIR LOGIC
-      let formattedKey = privateKey;
+      let formattedKey = finalPrivateKey;
       
-      // 1. Remove surrounding quotes if they exist
+      // 1. Remove surrounding quotes
       if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
         formattedKey = formattedKey.substring(1, formattedKey.length - 1);
       }
-      if (formattedKey.startsWith("'") && formattedKey.endsWith("'")) {
-        formattedKey = formattedKey.substring(1, formattedKey.length - 1);
-      }
 
-      // 2. Handle literal \n characters (common when pasting JSON values into UI)
+      // 2. Handle literal \n
       formattedKey = formattedKey.replace(/\\n/g, '\n');
 
-      // 3. Ensure the key has the correct PEM headers/footers
+      // 3. Ensure PEM headers
       const header = "-----BEGIN PRIVATE KEY-----";
       const footer = "-----END PRIVATE KEY-----";
-      
       if (!formattedKey.includes(header)) {
-        // If it's just the base64 content, wrap it
         formattedKey = `${header}\n${formattedKey}\n${footer}`;
       }
 
       admin.initializeApp({
         credential: admin.credential.cert({
-          projectId,
-          clientEmail,
+          projectId: finalProjectId,
+          clientEmail: finalClientEmail,
           privateKey: formattedKey,
         }),
-        storageBucket: `${projectId}.firebasestorage.app`
+        storageBucket: `${finalProjectId}.firebasestorage.app`
       });
       console.log("[Firebase] Admin SDK initialized successfully.");
     }
