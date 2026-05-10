@@ -73,7 +73,7 @@ export function FootballWidget() {
       </div>
 
       {/* Body */}
-      <div className="football-widget-body min-h-[300px]">
+      <div className="football-widget-body max-h-[450px] overflow-y-auto custom-scrollbar">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
