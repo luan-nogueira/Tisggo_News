@@ -194,8 +194,6 @@ export async function automateNews(limitPerSource = 2) {
             let targetCategoryName = source.category;
             
             // Keyword-based override for better accuracy
-            const lowerTitle = title.toLowerCase();
-            const lowerContent = content.toLowerCase();
             
             if (lowerTitle.includes("futebol") || lowerTitle.includes("jogo") || lowerTitle.includes("flamengo") || 
                 lowerTitle.includes("vasco") || lowerTitle.includes("botafogo") || lowerTitle.includes("fluminense") ||
