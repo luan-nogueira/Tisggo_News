@@ -338,7 +338,6 @@ export async function automateNews() {
                       uniqueParagraphs.add(text);
                       contentHtml += `<p>${text}</p>\n`;
                     }
-                    }
                   }
                 } else {
                   const text = $art(block).text().trim();
