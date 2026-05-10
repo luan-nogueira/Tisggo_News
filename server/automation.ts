@@ -103,12 +103,26 @@ async function getOrCreateCategory(name: string) {
 
 export async function automateNews() {
   console.log("[Robô] Verificando fontes...");
+  const firestore = await db.getDb();
+  const updateStatus = async (msg: string, prog: number, active: boolean) => {
+    await firestore.collection("automation_status").doc("current").set({
+      message: msg,
+      progress: prog,
+      updatedAt: new Date().toISOString(),
+      isAutomating: active
+    });
+  };
+
   try {
+    await updateStatus("Iniciando faxina...", 5, true);
     await cleanupOldArticles();
     const results: any[] = [];
 
-    for (const source of SOURCES) {
+    for (let i = 0; i < SOURCES.length; i++) {
+      const source = SOURCES[i];
+      const progress = Math.round(10 + (i / SOURCES.length) * 85);
       try {
+        await updateStatus(`Buscando no site: ${source.name}`, progress, true);
         console.log(`[Automation] Scraping source: ${source.name}`);
         const res = await fetch(source.url, {
           headers: {
@@ -161,17 +175,44 @@ export async function automateNews() {
               if (imgTag) coverImage = imgTag.startsWith('http') ? imgTag : source.baseUrl + imgTag;
             }
 
-            $art('script, style, iframe, .adsbygoogle, .banners, .whatsapp-button, .social-share, footer, nav, header').remove();
+            $art('script, style, iframe, .adsbygoogle, .banners, .whatsapp-button, .social-share, footer, nav, header, .related-posts, .recommended-posts, .post-navigation').remove();
+
+            const STOP_WORDS = [
+              /Um post compartilhado por/gi,
+              /Leia também:/gi,
+              /Veja também:/gi,
+              /Confira abaixo:/gi,
+              /Aviso importante:/gi,
+              /A programação organizada pela/gi,
+              /O vereador de Campos/gi,
+              /A concessionária Águas do Paraíba/gi,
+              /A fabricante Ypê/gi
+            ];
 
             let contentHtml = "";
             const contentBlocks = $art(source.contentSelector);
             if (contentBlocks.length > 0) {
               const uniqueParagraphs = new Set<string>();
+              let stopReading = false;
+
               contentBlocks.each((i, block) => {
+                if (stopReading) return;
+                
                 const items = $art(block).find('p, h2, h3, h4, li');
                 if (items.length > 0) {
                   items.each((j, item) => {
                     const text = $art(item).text().trim();
+                    
+                    // Check for stop words
+                    for (const regex of STOP_WORDS) {
+                      if (regex.test(text)) {
+                        stopReading = true;
+                        break;
+                      }
+                    }
+
+                    if (stopReading) return false;
+
                     if (text.length > 40 && !uniqueParagraphs.has(text)) {
                       uniqueParagraphs.add(text);
                       contentHtml += `<p>${text}</p>\n`;
@@ -179,7 +220,16 @@ export async function automateNews() {
                   });
                 } else {
                   const text = $art(block).text().trim();
-                  if (text.length > 50 && !uniqueParagraphs.has(text)) {
+                  
+                  // Check for stop words in single blocks
+                  for (const regex of STOP_WORDS) {
+                    if (regex.test(text)) {
+                      stopReading = true;
+                      break;
+                    }
+                  }
+
+                  if (!stopReading && text.length > 50 && !uniqueParagraphs.has(text)) {
                     uniqueParagraphs.add(text);
                     contentHtml += `<p>${text}</p>\n`;
                   }
@@ -229,6 +279,7 @@ export async function automateNews() {
       }
     }
 
+    await updateStatus("Automação concluída!", 100, false);
     return {
       success: true,
       processed: SOURCES.length,
@@ -236,6 +287,7 @@ export async function automateNews() {
     };
   } catch (error) {
     console.error("[Robô] Erro:", error);
+    await updateStatus("Erro na automação!", 100, false);
     throw error;
   }
 }

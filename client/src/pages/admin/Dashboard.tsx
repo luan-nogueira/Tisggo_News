@@ -8,6 +8,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Link, useLocation } from "wouter";
 import { Sparkles, Loader2, Edit2, Trash2, Plus, Eye, FileText, Users, TrendingUp, Clock, ShieldCheck, Settings } from "lucide-react";
 import { motion } from "framer-motion";
+import { onSnapshot, doc } from "firebase/firestore";
+import { db as firestoreDb } from "@/lib/firebase";
+import { Progress } from "@/components/ui/progress";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -36,6 +39,17 @@ export default function Dashboard() {
   const [automationInterval, setAutomationInterval] = useState("4");
   const [autoCleanup, setAutoCleanup] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [automationStatus, setAutomationStatus] = useState<any>(null);
+
+  // Listener for real-time progress
+  useEffect(() => {
+    const unsub = onSnapshot(doc(firestoreDb, "automation_status", "current"), (doc) => {
+      if (doc.exists()) {
+        setAutomationStatus(doc.data());
+      }
+    });
+    return () => unsub();
+  }, []);
 
   // Sync settings when loaded
   useEffect(() => {
@@ -249,6 +263,34 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Real-time Progress Bar */}
+        {automationStatus?.isAutomating && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card border border-accent/30 rounded-2xl p-8 mb-12 shadow-2xl relative overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+            <div className="flex items-center justify-between mb-6 relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="bg-accent/10 p-3 rounded-xl animate-pulse">
+                  <Sparkles className="w-6 h-6 text-accent" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-foreground uppercase tracking-tighter">O Robô está trabalhando</h3>
+                  <p className="text-muted-foreground text-sm font-bold animate-pulse">{automationStatus.message}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-3xl font-black text-accent">{automationStatus.progress}%</span>
+              </div>
+            </div>
+            <div className="relative z-10">
+              <Progress value={automationStatus.progress} className="h-3 bg-muted" />
+            </div>
+          </motion.div>
+        )}
+
         {/* Articles Management */}
         <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl">
           <div className="flex items-center justify-between p-6 border-b border-border bg-accent/5">
@@ -268,15 +310,15 @@ export default function Dashboard() {
               </Button>
               <Button
                 onClick={handleAutomate}
-                disabled={isAutomating}
+                disabled={isAutomating || automationStatus?.isAutomating}
                 className="bg-background text-foreground hover:bg-accent/10 font-bold flex items-center gap-2 border border-border"
               >
-                {isAutomating ? (
+                {(isAutomating || automationStatus?.isAutomating) ? (
                   <Loader2 className="w-4 h-4 animate-spin text-accent" />
                 ) : (
                   <Sparkles className="w-4 h-4 text-accent" />
                 )}
-                Buscar Agora
+                {automationStatus?.isAutomating ? "Puxando..." : "Buscar Agora"}
               </Button>
               <Link href="/admin/articles/new">
                 <Button className="bg-accent text-black hover:bg-yellow-500 font-black flex items-center gap-2">
