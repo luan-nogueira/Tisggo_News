@@ -253,6 +253,7 @@ export async function automateNews() {
             if (existing) continue;
 
             console.log(`[Automation] Extracting details for: "${title}"`);
+            await updateStatus(`Encontrei uma notícia: ${title.substring(0, 30)}...`, progress, true);
 
             let coverImage = $art('meta[property="og:image"]').attr('content') || "";
             if (coverImage.includes('video-thumb') || !coverImage) {
@@ -330,6 +331,8 @@ export async function automateNews() {
               });
             }
 
+            await updateStatus(`Implementando notícia: ${title.substring(0, 20)}...`, progress, true);
+
             let cleanContent = contentHtml.replace(/<a\b[^>]*>(.*?)<\/a>/gi, '$1');
             for (const regex of FORBIDDEN_WORDS) {
               cleanContent = cleanContent.replace(regex, "");
@@ -351,11 +354,19 @@ export async function automateNews() {
                 </div>`;
             }
 
+            await updateStatus(`Finalizando ajustes e classificando...`, progress, true);
+
             let categoryId;
+            let categoryName = "";
             if (source.forcedCategory) {
+              categoryName = source.forcedCategory;
               categoryId = await getOrCreateCategory(source.forcedCategory);
             } else {
               categoryId = await classifyAndGetCategoryId(title, cleanContent, link);
+              // Buscar o nome da categoria para o log
+              const categories = await db.getCategories();
+              const cat = categories.find(c => c.id === categoryId);
+              categoryName = cat ? cat.name : "Geral";
             }
 
             await db.createArticle({
@@ -370,6 +381,8 @@ export async function automateNews() {
               published: true,
               sourceUrl: link,
             });
+
+            await updateStatus(`Postada com sucesso em ${categoryName}!`, progress, true);
 
             results.push({ title, status: "success", source: source.name });
           } catch (err) { }
