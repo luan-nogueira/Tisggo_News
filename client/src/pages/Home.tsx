@@ -406,6 +406,7 @@ export default function Home() {
               ))}
             </div>
           </div>
+        )}
 
           {/* Sidebar - Featured Articles & Sponsor */}
           <div className="space-y-6">
