@@ -55,6 +55,8 @@ export const articles = mysqlTable("articles", {
   views: int("views").default(0),
   published: boolean("published").default(false),
   publishedAt: timestamp("publishedAt"),
+  videoUrl: varchar("videoUrl", { length: 500 }),
+  sourceUrl: varchar("sourceUrl", { length: 500 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

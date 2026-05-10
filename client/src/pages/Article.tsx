@@ -197,19 +197,31 @@ export default function Article() {
           </div>
         </div>
 
-        {/* Featured Image */}
-        {article.coverImage && (
+        {/* Featured Media (Video or Image) */}
+        {(article.videoUrl || article.coverImage) && (
           <motion.div
-            className="mb-12 rounded-lg overflow-hidden max-w-4xl mx-auto shadow-2xl"
+            className="mb-12 rounded-lg overflow-hidden max-w-4xl mx-auto shadow-2xl bg-black"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <img
-              src={article.coverImage}
-              alt={article.title}
-              className="w-full h-auto object-cover max-h-[600px]"
-            />
+            {article.videoUrl ? (
+              <div className="relative pt-[56.25%] w-full">
+                <iframe
+                  src={article.videoUrl}
+                  className="absolute top-0 left-0 w-full h-full"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  title="Video Player"
+                />
+              </div>
+            ) : (
+              <img
+                src={article.coverImage}
+                alt={article.title}
+                className="w-full h-auto object-cover max-h-[600px]"
+              />
+            )}
           </motion.div>
         )}
 

@@ -218,7 +218,7 @@ export async function automateNews() {
       const source = SOURCES[i];
       const progress = Math.round(10 + (i / SOURCES.length) * 85);
       try {
-        await updateStatus(`Buscando notícias em: ${source.name}...`, progress, true);
+        await updateStatus(`Buscando novas notícias na região...`, progress, true);
         console.log(`[Automation] Scraping source: ${source.name}`);
         
         const controller = new AbortController();
@@ -387,6 +387,18 @@ export async function automateNews() {
                 </div>`;
             }
 
+            let videoUrl = "";
+            // Detect ESPN Video
+            if (source.name.includes("ESPN")) {
+              const videoIdMatch = artHtml.match(/["']videoId["']\s*:\s*["'](\d+)["']/i) || 
+                                  artHtml.match(/\/video\/clipe\/_\/id\/(\d+)/i) ||
+                                  artHtml.match(/["']id["']\s*:\s*["'](\d+)["']/i);
+              if (videoIdMatch && videoIdMatch[1]) {
+                videoUrl = `https://www.espn.com.br/watch/syndicatedplayer?id=${videoIdMatch[1]}`;
+                console.log(`[Automation] Video detected for ESPN: ${videoUrl}`);
+              }
+            }
+
             await updateStatus(`Finalizando ajustes e classificando...`, progress, true);
 
             let categoryId;
@@ -396,7 +408,6 @@ export async function automateNews() {
               categoryId = await getOrCreateCategory(source.forcedCategory);
             } else {
               categoryId = await classifyAndGetCategoryId(title, cleanContent, link);
-              // Buscar o nome da categoria para o log
               const categories = await db.getCategories();
               const cat = categories.find(c => c.id === categoryId);
               categoryName = cat ? cat.name : "Geral";
@@ -410,6 +421,7 @@ export async function automateNews() {
               author: "Equipe Editorial",
               categoryId,
               coverImage: coverImage || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800",
+              videoUrl: videoUrl || null,
               publishedAt: new Date(),
               published: true,
               sourceUrl: link,

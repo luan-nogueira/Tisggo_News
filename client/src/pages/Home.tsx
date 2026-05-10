@@ -23,21 +23,38 @@ const getCategoryEmoji = (name: string) => {
   return '🗞️';
 };
 
-const renderMedia = (url: string, alt: string, className: string) => {
+const renderMedia = (url: string, alt: string, className: string, hasVideo?: boolean) => {
   const isVideo = url.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i);
   if (isVideo) {
     return (
-      <video 
-        src={url} 
-        className={className} 
-        autoPlay 
-        muted 
-        loop 
-        playsInline 
-      />
+      <div className="relative w-full h-full">
+        <video 
+          src={url} 
+          className={className} 
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-12 h-12 bg-accent/80 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <Zap className="w-6 h-6 text-black fill-black" />
+          </div>
+        </div>
+      </div>
     );
   }
-  return <img src={url} alt={alt} className={className} />;
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      <img src={url} alt={alt} className={className} />
+      {hasVideo && (
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-md rounded border border-white/20 z-10">
+          <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+          <span className="text-[10px] font-black text-white uppercase tracking-wider">VÍDEO</span>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default function Home() {
@@ -318,12 +335,8 @@ export default function Home() {
                     utils.articles.getBySlug.prefetch({ slug: article.slug || article.id });
                   }}
                 >
-                  {/* Background Image */}
-                  <img
-                    src={article.coverImage}
-                    alt={article.title}
-                    className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-                  />
+                  {/* Background Media */}
+                  {renderMedia(article.coverImage || "", article.title, "absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700", !!(article as any).videoUrl)}
                   {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                   
@@ -475,15 +488,10 @@ export default function Home() {
                 }}
               >
                 <div className="bg-card border border-border hover:border-accent transition-all duration-300 rounded overflow-hidden hover:shadow-lg hover:shadow-accent/20">
-                  {/* Image */}
+                  {/* Media */}
                   <div className="relative overflow-hidden bg-gray-800 aspect-video">
-                    {article.coverImage ? (
-                      <img
-                        src={article.coverImage}
-                        alt={article.title}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
+                    {article.coverImage || (article as any).videoUrl ? (
+                      renderMedia(article.coverImage || "", article.title, "w-full h-full object-cover group-hover:scale-110 transition-transform duration-500", !!(article as any).videoUrl)
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5" />
                     )}
