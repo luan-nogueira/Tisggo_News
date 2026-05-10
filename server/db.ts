@@ -86,7 +86,19 @@ export function getStorage() {
 }
 
 function toData<T>(doc: admin.firestore.DocumentSnapshot | admin.firestore.QueryDocumentSnapshot): T {
-  return { id: doc.id, ...doc.data() } as T;
+  const data = doc.data() || {};
+  
+  // Converte Firestore Timestamps para strings ISO legíveis pelo frontend
+  const converted: any = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value && typeof value === 'object' && typeof (value as any).toDate === 'function') {
+      converted[key] = (value as admin.firestore.Timestamp).toDate().toISOString();
+    } else {
+      converted[key] = value;
+    }
+  }
+  
+  return { id: doc.id, ...converted } as T;
 }
 
 // Helper to ensure we have a valid DB instance or throw clear error

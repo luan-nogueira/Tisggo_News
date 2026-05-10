@@ -596,18 +596,25 @@ async function classifyAndGetCategoryId(title: string, content: string, link: st
     "Geral": ["notícia", "informação", "portal", "região"]
   };
 
+  // Função de matching com limite de palavra para evitar falsos positivos
+  const matchesWord = (text: string, word: string): boolean => {
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    return regex.test(text);
+  };
+
   let bestCategory = "Geral";
   let maxScore = 0;
 
   for (const [category, words] of Object.entries(keywords)) {
     let score = 0;
     words.forEach(word => {
-      if (text.includes(word.toLowerCase())) score += 1;
+      if (matchesWord(text, word)) score += 1;
     });
     
     // Título pesa 3x mais
     words.forEach(word => {
-      if (titleLower.includes(word.toLowerCase())) score += 3;
+      if (matchesWord(titleLower, word)) score += 3;
     });
 
     if (score > maxScore) {
