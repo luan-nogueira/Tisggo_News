@@ -140,8 +140,7 @@ export async function automateNews() {
       message: msg,
       progress: prog,
       updatedAt: new Date().toISOString(),
-      isAutomating: active,
-      stopRequested: false // Garante que comece como false
+      isAutomating: active
     }, { merge: true });
   };
 
@@ -149,6 +148,12 @@ export async function automateNews() {
     const doc = await firestore.collection("automation_status").doc("current").get();
     return doc.exists && doc.data()?.stopRequested === true;
   };
+
+  // Reset inicial: Limpa qualquer pedido de parada anterior antes de começar
+  await firestore.collection("automation_status").doc("current").update({
+    stopRequested: false,
+    isAutomating: true
+  });
 
   try {
     await updateStatus("Iniciando faxina...", 5, true);
@@ -406,16 +411,16 @@ export async function automateNews() {
       }
     }
 
-    await updateStatus("Automação concluída!", 100, false);
-    return {
-      success: true,
-      processed: SOURCES.length,
-      timestamp: new Date().toISOString()
-    };
+    console.log("[Automation] Automação encerrada.");
+    await updateStatus("Automação concluída com sucesso!", 100, false);
+    // Limpa o flag de parada ao finalizar normalmente
+    await firestore.collection("automation_status").doc("current").update({ stopRequested: false });
+    
+    return results;
   } catch (error) {
-    console.error("[Robô] Erro:", error);
-    await updateStatus("Erro na automação!", 100, false);
-    throw error;
+    console.error("[Robô] Erro fatal:", error);
+    await updateStatus("Erro na automação. Tente novamente.", 0, false);
+    return [];
   }
 }
 
