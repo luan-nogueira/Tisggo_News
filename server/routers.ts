@@ -174,10 +174,10 @@ export const appRouter = router({
       fileName: z.string(),
       contentType: z.string()
     })).mutation(async ({ input }) => {
-      const { firebaseUpload } = await import("./db.js");
+      const { uploadImageToStorage } = await import("./db.js");
       const buffer = Buffer.from(input.base64.split(",")[1], "base64");
       const safeName = input.fileName.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
-      const url = await firebaseUpload(`sponsors/${Date.now()}_${safeName}`, buffer, input.contentType);
+      const url = await uploadImageToStorage(buffer, `sponsors/${Date.now()}_${safeName}`, input.contentType);
       return { url };
     })
   }),

@@ -288,7 +288,7 @@ export async function getAllArticlesAdmin() {
 // STORAGE HELPERS
 export async function uploadImageToStorage(buffer: Buffer, fileName: string, contentType: string): Promise<string> {
   const bucket = getStorage().bucket();
-  const file = bucket.file(`articles/${Date.now()}_${fileName}`);
+  const file = bucket.file(fileName);
   
   await file.save(buffer, {
     metadata: { contentType },
