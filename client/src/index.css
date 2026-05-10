@@ -338,8 +338,14 @@
     font-size: clamp(2rem, 6vw, 3.5rem);
   }
 
+  .article-body-content {
+    @apply text-lg md:text-xl text-foreground/90;
+    line-height: 1.8;
+    font-family: 'Merriweather', serif;
+  }
+
   .article-body-content p {
-    @apply mb-8 text-lg md:text-xl leading-relaxed text-foreground/90;
+    @apply mb-8;
   }
 
   .article-body-content h2 {

@@ -54,7 +54,7 @@ export function AdvertiseModal({ isOpen, onClose }: AdvertiseModalProps) {
               </div>
 
               <h2 className="text-2xl font-black text-foreground mb-2 uppercase tracking-tighter">
-                Anuncie no <span className="text-accent">Tisgo</span>
+                Anuncie no <span className="text-accent">Tisgo News</span>
               </h2>
               <p className="text-muted-foreground mb-8">
                 Alcance milhares de leitores em Campos e região. Entre em contato para conhecer nossos planos e formatos.
