@@ -208,9 +208,12 @@ export default function Article() {
         )}
 
         {/* Article Body */}
-        <div className="mt-12">
-          <div className="editorial-content max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: article.content }} />
+        <div className="mt-12 flex justify-center">
+          <div className="editorial-content max-w-2xl w-full">
+            <div 
+              dangerouslySetInnerHTML={{ __html: article.content }} 
+              className="article-body-content"
+            />
           </div>
         </div>
 

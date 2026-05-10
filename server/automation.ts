@@ -161,8 +161,9 @@ export async function automateNews() {
                 .replace(/\s{2,}/g, ' ')
                 .trim();
              
-             // If content is too short after cleaning, it's probably broken
-             if (polished.length < 300) {
+             // If content has very little actual text after cleaning, it's probably broken
+             const textOnly = polished.replace(/<[^>]*>/g, '').trim();
+             if (textOnly.length < 200) {
                 console.log(`[Automation] Deletando notícia curta/quebrada: ${data.title}`);
                 await doc.ref.delete();
                 continue;
