@@ -36,6 +36,16 @@ const SOURCES = [
     contentSelector: ".entry-content",
     baseUrl: "https://www.ururau.com.br",
     category: "Cidades"
+  },
+  {
+    name: "Campos Ocorrências",
+    url: "https://camposocorrencias.com.br/",
+    linkSelector: "article.post a.post-title, .mag-box-container a",
+    titleSelector: "h1.single-post-title",
+    contentSelector: ".entry-content",
+    dateSelector: "time, .post-date",
+    baseUrl: "https://camposocorrencias.com.br",
+    category: "Polícia"
   }
 ];
 
@@ -192,6 +202,24 @@ export async function automateNews(limitPerSource = 2) {
               c.name.toLowerCase().includes(targetCategoryName.toLowerCase())
             ) || categories.find(c => c.name === "Geral") || categories[0];
             
+            // Extract original publication date if available
+            let publishedAt = new Date().toISOString();
+            if (source.dateSelector) {
+              const rawDate = $art(source.dateSelector).attr('datetime') || $art(source.dateSelector).first().text();
+              if (rawDate) {
+                const parsed = new Date(rawDate);
+                if (!isNaN(parsed.getTime())) {
+                  publishedAt = parsed.toISOString();
+                } else {
+                  // Try to parse BR date format DD/MM/YYYY
+                  const match = rawDate.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                  if (match) {
+                    publishedAt = new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1])).toISOString();
+                  }
+                }
+              }
+            }
+
             await createArticle({
               title,
               slug,
@@ -201,7 +229,7 @@ export async function automateNews(limitPerSource = 2) {
               categoryId: sourceCategory.id,
               coverImage: finalImageUrl,
               sourceUrl: link,
-              publishedAt: new Date().toISOString(),
+              publishedAt,
               published: true,
             });
             stats.added++;
