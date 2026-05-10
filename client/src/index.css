@@ -347,9 +347,10 @@
   .article-body-content p, 
   .article-body-content div, 
   .article-body-content {
-    @apply text-lg md:text-xl text-foreground/90 !important;
-    line-height: 1.8 !important;
-    font-family: 'Merriweather', serif !important;
+    font-size: 1.25rem;
+    color: var(--foreground);
+    line-height: 1.8;
+    font-family: 'Merriweather', serif;
   }
 
   .article-body-content p {

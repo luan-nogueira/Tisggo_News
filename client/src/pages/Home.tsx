@@ -348,6 +348,20 @@ export default function Home() {
               </motion.div>
             ))}
 
+            {/* Slider Arrows */}
+            <button 
+              onClick={(e) => { e.preventDefault(); setCurrentSlide((prev) => (prev - 1 + featuredArticles.length) % featuredArticles.length); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-3 bg-black/40 hover:bg-accent hover:text-black text-white rounded-full transition-all backdrop-blur-md hidden md:flex"
+            >
+              <ChevronRight className="w-6 h-6 rotate-180" />
+            </button>
+            <button 
+              onClick={(e) => { e.preventDefault(); setCurrentSlide((prev) => (prev + 1) % featuredArticles.length); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-3 bg-black/40 hover:bg-accent hover:text-black text-white rounded-full transition-all backdrop-blur-md hidden md:flex"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
             {/* Slider Dots */}
             <div className="absolute bottom-6 right-10 flex gap-2 z-20">
               {featuredArticles.map((_, i) => (
