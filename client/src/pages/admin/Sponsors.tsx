@@ -148,6 +148,32 @@ export default function AdminSponsors() {
         )}
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { id: 'sidebar', name: 'Barra Lateral', icon: Layout },
+          { id: 'horizontal_bottom', name: 'Banner Inferior', icon: ExternalLink },
+          { id: 'horizontal_middle', name: 'Banner Home', icon: Zap },
+          { id: 'top_banner', name: 'Topo do Site', icon: Crop }
+        ].map(slot => {
+          const isOccupied = sponsors?.some((s: any) => s.location === slot.id && s.active);
+          return (
+            <Card key={slot.id} className={`border-2 transition-all ${isOccupied ? 'border-accent/20 bg-accent/5' : 'border-dashed border-muted bg-transparent'}`}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isOccupied ? 'bg-accent text-black' : 'bg-muted text-muted-foreground'}`}>
+                  <slot.icon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate">{slot.name}</p>
+                  <p className={`text-xs font-bold ${isOccupied ? 'text-foreground' : 'text-muted-foreground italic'}`}>
+                    {isOccupied ? 'Ocupado' : 'Disponível'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
       {isEditing ? (
         <Card className="bg-card border-border">
           <CardHeader>

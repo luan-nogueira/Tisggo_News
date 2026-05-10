@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdvertiseModal } from "@/components/AdvertiseModal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Share2, ArrowLeft, Calendar, User, Eye, Link as LinkIcon, MessageCircle } from "lucide-react";
+import { Loader2, Share2, ArrowLeft, Calendar, User, Eye, Link as LinkIcon, MessageCircle, Instagram } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -57,10 +57,12 @@ export default function Article() {
       {/* News Ticker */}
       <div className="news-ticker">
         <div className="news-ticker-content">
-          <span className="mx-8">🔴 URGENTE: Acompanhe as últimas notícias de Campos dos Goytacazes e Região em tempo real</span>
-          <span className="mx-8">📈 ECONOMIA: Receita petrolífera de Campos registra queda de 58%</span>
-          <span className="mx-8">⚖️ JUSTIÇA: Operação da PF investiga fraudes na educação em Campos</span>
-          <span className="mx-8">🌊 CLIMA: Defesa Civil emite alerta de ressaca para o Farol de São Thomé</span>
+          <span className="mx-8">Acompanhe as últimas notícias de Campos dos Goytacazes e Região em tempo real</span>
+          {relatedArticles?.slice(0, 5).map(a => (
+            <span key={a.id} className="mx-8">
+              🗞️ {a.title.toUpperCase()}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -184,6 +186,25 @@ export default function Article() {
             </Button>
             <Button
               size="sm"
+              className="bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white hover:opacity-90 transition-all duration-300 font-bold border-none"
+              onClick={() => {
+                const url = window.location.href;
+                if (navigator.share) {
+                  navigator.share({
+                    title: article.title,
+                    url: url
+                  }).catch(console.error);
+                } else {
+                  navigator.clipboard.writeText(url);
+                  alert('Link copiado para compartilhar no Instagram!');
+                }
+              }}
+            >
+              <Instagram className="w-4 h-4 mr-2" />
+              Instagram
+            </Button>
+            <Button
+              size="sm"
               variant="outline"
               className="border-gray-700 hover:border-accent text-gray-400 hover:text-accent transition-all duration-300 font-bold"
               onClick={() => {
@@ -206,14 +227,25 @@ export default function Article() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             {article.videoUrl ? (
-              <div className="relative pt-[56.25%] w-full">
-                <iframe
-                  src={article.videoUrl}
-                  className="absolute top-0 left-0 w-full h-full"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                  title="Video Player"
-                />
+              <div className="relative pt-[125%] sm:pt-[56.25%] w-full">
+                {article.videoUrl.includes('instagram.com') ? (
+                  <iframe
+                    src={`${article.videoUrl.split('?')[0]}${article.videoUrl.endsWith('/') ? '' : '/'}embed`}
+                    className="absolute top-0 left-0 w-full h-full"
+                    frameBorder="0"
+                    scrolling="no"
+                    allowTransparency={true}
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  />
+                ) : (
+                  <iframe
+                    src={article.videoUrl}
+                    className="absolute top-0 left-0 w-full h-full"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    title="Video Player"
+                  />
+                )}
               </div>
             ) : (
               <img

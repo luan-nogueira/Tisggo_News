@@ -478,7 +478,7 @@
   }
 
   .news-ticker-content span {
-    @apply text-[10px] font-black uppercase text-black tracking-widest;
+    @apply text-xs md:text-sm font-black uppercase text-black tracking-widest;
   }
 
   @keyframes marquee {

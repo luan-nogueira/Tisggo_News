@@ -83,10 +83,16 @@ export default function Category() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Red Urgent Bar */}
-      <div className="bg-red-700 text-white py-2 px-4 text-center text-sm font-bold">
-        <span className="inline-block bg-red-900 px-3 py-1 rounded mr-3">URGENTE</span>
-        ACOMPANHE AS ÚLTIMAS NOTÍCIAS DA REGIÃO EM TEMPO REAL
+      {/* News Ticker */}
+      <div className="news-ticker">
+        <div className="news-ticker-content">
+          <span className="mx-8">Acompanhe as últimas notícias de Campos dos Goytacazes e Região em tempo real</span>
+          {articles?.slice(0, 10).map(a => (
+            <span key={a.id} className="mx-8">
+              🗞️ {a.title.toUpperCase()}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* Header */}
@@ -210,7 +216,7 @@ export default function Category() {
 
       {/* Category Header */}
       <motion.section
-        className="max-w-7xl mx-auto px-4 py-12"
+        className="max-w-[1600px] mx-auto px-4 py-12"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}

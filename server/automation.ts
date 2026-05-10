@@ -11,11 +11,11 @@ async function cleanupOldArticles() {
     const settings = settingsDoc.exists ? settingsDoc.data() : { autoCleanup: true };
     if (!settings?.autoCleanup) return;
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const tenDaysAgo = new Date();
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
 
     const snapshot = await firestore.collection("articles")
-      .where("createdAt", "<", sevenDaysAgo.toISOString())
+      .where("createdAt", "<", tenDaysAgo.toISOString())
       .get();
 
     if (snapshot.empty) return;

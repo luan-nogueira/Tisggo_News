@@ -8,6 +8,7 @@ export const createArticleSchema = z.object({
   categoryId: z.string().min(1, "Categoria é obrigatória"),
   author: z.string().min(2),
   coverImage: z.string().optional(),
+  videoUrl: z.string().optional(),
   sourceUrl: z.string().optional(),
   published: z.boolean().default(false),
 });

@@ -29,6 +29,7 @@ export default function ArticleForm() {
     categoryId: "",
     author: "",
     coverImage: "",
+    videoUrl: "",
     published: false,
   });
 
@@ -41,6 +42,7 @@ export default function ArticleForm() {
         categoryId: String(existingArticle.categoryId),
         author: existingArticle.author,
         coverImage: existingArticle.coverImage || "",
+        videoUrl: (existingArticle as any).videoUrl || "",
         published: existingArticle.published ?? false,
       });
     }
@@ -292,6 +294,17 @@ export default function ArticleForm() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-black text-muted-foreground tracking-wider">Link de Vídeo / Social (Instagram)</label>
+                <Input
+                  placeholder="https://instagram.com/p/..."
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                  className="bg-muted/50 border-border rounded-2xl h-12 text-foreground placeholder:text-muted-foreground/50"
+                />
+                <p className="text-[9px] text-muted-foreground px-1">Insira o link do Instagram ou vídeo para exibição especial.</p>
               </div>
 
               <div className="flex items-center justify-between bg-muted/50 p-4 rounded-2xl border border-border">

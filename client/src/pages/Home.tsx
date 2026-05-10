@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Search, ChevronRight, Eye, LogIn, Menu, X, Zap, Instagram, MessageCircle } from "lucide-react";
+import { Loader2, Search, ChevronRight, Eye, LogIn, Menu, X, Zap, Instagram, Facebook, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
@@ -11,6 +11,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { WeatherWidget } from "@/components/WeatherWidget";
+import { FootballWidget } from "@/components/FootballWidget";
 import { AdvertiseModal } from "@/components/AdvertiseModal";
 
 const getCategoryEmoji = (name: string) => {
@@ -83,9 +84,36 @@ export default function Home() {
     index === self.findIndex((t) => t.id === article.id)
   ) : [];
 
-  const featuredArticles = uniqueArticles?.slice(0, 6) || [];
-  const sidebarArticles = uniqueArticles?.slice(6, 10) || [];
-  const gridArticles = uniqueArticles?.slice(10, 20) || [];
+  // Diversify featured articles to include different categories
+  const featuredArticles = (() => {
+    if (!uniqueArticles?.length) return [];
+    
+    const categoriesSet = new Set();
+    const diversified: any[] = [];
+    const others: any[] = [];
+
+    // First, try to get one from each category for the top spots
+    uniqueArticles.forEach(article => {
+      if (!categoriesSet.has(article.categoryId) && diversified.length < 6) {
+        diversified.push(article);
+        categoriesSet.add(article.categoryId);
+      } else {
+        others.push(article);
+      }
+    });
+
+    // Fill remaining spots if needed
+    while (diversified.length < 6 && others.length > 0) {
+      diversified.push(others.shift());
+    }
+    
+    return diversified;
+  })();
+
+  // Filter remaining articles for other sections
+  const remainingArticles = uniqueArticles.filter(a => !featuredArticles.find(f => f.id === a.id));
+  const sidebarArticles = remainingArticles.slice(0, 4);
+  const gridArticles = remainingArticles.slice(4, 16);
 
   useEffect(() => {
     if (featuredArticles.length > 0) {
@@ -149,13 +177,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* News Ticker */}
       <div className="news-ticker">
         <div className="news-ticker-content">
-          <span className="mx-8">🔴 URGENTE: Acompanhe as últimas notícias de Campos dos Goytacazes e Região em tempo real</span>
-          <span className="mx-8">📈 ECONOMIA: Receita petrolífera de Campos registra queda de 58%</span>
-          <span className="mx-8">⚖️ JUSTIÇA: Operação da PF investiga fraudes na educação em Campos</span>
-          <span className="mx-8">🌊 CLIMA: Defesa Civil emite alerta de ressaca para o Farol de São Thomé</span>
+          <span className="mx-8">Acompanhe as últimas notícias de Campos dos Goytacazes e Região em tempo real</span>
+          {uniqueArticles.slice(0, 10).map(article => (
+            <span key={article.id} className="mx-8">
+              {getCategoryEmoji(categories?.find(c => String(c.id) === String(article.categoryId))?.name || "")} {article.title.toUpperCase()}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -304,7 +333,7 @@ export default function Home() {
         onClose={() => setIsAdvertiseOpen(false)} 
       />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-[1600px] mx-auto px-4 py-8">
         {/* Main Article + Sidebar Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
           {/* Main Slider */}
@@ -334,7 +363,6 @@ export default function Home() {
                   <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
                     <div className="flex gap-2 mb-4">
                       <Badge className="bg-red-600 text-white border-none font-bold">DESTAQUE</Badge>
-                      <Badge className="bg-accent text-black border-none font-bold">URGENTE</Badge>
                     </div>
                     <h1 className="text-xl md:text-3xl font-serif font-black text-white leading-tight mb-3 drop-shadow-lg">
                       {article.title}
@@ -435,7 +463,10 @@ export default function Home() {
                 </div>
               </div>
             )}
-            <h3 className="text-lg font-black uppercase text-foreground mb-4">Destaque</h3>
+            <h3 className="text-lg font-black uppercase text-foreground mb-4">Esportes</h3>
+            <FootballWidget />
+            
+            <h3 className="text-lg font-black uppercase text-foreground mt-8 mb-4">Destaque</h3>
             {sidebarArticles.map((article) => (
               <Link 
                 key={article.id} 
@@ -590,9 +621,20 @@ export default function Home() {
                 <span className="text-accent">TISGO</span>
                 <span className="text-foreground">NEWS</span>
               </Link>
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                 O portal de notícias líder em Campos dos Goytacazes e região. Informação com credibilidade e agilidade.
               </p>
+              <div className="flex items-center gap-4">
+                <a href="#" className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-accent hover:text-black transition-all">
+                  <Instagram className="w-5 h-5" />
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-accent hover:text-black transition-all">
+                  <Facebook className="w-5 h-5" />
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-accent hover:text-black transition-all">
+                  <MessageCircle className="w-5 h-5" />
+                </a>
+              </div>
             </div>
             
             <div>
