@@ -4,9 +4,13 @@ import type { User, Article, Category, InsertUser, InsertArticle, InsertCategory
 
 if (!admin.apps.length) {
   try {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY 
-      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') 
-      : undefined;
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    
+    if (privateKey) {
+      // Handle cases where the key is quoted or contains literal \n characters
+      privateKey = privateKey.replace(/^['"]|['"]$/g, '');
+      privateKey = privateKey.replace(/\\n/g, '\n');
+    }
 
     admin.initializeApp({
       credential: admin.credential.cert({

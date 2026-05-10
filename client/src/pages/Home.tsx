@@ -58,6 +58,24 @@ export default function Home() {
   const { data: articles, isLoading: articlesLoading } = trpc.articles.list.useQuery();
   const { data: categories, isLoading: categoriesLoading } = trpc.categories.list.useQuery();
 
+  // Filter out duplicate articles if any
+  const uniqueArticles = articles ? articles.filter((article, index, self) =>
+    index === self.findIndex((t) => t.id === article.id)
+  ) : [];
+
+  const featuredArticles = uniqueArticles?.slice(0, 6) || [];
+  const sidebarArticles = uniqueArticles?.slice(6, 10) || [];
+  const gridArticles = uniqueArticles?.slice(10, 20) || [];
+
+  useEffect(() => {
+    if (featuredArticles.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % featuredArticles.length);
+      }, 6000);
+      return () => clearInterval(timer);
+    }
+  }, [featuredArticles.length]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -97,24 +115,6 @@ export default function Home() {
       </div>
     );
   }
-
-  // Filter out duplicate articles if any
-  const uniqueArticles = articles ? articles.filter((article, index, self) =>
-    index === self.findIndex((t) => t.id === article.id)
-  ) : [];
-
-  const featuredArticles = uniqueArticles?.slice(0, 6) || [];
-  const sidebarArticles = uniqueArticles?.slice(6, 10) || [];
-  const gridArticles = uniqueArticles?.slice(10, 20) || [];
-
-  useEffect(() => {
-    if (featuredArticles.length > 0) {
-      const timer = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % featuredArticles.length);
-      }, 6000);
-      return () => clearInterval(timer);
-    }
-  }, [featuredArticles.length]);
 
   const formatDate = (dateStr: any) => {
     try {
