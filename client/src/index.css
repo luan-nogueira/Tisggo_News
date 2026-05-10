@@ -124,8 +124,14 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
+    width: 100%;
+  }
+
+  html {
+    @apply overflow-x-hidden;
+    width: 100%;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -338,14 +344,16 @@
     font-size: clamp(2rem, 6vw, 3.5rem);
   }
 
+  .article-body-content p, 
+  .article-body-content div, 
   .article-body-content {
-    @apply text-lg md:text-xl text-foreground/90;
-    line-height: 1.8;
-    font-family: 'Merriweather', serif;
+    @apply text-lg md:text-xl text-foreground/90 !important;
+    line-height: 1.8 !important;
+    font-family: 'Merriweather', serif !important;
   }
 
   .article-body-content p {
-    @apply mb-8;
+    @apply mb-8 block;
   }
 
   .article-body-content h2 {

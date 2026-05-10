@@ -206,15 +206,15 @@ export default function Home() {
         </div>
 
         {/* Mobile Category Scroll Bar */}
-        <div className="xl:hidden border-b border-border bg-card/50 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-6 px-4 py-3 whitespace-nowrap">
+        <div className="xl:hidden border-b border-border bg-card/50 overflow-x-auto no-scrollbar touch-pan-x">
+          <div className="flex items-center gap-8 px-6 py-4 whitespace-nowrap">
             {categories?.map((cat) => (
               <Link 
                 key={cat.id} 
                 href={`/category/${cat.slug}`} 
-                className="text-[11px] font-black uppercase text-muted-foreground hover:text-accent transition-colors flex items-center gap-1.5"
-              >
-                <span>{getCategoryEmoji(cat.name)}</span>
+                className="text-xs font-black uppercase text-muted-foreground hover:text-accent transition-all hover:scale-105 flex items-center gap-2.5"
+              > 
+                <span className="text-lg leading-none">{getCategoryEmoji(cat.name)}</span>
                 {cat.name}
               </Link>
             ))}
@@ -232,6 +232,19 @@ export default function Home() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="fixed inset-0 bg-black/60 z-[60] backdrop-blur-sm xl:hidden"
               />
+              <style>{`
+                .news-ticker-content {
+                  display: inline-block;
+                  animation: marquee 40s linear infinite;
+                  will-change: transform;
+                  transform: translateZ(0);
+                }
+
+                @keyframes marquee {
+                  0% { transform: translate3d(100%, 0, 0); }
+                  100% { transform: translate3d(-100%, 0, 0); }
+                }
+              `}</style>
               <motion.div 
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}

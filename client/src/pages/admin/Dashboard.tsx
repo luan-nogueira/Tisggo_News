@@ -56,14 +56,22 @@ export default function Dashboard() {
 
   const { data: stats } = trpc.analytics.getStats.useQuery();
 
-  // Icon switcher for Admin
+  // Robust Icon switcher for Admin
   useEffect(() => {
-    const link: any = document.querySelector("link[rel*='icon']");
-    const appleLink: any = document.querySelector("link[rel='apple-touch-icon']");
-    if (link) link.href = "/admin-icon.png";
-    if (appleLink) appleLink.href = "/admin-icon.png";
+    const updateIcons = () => {
+      const link: any = document.querySelector("link[rel*='icon']");
+      const appleLink: any = document.querySelector("link[rel='apple-touch-icon']");
+      if (link && link.href !== "/admin-icon.png") link.href = "/admin-icon.png";
+      if (appleLink && appleLink.href !== "/admin-icon.png") appleLink.href = "/admin-icon.png";
+    };
+    
+    updateIcons();
+    const interval = setInterval(updateIcons, 1000);
     
     return () => {
+      clearInterval(interval);
+      const link: any = document.querySelector("link[rel*='icon']");
+      const appleLink: any = document.querySelector("link[rel='apple-touch-icon']");
       if (link) link.href = "/news-icon.png";
       if (appleLink) appleLink.href = "/news-icon.png";
     };

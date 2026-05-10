@@ -114,11 +114,17 @@ export default function Article() {
               {categoryName}
             </Badge>
             <span className="text-sm text-gray-400">
-              {publishDate.toLocaleDateString('pt-BR', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-              })} às {publishDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              {publishDate instanceof Date && !isNaN(publishDate.getTime()) ? (
+                <>
+                  {publishDate.toLocaleDateString('pt-BR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })} às {publishDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </>
+              ) : (
+                new Date().toLocaleDateString('pt-BR')
+              )}
             </span>
             <span className="text-sm text-gray-400">•</span>
             <span className="text-sm text-gray-400">{readingTime} min de leitura</span>
@@ -209,10 +215,11 @@ export default function Article() {
 
         {/* Article Body */}
         <div className="mt-12 flex justify-center">
-          <div className="editorial-content max-w-2xl w-full">
+          <div className="article-body-content max-w-2xl w-full">
             <div 
-              dangerouslySetInnerHTML={{ __html: article.content }} 
-              className="article-body-content"
+              dangerouslySetInnerHTML={{ 
+                __html: article.content.includes('<p') ? article.content : `<p>${article.content.replace(/\n/g, '</p><p>')}</p>` 
+              }} 
             />
           </div>
         </div>
