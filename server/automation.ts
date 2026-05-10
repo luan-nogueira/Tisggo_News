@@ -218,13 +218,19 @@ export async function automateNews() {
       const source = SOURCES[i];
       const progress = Math.round(10 + (i / SOURCES.length) * 85);
       try {
-        await updateStatus("Estamos buscando notícias na região para implementar no site", progress, true);
+        await updateStatus(`Buscando notícias em: ${source.name}...`, progress, true);
         console.log(`[Automation] Scraping source: ${source.name}`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
         const res = await fetch(source.url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          }
+          },
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
         if (!res.ok) continue;
 
         const html = await res.text();
