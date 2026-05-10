@@ -344,6 +344,14 @@
     font-size: clamp(2rem, 6vw, 3.5rem);
   }
 
+  /* Article body wrapper - forces centering */
+  .article-body-wrapper {
+    max-width: 700px !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
   .article-body-content p, 
   .article-body-content div, 
   .article-body-content span, 
@@ -353,7 +361,6 @@
     line-height: 1.8 !important;
     font-family: 'Merriweather', serif !important;
     background-color: transparent !important;
-    display: block !important;
   }
 
   .article-body-content ul, 

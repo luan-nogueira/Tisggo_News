@@ -214,17 +214,8 @@ export default function Article() {
         )}
 
         {/* Article Body */}
-        <div className="w-full flex flex-col items-center">
-          <div 
-            className="article-body-content px-4 w-full"
-            style={{ 
-              maxWidth: '700px', 
-              margin: '0 auto', 
-              fontSize: '22px', 
-              lineHeight: '1.8',
-              textAlign: 'left'
-            }}
-          >
+        <div className="w-full px-4 mt-8 mb-12">
+          <div className="article-body-wrapper article-body-content">
             <div 
               dangerouslySetInnerHTML={{ 
                 __html: article.content.includes('<p') ? article.content : `<p>${article.content.replace(/\n/g, '</p><p>')}</p>` 
