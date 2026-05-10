@@ -128,6 +128,7 @@ export default function Dashboard() {
       toast.success("Comando enviado com sucesso!");
     } catch (error: any) {
       toast.error("O robô parou ou deu timeout. Verifique o site.");
+    } finally {
       setIsAutomating(false);
     }
   };
