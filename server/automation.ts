@@ -116,6 +116,31 @@ export async function automateNews() {
   try {
     await updateStatus("Iniciando faxina...", 5, true);
     await cleanupOldArticles();
+    
+    // RETROACTIVE CLEANING: Clean existing dirty articles
+    await updateStatus("Validando notícias existentes...", 8, true);
+    const existingSnapshot = await firestore.collection("articles").limit(50).get(); // Clean newest 50
+    for (const doc of existingSnapshot.docs) {
+      const data = doc.data();
+      let content = data.content || "";
+      if (content.includes("Um post compartilhado por") || content.includes("Aviso importante:")) {
+         const paragraphs = content.split(/<\/p>/i);
+         let newContent = "";
+         let stopped = false;
+         for (let p of paragraphs) {
+            const cleanP = p.replace(/<p>/i, "").trim();
+            if (!cleanP) continue;
+            const textOnly = cleanP.replace(/<[^>]*>/g, '').trim();
+            for (const regex of STOP_WORDS) { if (regex.test(textOnly)) { stopped = true; break; } }
+            if (stopped) break;
+            newContent += `<p>${cleanP}</p>\n`;
+         }
+         if (newContent.trim() !== content.trim()) {
+            await doc.ref.update({ content: newContent });
+         }
+      }
+    }
+
     const results: any[] = [];
 
     for (let i = 0; i < SOURCES.length; i++) {
