@@ -338,7 +338,8 @@ export async function automateNews() {
                       uniqueParagraphs.add(text);
                       contentHtml += `<p>${text}</p>\n`;
                     }
-                  });
+                    }
+                  }
                 } else {
                   const text = $art(block).text().trim();
                   
@@ -355,7 +356,7 @@ export async function automateNews() {
                     contentHtml += `<p>${text}</p>\n`;
                   }
                 }
-              });
+              }
             }
 
             await updateStatus(`Implementando notícia: ${title.substring(0, 20)}...`, progress, true);
