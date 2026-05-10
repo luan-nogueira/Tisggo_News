@@ -209,7 +209,9 @@ export async function automateNews() {
     const results: any[] = [];
 
     for (let i = 0; i < SOURCES.length; i++) {
-      if (await checkStop()) {
+      const stop = await checkStop();
+      console.log(`[Automation] Check stop for source ${i}: ${stop}`);
+      if (stop) {
         await updateStatus("Automação interrompida pelo usuário.", 0, false);
         return results;
       }
@@ -295,12 +297,18 @@ export async function automateNews() {
               const uniqueParagraphs = new Set<string>();
               let stopReading = false;
 
-              contentBlocks.each((i, block) => {
-                if (stopReading) return;
+              const blocksArray = contentBlocks.toArray();
+              for (const block of blocksArray) {
+                if (stopReading) break;
                 
-                const items = $art(block).find('p, h2, h3, h4, li, table');
+                const items = $art(block).find('p, h2, h3, h4, li, table').toArray();
                 if (items.length > 0) {
-                  items.each((j, item) => {
+                  for (const item of items) {
+                    if (await checkStop()) { 
+                      stopReading = true; 
+                      break; 
+                    }
+                    
                     if (item.name === 'table') {
                        // Basic table cleanup
                        $art(item).find('script, style').remove();

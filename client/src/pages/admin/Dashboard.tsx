@@ -118,19 +118,16 @@ export default function Dashboard() {
   };
 
   const handleAutomate = async () => {
-    if (automationStatus?.isAutomating) {
+    if (automationStatus?.isAutomating || isAutomating) {
       handleStopAutomate();
       return;
     }
     try {
       setIsAutomating(true);
       await automateNews.mutateAsync();
-      toast.success("Notícias automatizadas com sucesso!");
-      utils.articles.list.invalidate();
+      toast.success("Comando enviado com sucesso!");
     } catch (error: any) {
-      toast.error("Erro ao automatizar notícias: " + error.message);
-      console.error("Erro na automação:", error);
-    } finally {
+      toast.error("O robô parou ou deu timeout. Verifique o site.");
       setIsAutomating(false);
     }
   };
@@ -139,10 +136,15 @@ export default function Dashboard() {
     try {
       setIsStopping(true);
       await stopAutomate.mutateAsync();
-      toast.info("Solicitação de parada enviada...");
+      toast.info("Comando de PARADA enviado!");
+      // Reset local imediato para não travar o usuário
+      setTimeout(() => {
+        setIsAutomating(false);
+        setAutomationStatus((prev: any) => ({ ...prev, isAutomating: false }));
+      }, 2000);
     } catch (error: any) {
-      toast.error("Erro ao parar o robô. Tentando reset forçado...");
-      setIsAutomating(false); // Destrava o botão localmente
+      toast.error("Erro ao enviar comando de parada.");
+      setIsAutomating(false);
     } finally {
       setIsStopping(false);
     }
