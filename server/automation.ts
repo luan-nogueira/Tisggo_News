@@ -479,7 +479,28 @@ async function classifyAndGetCategoryId(title: string, content: string, link: st
   const titleLower = title.toLowerCase();
   
   const keywords: Record<string, string[]> = {
-    "Esportes": ["futebol", "série a", "brasileirão", "flamengo", "vasco", "fluminense", "botafogo", "campeonato estadual", "campeonato carioca", "campeonato brasileiro", "gol", "partida", "atleta", "esporte", "estádio", "taça", "libertadores", "copa do brasil", "copa do mundo", "seleção brasileira", "vôlei", "basquete", "surf", "wsl", "circuito mundial de surfe", "golfe", "olimpíadas", "tênis", "ranking esportivo"],
+    "Esportes": [
+      // Futebol
+      "futebol", "série a", "brasileirão", "flamengo", "vasco", "fluminense", "botafogo",
+      "campeonato estadual", "campeonato carioca", "campeonato brasileiro", "gol", "partida",
+      "atleta", "esporte", "estádio", "taça", "libertadores", "copa do brasil", "copa do mundo",
+      "seleção brasileira", "vôlei", "basquete", "olimpíadas", "ranking esportivo",
+      // Fórmula 1
+      "fórmula 1", "formula 1", "f1", "gp do brasil", "grande prêmio", "grid de largada",
+      "piloto", "corrida de f1", "verstappen", "hamilton", "leclerc", "norris", "ferrari",
+      "red bull racing", "mercedes f1", "mclaren", "box pit", "pole position", "volta mais rápida",
+      // Surf
+      "surf", "wsl", "circuito mundial de surfe", "tubo", "manobra",
+      // Tênis
+      "tênis", "torneio de tênis", "roland garros", "wimbledon", "us open", "australian open",
+      "atp", "wta", "grand slam", "saque", "set", "match point", "alcaraz", "djokovic", "sinner",
+      // MMA / Boxe / Luta
+      "mma", "ufc", "boxe", "luta", "nocaute", "ko", "cinturão", "pesagem", "round",
+      "combate", "ring", "octógono",
+      // Outros
+      "golfe", "natação", "atletismo", "ciclismo", "rugby", "handebol", "ginástica",
+      "maratona", "corrida de rua", "triathlon", "esgrima", "judô", "caratê", "wrestling"
+    ],
     "Polícia": ["preso", "apreendido", "polícia militar", "policia civil", "pm preso", "tiro", "assalto", "crime", "delegacia", "tráfico", "homicídio", "acidente fatal", "bombeiros", "resgate", "flagrante", "suspeito preso", "mandado de prisão", "arma de fogo", "revólver", "pistola", "vítima fatal", "morte violenta", "operação policial"],
     "Economia": ["dólar", "pib", "inflação", "mercado financeiro", "investimento", "taxa selic", "lucro", "economia", "royalties do petróleo", "emprego", "vaga de emprego", "orçamento público", "icms", "imposto de renda", "banco central", "finanças públicas", "licitação", "concurso público"],
     "Cidades": ["prefeitura de campos", "prefeito de campos", "câmara municipal", "vereador de campos", "obras públicas", "trânsito", "interdição", "saúde pública", "educação pública", "campos dos goytacazes", "farol de são thomé", "guarus", "pelinca", "avenida", "bairro"],
