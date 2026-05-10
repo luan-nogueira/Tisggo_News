@@ -147,7 +147,7 @@ export async function automateNews() {
       const source = SOURCES[i];
       const progress = Math.round(10 + (i / SOURCES.length) * 85);
       try {
-        await updateStatus(`Buscando no site: ${source.name}`, progress, true);
+        await updateStatus("Estamos buscando notícias na região para implementar no site", progress, true);
         console.log(`[Automation] Scraping source: ${source.name}`);
         const res = await fetch(source.url, {
           headers: {
