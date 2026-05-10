@@ -37,8 +37,8 @@ export const appRouter = router({
   }),
 
   articles: router({
-    list: publicProcedure.query(async () => {
-      return getArticles(20);
+    list: publicProcedure.input(z.number().optional().default(20)).query(async ({ input }) => {
+      return getArticles(input);
     }),
     get: publicProcedure.input(z.string()).query(async ({ input }) => {
       return getArticleById(input);

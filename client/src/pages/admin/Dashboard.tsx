@@ -17,7 +17,8 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
-  const { data: articles, isLoading: articlesLoading } = trpc.articles.list.useQuery();
+  const [limit, setLimit] = useState(20);
+  const { data: articles, isLoading: articlesLoading } = trpc.articles.list.useQuery(limit);
   const { data: categories } = trpc.categories.list.useQuery();
   const deleteArticle = trpc.articles.delete.useMutation();
   const automateNews = trpc.articles.automate.useMutation();
@@ -101,15 +102,17 @@ export default function Dashboard() {
     }
   };
 
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
   const handleDelete = async (id: string) => {
-    if (confirm("Tem certeza que deseja deletar este artigo?")) {
-      try {
-        await deleteArticle.mutateAsync(id);
-        utils.articles.list.invalidate();
-        toast.success("Artigo deletado!");
-      } catch (error) {
-        console.error("Erro ao deletar:", error);
-      }
+    try {
+      await deleteArticle.mutateAsync(id);
+      utils.articles.list.invalidate();
+      toast.success("Artigo deletado com sucesso!");
+      setDeleteId(null);
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+      toast.error("Erro ao deletar artigo.");
     }
   };
 
@@ -321,22 +324,37 @@ export default function Dashboard() {
           <div className="h-[300px] w-full relative z-10">
             {stats?.topArticles && (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.topArticles} layout="vertical" margin={{ left: 10, right: 40 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                <BarChart data={stats.topArticles} layout="vertical" margin={{ left: 10, right: 60, top: 10, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} opacity={0.2} />
                   <XAxis type="number" hide />
                   <YAxis 
                     dataKey="name" 
                     type="category" 
-                    width={160} 
-                    tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: '700' }} 
+                    width={180} 
+                    tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: '800', fontFamily: 'Outfit' }} 
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <Tooltip 
                     cursor={{ fill: 'rgba(214, 158, 46, 0.05)' }}
-                    contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px', fontSize: '12px' }}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))', 
+                      borderRadius: '16px', 
+                      fontSize: '12px', 
+                      color: 'hsl(var(--foreground))', 
+                      fontWeight: '800', 
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.2)' 
+                    }}
+                    itemStyle={{ color: '#D69E2E' }}
                   />
-                  <Bar dataKey="views" radius={[0, 6, 6, 0]} barSize={24}>
+                  <Bar dataKey="views" radius={[0, 50, 50, 0]} barSize={28}>
                     {stats.topArticles.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={index === 0 ? '#D69E2E' : '#2D3748'} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={index === 0 ? '#D69E2E' : 'hsl(var(--muted-foreground))'} 
+                        fillOpacity={index === 0 ? 1 : 0.4}
+                      />
                     ))}
                   </Bar>
                 </BarChart>
@@ -446,10 +464,9 @@ export default function Dashboard() {
                             size="sm"
                             variant="outline"
                             className="border-border hover:border-red-600 text-muted-foreground hover:text-red-600"
-                            onClick={() => handleDelete(String(article.id))}
-                            disabled={deleteArticle.isPending}
+                            onClick={() => setDeleteId(String(article.id))}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4 text-red-500" />
                           </Button>
                         </div>
                       </td>
@@ -457,6 +474,53 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Custom Delete Modal */}
+              {deleteId && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                  <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="bg-card border border-border p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl"
+                  >
+                    <div className="bg-red-500/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                      <Trash2 className="w-8 h-8 text-red-500" />
+                    </div>
+                    <h3 className="text-2xl font-black uppercase text-foreground mb-4">Tem certeza?</h3>
+                    <p className="text-muted-foreground font-bold mb-8">
+                      Esta ação não pode ser desfeita. A notícia será removida permanentemente do portal.
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      <Button 
+                        onClick={() => handleDelete(deleteId)}
+                        className="bg-red-600 hover:bg-red-700 text-white font-black py-6 rounded-2xl"
+                        disabled={deleteArticle.isPending}
+                      >
+                        {deleteArticle.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "SIM, DELETAR NOTÍCIA"}
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => setDeleteId(null)}
+                        className="font-black py-6 rounded-2xl border-border text-foreground"
+                      >
+                        CANCELAR
+                      </Button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+              
+              {articles.length >= limit && (
+                <div className="p-6 border-t border-border flex justify-center">
+                  <Button 
+                    onClick={() => setLimit(prev => prev + 20)}
+                    variant="outline"
+                    className="border-accent text-accent hover:bg-accent hover:text-black font-bold"
+                  >
+                    Carregar mais notícias
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
