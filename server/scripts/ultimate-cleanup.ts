@@ -15,13 +15,13 @@ async function ultimateCleanup() {
 
       // 1. Corrigir "O  teve" (com múltiplos espaços)
       if (content.match(/O\s{1,5}teve\s+acesso/gi)) {
-        content = content.replace(/O\s{1,5}teve\s+acesso/gi, "O Tisggo News teve acesso");
+        content = content.replace(/O\s{1,5}teve\s+acesso/gi, "O Tisgo News teve acesso");
         hasChanges = true;
       }
 
       // 2. Corrigir "O teve" genérico no início de parágrafos
       if (content.match(/<p>O\s+teve/gi)) {
-        content = content.replace(/<p>O\s+teve/gi, "<p>O Tisggo News teve");
+        content = content.replace(/<p>O\s+teve/gi, "<p>O Tisgo News teve");
         hasChanges = true;
       }
 

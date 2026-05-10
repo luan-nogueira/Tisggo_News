@@ -5,7 +5,7 @@ async function count() {
     const db = await getDb();
     const categoriesSnapshot = await db.collection('categories').get();
     
-    console.log('--- Estatísticas do Portal Tisggo ---');
+    console.log('--- Estatísticas do Portal Tisgo ---');
     for (const catDoc of categoriesSnapshot.docs) {
       const cat = catDoc.data();
       const articlesSnapshot = await db.collection('articles').where('categoryId', '==', catDoc.id).get();

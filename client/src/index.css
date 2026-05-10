@@ -47,7 +47,7 @@
 }
 
 :root {
-  /* Tisggo Brand Colors: Black and Yellow */
+  /* Tisgo Brand Colors: Black and Yellow */
   --primary: oklch(0.12 0.01 0);
   --primary-foreground: oklch(0.98 0.01 100);
   --sidebar-primary: oklch(0.12 0.01 0);
@@ -84,7 +84,7 @@
 }
 
 .dark {
-  /* Tisggo Brand Colors Dark Mode: Black and Yellow */
+  /* Tisgo Brand Colors Dark Mode: Black and Yellow */
   --primary: oklch(0.12 0.01 0);
   --primary-foreground: oklch(0.98 0.01 100);
   --sidebar-primary: oklch(0.12 0.01 0);

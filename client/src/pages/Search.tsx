@@ -26,7 +26,7 @@ export default function SearchPage() {
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
           <Link href="/">
             <span className="text-2xl font-black cursor-pointer">
-              <span className="text-accent">TISGGO</span>
+              <span className="text-accent">TISGO</span>
               <span className="text-white">NEWS</span>
             </span>
           </Link>
@@ -128,7 +128,7 @@ export default function SearchPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <span className="text-2xl font-black">
-                <span className="text-accent">TISGGO</span>
+                <span className="text-accent">TISGO</span>
                 <span className="text-white">NEWS</span>
               </span>
               <p className="text-sm text-gray-500 mt-2">
@@ -167,7 +167,7 @@ export default function SearchPage() {
           </div>
           <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-8" />
           <p className="text-center text-sm text-gray-500">
-            &copy; 2026 Tisggo News. Todos os direitos reservados.
+            &copy; 2026 Tisgo News. Todos os direitos reservados.
           </p>
         </div>
       </footer>

@@ -102,7 +102,7 @@ export default function Category() {
               </button>
               <Link href="/" className="flex flex-col group">
                 <span className="text-2xl sm:text-3xl font-black leading-none tracking-tighter italic">
-                  <span className="text-accent drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">TISGGO</span>
+                  <span className="text-accent drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">TISGO</span>
                   <span className="text-foreground drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">NEWS</span>
                 </span>
                 <div className="flex items-center gap-2 mt-1">
@@ -409,7 +409,7 @@ export default function Category() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-8">
             <div>
               <span className="text-2xl font-black">
-                <span className="text-accent">TISGGO</span>
+                <span className="text-accent">TISGO</span>
                 <span className="text-foreground">NEWS</span>
               </span>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
@@ -461,7 +461,7 @@ export default function Category() {
           </div>
           <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-8" />
           <div className="text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Tisggo News. Todos os direitos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} Tisgo News. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

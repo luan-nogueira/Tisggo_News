@@ -23,7 +23,7 @@ export default function Article() {
 
   useSEO({
     title: article?.title || "Artigo",
-    description: article?.excerpt || article?.content.substring(0, 160) || "Leia este artigo no Tisggo News",
+    description: article?.excerpt || article?.content.substring(0, 160) || "Leia este artigo no Tisgo News",
     image: article?.coverImage || undefined,
     url: typeof window !== "undefined" ? window.location.href : "",
     type: "article",
@@ -70,7 +70,7 @@ export default function Article() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex flex-col">
               <span className="text-2xl font-black leading-none tracking-tighter">
-                <span className="text-accent">TISGGO</span>
+                <span className="text-accent">TISGO</span>
                 <span className="text-foreground">NEWS</span>
               </span>
               <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">
@@ -152,7 +152,7 @@ export default function Article() {
               className="bg-[#25D366] text-white hover:bg-[#128C7E] transition-all duration-300 font-bold border-none"
               onClick={() => {
                 const url = window.location.href;
-                const text = `Confira esta notícia no Tisggo News: ${article.title}`;
+                const text = `Confira esta notícia no Tisgo News: ${article.title}`;
                 window.open(
                   `https://api.whatsapp.com/send?text=${encodeURIComponent(text + " " + url)}`,
                   '_blank'
@@ -225,7 +225,7 @@ export default function Article() {
           <div className="min-w-0">
             <h4 className="text-[10px] font-black uppercase text-accent mb-0.5 tracking-widest">Postado por</h4>
             <p className="text-xs text-muted-foreground leading-tight">
-              <span className="font-bold text-foreground">{article.author || "Equipe Tisggo"}</span>
+              <span className="font-bold text-foreground">{article.author || "Equipe Tisgo"}</span>
             </p>
           </div>
         </div>
@@ -294,7 +294,7 @@ export default function Article() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-8">
             <div>
               <span className="text-2xl font-black">
-                <span className="text-accent">TISGGO</span>
+                <span className="text-accent">TISGO</span>
                 <span className="text-foreground">NEWS</span>
               </span>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
@@ -346,7 +346,7 @@ export default function Article() {
           </div>
           <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-8" />
           <div className="text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Tisggo News. Todos os direitos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} Tisgo News. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

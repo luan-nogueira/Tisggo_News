@@ -32,7 +32,7 @@ export default function DashboardLayout({
               Acesso <span className="text-accent">Restrito</span>
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Você precisa estar logado para acessar o painel administrativo do Tisggo News.
+              Você precisa estar logado para acessar o painel administrativo do Tisgo News.
             </p>
           </div>
           <Button
@@ -62,7 +62,7 @@ export default function DashboardLayout({
         <div className="max-w-[1600px] mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-10">
             <Link href="/admin" className="flex items-center gap-2">
-              <span className="text-2xl font-black text-accent tracking-tighter uppercase">Tisggo</span>
+              <span className="text-2xl font-black text-accent tracking-tighter uppercase">Tisgo</span>
               <span className="text-2xl font-black text-foreground tracking-tighter uppercase hidden sm:inline">Admin</span>
             </Link>
             

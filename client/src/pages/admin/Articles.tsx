@@ -44,7 +44,7 @@ export default function AdminArticles() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-black uppercase text-white tracking-tighter">Artigos</h1>
-          <p className="text-gray-500 text-sm font-medium">Gerencie o conteúdo do portal Tisggo</p>
+          <p className="text-gray-500 text-sm font-medium">Gerencie o conteúdo do portal Tisgo</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/admin/articles/new">

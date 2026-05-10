@@ -147,7 +147,7 @@ export default function ArticleForm() {
               {id ? "Editar Notícia" : "Nova Publicação"}
             </h1>
             <p className="text-muted-foreground text-sm font-medium mt-1">
-              {id ? "Ajuste os detalhes da sua notícia" : "Crie um novo conteúdo de impacto para o Tisggo News"}
+              {id ? "Ajuste os detalhes da sua notícia" : "Crie um novo conteúdo de impacto para o Tisgo News"}
             </p>
           </div>
         </div>

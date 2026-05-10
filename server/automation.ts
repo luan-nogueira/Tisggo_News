@@ -337,3 +337,85 @@ export async function checkAndRunAutomation() {
     console.error("[Agendador] Erro:", error);
   }
 }
+
+export async function cleanupExistingArticles() {
+  try {
+    const firestore = await db.getDb();
+    console.log("[Automation] Iniciando faxina retroativa nas notícias...");
+    
+    const snapshot = await firestore.collection("articles").get();
+    let cleanedCount = 0;
+
+    const stopPhrases = [
+      "Um post compartilhado por",
+      "Leia também:",
+      "Veja também:",
+      "Confira abaixo:",
+      "Aviso importante:",
+      "A programação organizada pela",
+      "O vereador de Campos",
+      "A concessionária Águas do Paraíba",
+      "A fabricante Ypê",
+      "Inscreva-se no canal",
+      "Siga o g1",
+      "Siga o canal",
+      "WhatsApp",
+      "reproduzir nosso conteúdo",
+      "comercial@"
+    ];
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      let content = data.content || "";
+      let title = data.title || "";
+      
+      let needsUpdate = false;
+      let newContent = "";
+      let stopped = false;
+
+      // Clean title if it has forbidden words
+      let newTitle = title;
+      FORBIDDEN_WORDS.forEach(regex => {
+        if (regex.test(newTitle)) {
+          newTitle = newTitle.replace(regex, "").trim();
+          needsUpdate = true;
+        }
+      });
+
+      // Clean content
+      const paragraphs = content.split(/<\/p>/i);
+      for (let p of paragraphs) {
+        const cleanP = p.replace(/<p>/i, "").trim();
+        if (!cleanP) continue;
+        
+        const textOnly = cleanP.replace(/<[^>]*>/g, '').trim();
+        
+        // Check for stop phrases
+        for (const phrase of stopPhrases) {
+          if (textOnly.toLowerCase().includes(phrase.toLowerCase())) {
+            stopped = true;
+            needsUpdate = true;
+            break;
+          }
+        }
+        
+        if (stopped) break;
+        newContent += `<p>${cleanP}</p>\n`;
+      }
+
+      if (needsUpdate || newContent.trim() !== content.trim()) {
+        await doc.ref.update({ 
+          content: newContent.trim(),
+          title: newTitle
+        });
+        cleanedCount++;
+      }
+    }
+
+    console.log(`[Automation] Faxina concluída! ${cleanedCount} notícias limpas.`);
+    return cleanedCount;
+  } catch (error) {
+    console.error("[Automation] Erro na faxina:", error);
+    throw error;
+  }
+}

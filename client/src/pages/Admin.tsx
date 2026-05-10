@@ -60,7 +60,7 @@ export default function Admin() {
             </div>
             <CardTitle className="text-2xl font-bold text-white">Portal do Administrador</CardTitle>
             <CardDescription className="text-gray-400">
-              Acesso restrito à gerência do Tisggo News
+              Acesso restrito à gerência do Tisgo News
             </CardDescription>
           </CardHeader>
           <CardContent className="mt-4">
@@ -73,7 +73,7 @@ export default function Admin() {
                 <Input 
                   id="email" 
                   type="email" 
-                  placeholder="admin@tisggo.com"
+                  placeholder="admin@tisgo.com"
                   className="bg-gray-800 border-gray-700 text-white"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

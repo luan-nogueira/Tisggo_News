@@ -11,7 +11,7 @@ interface SEOProps {
 export function useSEO({ title, description, image, url, type = "article" }: SEOProps) {
   useEffect(() => {
     // Update title
-    document.title = `${title} | Tisggo News`;
+    document.title = `${title} | Tisgo News`;
 
     // Update meta description
     const metaDescription = document.querySelector('meta[name="description"]');
@@ -48,7 +48,7 @@ export function useSEO({ title, description, image, url, type = "article" }: SEO
         datePublished: new Date().toISOString(),
         author: {
           "@type": "Organization",
-          name: "Tisggo News",
+          name: "Tisgo News",
         },
       };
 
