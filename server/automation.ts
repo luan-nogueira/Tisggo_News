@@ -105,7 +105,13 @@ const STOP_WORDS = [
 
 async function getOrCreateCategory(name: string) {
   const categories = await db.getCategories();
-  const existing = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+  const normalizedInput = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+  
+  const existing = categories.find(c => {
+    const normalizedExisting = c.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    return normalizedExisting === normalizedInput;
+  });
+
   if (existing) return existing.id;
 
   const slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
@@ -455,6 +461,10 @@ async function classifyAndGetCategoryId(title: string, content: string, link: st
 export async function recategorizeExistingArticles() {
   try {
     const firestore = await db.getDb();
+    
+    // First, merge any duplicates (e.g., Policia and Polícia)
+    await mergeDuplicateCategories();
+    
     console.log("[Automation] Iniciando re-categorização de notícias...");
     
     const snapshot = await firestore.collection("articles").get();
@@ -479,6 +489,50 @@ export async function recategorizeExistingArticles() {
     return updatedCount;
   } catch (error) {
     console.error("[Automation] Erro na re-categorização:", error);
+    throw error;
+  }
+}
+
+/**
+ * Merges duplicate categories and updates articles to point to the correct one.
+ * Example: Merges "Policia" into "Polícia"
+ */
+export async function mergeDuplicateCategories() {
+  try {
+    const firestore = await db.getDb();
+    console.log("[Automation] Iniciando unificação de categorias duplicadas...");
+    
+    const categories = await db.getCategories();
+    const seen = new Map<string, string>(); // normalized name -> correct ID
+    let mergedCount = 0;
+
+    for (const cat of categories) {
+      const normalized = cat.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+      
+      if (seen.has(normalized)) {
+        const targetId = seen.get(normalized)!;
+        const duplicateId = cat.id;
+        
+        console.log(`[Automation] Mesclando categoria "${cat.name}" (${duplicateId}) em ID ${targetId}`);
+        
+        // Update all articles in this duplicate category
+        const articlesSnapshot = await firestore.collection("articles").where("categoryId", "==", duplicateId).get();
+        for (const doc of articlesSnapshot.docs) {
+           await doc.ref.update({ categoryId: targetId });
+           mergedCount++;
+        }
+
+        // Delete the duplicate category
+        await firestore.collection("categories").doc(duplicateId).delete();
+      } else {
+        seen.set(normalized, cat.id);
+      }
+    }
+
+    console.log(`[Automation] Unificação concluída! ${mergedCount} notícias atualizadas.`);
+    return mergedCount;
+  } catch (error) {
+    console.error("[Automation] Erro na unificação:", error);
     throw error;
   }
 }
