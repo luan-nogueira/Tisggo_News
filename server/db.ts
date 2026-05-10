@@ -8,38 +8,42 @@ export function getDb() {
   if (dbInstance) return dbInstance;
 
   if (!admin.apps.length) {
+    console.log("[Firebase] Starting initialization sequence...");
     try {
       let privateKey = process.env.FIREBASE_PRIVATE_KEY;
       
-      if (privateKey) {
-        privateKey = privateKey.trim();
-        // Handle full JSON if accidentally pasted, but focus on the raw key
-        if (privateKey.startsWith('{')) {
-          const json = JSON.parse(privateKey);
-          privateKey = json.private_key;
-        }
-        
-        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-          privateKey = privateKey.substring(1, privateKey.length - 1);
-        }
-        privateKey = privateKey.replace(/\\n/g, '\n');
+      if (!privateKey) {
+        console.error("[Firebase] CRITICAL: FIREBASE_PRIVATE_KEY is missing from environment!");
+        throw new Error("FIREBASE_PRIVATE_KEY is missing");
       }
 
-      if (!privateKey) throw new Error("FIREBASE_PRIVATE_KEY is missing or empty");
+      privateKey = privateKey.trim();
+      
+      if (privateKey.startsWith('{')) {
+        console.log("[Firebase] Detected JSON service account. Parsing...");
+        const json = JSON.parse(privateKey);
+        privateKey = json.private_key;
+      }
+      
+      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.substring(1, privateKey.length - 1);
+      }
 
+      // Final sanitization of the key
+      privateKey = privateKey.replace(/\\n/g, '\n');
+
+      console.log("[Firebase] Credentials prepared. Project ID:", process.env.FIREBASE_PROJECT_ID || "tisggo-news");
+      
       admin.initializeApp({
         credential: admin.credential.cert({
           projectId: process.env.FIREBASE_PROJECT_ID || "tisggo-news",
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@tisggo-news.iam.gserviceaccount.com",
           privateKey: privateKey,
         }),
-        databaseURL: `https://${process.env.FIREBASE_PROJECT_ID || "tisggo-news"}.firebaseio.com`,
       });
-      console.log("[Firebase] Admin initialized successfully");
+      console.log("[Firebase] admin.initializeApp() completed successfully");
     } catch (error: any) {
-      console.error("[Firebase] Initialization Critical Error:", error.message);
-      // We don't throw here to avoid crashing the whole serverless function
-      // but we store the error to report it via the data methods
+      console.error("[Firebase] INITIALIZATION ERROR:", error.message);
       dbInstance = { error: error.message } as any;
       return dbInstance;
     }
@@ -47,8 +51,15 @@ export function getDb() {
   
   if ((dbInstance as any)?.error) return dbInstance;
   
-  dbInstance = admin.firestore();
-  return dbInstance;
+  try {
+    console.log("[Firebase] Connecting to Firestore...");
+    dbInstance = admin.firestore();
+    console.log("[Firebase] Firestore connection established.");
+    return dbInstance;
+  } catch (err: any) {
+    console.error("[Firebase] Firestore connection error:", err.message);
+    return { error: err.message } as any;
+  }
 }
 const storage = admin.storage();
 
