@@ -2,40 +2,41 @@ import admin from "firebase-admin";
 import { ENV } from './_core/env.js';
 import type { User, Article, Category, InsertUser, InsertArticle, InsertCategory } from "../drizzle/schema";
 
-if (!admin.apps.length) {
-  try {
-    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-    
-    if (privateKey) {
-      // Remove any quotes that might have been added by Vercel's UI
-      privateKey = privateKey.trim();
-      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-        privateKey = privateKey.substring(1, privateKey.length - 1);
+let dbInstance: admin.firestore.Firestore | null = null;
+
+function getDb() {
+  if (dbInstance) return dbInstance;
+
+  if (!admin.apps.length) {
+    try {
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+      
+      if (privateKey) {
+        privateKey = privateKey.trim();
+        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+          privateKey = privateKey.substring(1, privateKey.length - 1);
+        }
+        privateKey = privateKey.replace(/\\n/g, '\n');
       }
-      // Critical: Convert literal \n strings to actual newline characters
-      privateKey = privateKey.replace(/\\n/g, '\n');
-    }
 
-    if (!privateKey || !process.env.FIREBASE_CLIENT_EMAIL) {
-      console.error("[Firebase] MISSING CREDENTIALS! Check Vercel Env Vars.");
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID || "tisggo-news",
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@tisggo-news.iam.gserviceaccount.com",
+          privateKey: privateKey,
+        }),
+        databaseURL: `https://${process.env.FIREBASE_PROJECT_ID || "tisggo-news"}.firebaseio.com`,
+      });
+      console.log("[Firebase] Admin initialized successfully");
+    } catch (error: any) {
+      console.error("[Firebase] Admin initialization error:", error.message);
+      throw new Error(`Firebase Init Failed: ${error.message}`);
     }
-
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID || "tisggo-news",
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@tisggo-news.iam.gserviceaccount.com",
-        privateKey: privateKey,
-      }),
-      databaseURL: `https://${process.env.FIREBASE_PROJECT_ID || "tisggo-news"}.firebaseio.com`,
-      storageBucket: `${process.env.FIREBASE_PROJECT_ID || "tisggo-news"}.firebasestorage.app`
-    });
-    console.log("[Firebase] Admin initialized successfully");
-  } catch (error: any) {
-    console.error("[Firebase] Admin initialization error:", error.message);
   }
+  
+  dbInstance = admin.firestore();
+  return dbInstance;
 }
-
-const db = admin.firestore();
 const storage = admin.storage();
 
 export async function firebaseUpload(path: string, buffer: Buffer, contentType: string) {
@@ -65,18 +66,16 @@ const toData = <T>(doc: any): T => {
   return { id: doc.id, ...data } as T;
 };
 
-export async function getDb() {
-  return db;
-}
-
 // USERS
 export async function getUserByOpenId(openId: string): Promise<User | null> {
+  const db = getDb();
   const snapshot = await db.collection("users").where("openId", "==", openId).limit(1).get();
   if (snapshot.empty) return null;
   return toData<User>(snapshot.docs[0]);
 }
 
 export async function upsertUser(user: Partial<InsertUser> & { openId: string }): Promise<void> {
+  const db = getDb();
   const existing = await getUserByOpenId(user.openId);
   const data = {
     ...user,
@@ -100,6 +99,7 @@ export async function getArticles(pageSize = 20) {
   console.log("[Firebase] Fetching articles (limit:", pageSize, ")...");
   try {
     // Try the ideal query first
+    const db = getDb();
     const snapshot = await db.collection("articles")
       .where("published", "==", true)
       .orderBy("publishedAt", "desc")
@@ -115,6 +115,7 @@ export async function getArticles(pageSize = 20) {
     // This bypasses the need for Firestore Indexes which might not be created yet in production
     try {
       console.warn("[Firebase] Trying emergency fallback query...");
+      const db = getDb();
       const fallbackSnapshot = await db.collection("articles").limit(pageSize).get();
       console.log("[Firebase] Fallback articles found:", fallbackSnapshot.size);
       return fallbackSnapshot.docs.map(toData<Article>);
@@ -126,6 +127,7 @@ export async function getArticles(pageSize = 20) {
 }
 
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
+  const db = getDb();
   // Tenta por slug
   const snapshot = await db.collection("articles").where("slug", "==", slug).limit(1).get();
   if (!snapshot.empty) return toData<Article>(snapshot.docs[0]);
@@ -142,6 +144,7 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
 }
 
 export async function createArticle(article: any) {
+  const db = getDb();
   console.log("[Firebase] Attempting to create article:", article.title);
   const data = {
     ...article,
@@ -163,6 +166,7 @@ export async function createArticle(article: any) {
 }
 
 export async function updateArticle(id: string, article: Partial<Article>) {
+  const db = getDb();
   const { id: _, ...updateData } = article as any;
   const data: any = { ...updateData, updatedAt: admin.firestore.Timestamp.now() };
   if (article.publishedAt && !isNaN(new Date(article.publishedAt).getTime())) {
@@ -172,6 +176,7 @@ export async function updateArticle(id: string, article: Partial<Article>) {
 }
 
 export async function incrementArticleViews(id: string) {
+  const db = getDb();
   const articleRef = db.collection("articles").doc(id);
   await articleRef.update({
     views: admin.firestore.FieldValue.increment(1)
@@ -179,6 +184,7 @@ export async function incrementArticleViews(id: string) {
 }
 
 export async function getArticlesByCategory(categoryId: string, limitCount: number = 10, offset: number = 0, orderBy: string = "recent") {
+  const db = getDb();
   console.log("[Firebase] Fetching articles for category ID:", categoryId, "(limit:", limitCount, ")");
   try {
     let query = db.collection("articles")
@@ -212,6 +218,7 @@ export async function getArticlesByCategory(categoryId: string, limitCount: numb
 }
 
 export async function searchArticles(searchTerm: string) {
+  const db = getDb();
   const snapshot = await db.collection("articles").where("published", "==", true).limit(50).get();
   const articles = snapshot.docs.map(toData<Article>);
   const term = searchTerm.toLowerCase();
@@ -223,6 +230,7 @@ export async function searchArticles(searchTerm: string) {
 
 // CATEGORIES
 export async function getCategories() {
+  const db = getDb();
   console.log("[Firebase] Fetching categories...");
   try {
     const snapshot = await db.collection("categories").orderBy("name", "asc").get();
@@ -235,6 +243,7 @@ export async function getCategories() {
 }
 
 export async function createCategory(category: Partial<InsertCategory>) {
+  const db = getDb();
   const docRef = await db.collection("categories").add({
     ...category,
     createdAt: admin.firestore.Timestamp.now(),
@@ -244,6 +253,7 @@ export async function createCategory(category: Partial<InsertCategory>) {
 }
 
 export async function updateCategory(id: string, data: Partial<Category>) {
+  const db = getDb();
   await db.collection("categories").doc(id).update({
     ...data,
     updatedAt: admin.firestore.Timestamp.now(),
@@ -251,20 +261,24 @@ export async function updateCategory(id: string, data: Partial<Category>) {
 }
 
 export async function deleteCategory(id: string) {
+  const db = getDb();
   await db.collection("categories").doc(id).delete();
 }
 
 // Extra methods for Admin
 export async function getAllArticlesAdmin() {
+  const db = getDb();
   const snapshot = await db.collection("articles").orderBy("createdAt", "desc").get();
   return snapshot.docs.map(toData<Article>);
 }
 
 export async function deleteArticle(id: string) {
+  const db = getDb();
   await db.collection("articles").doc(id).delete();
 }
 
 export async function getArticleById(id: string): Promise<Article | null> {
+  const db = getDb();
   const docSnap = await db.collection("articles").doc(id).get();
   if (!docSnap.exists) return null;
   return toData<Article>(docSnap);
