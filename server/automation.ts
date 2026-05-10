@@ -229,11 +229,17 @@ export async function automateNews() {
 
         for (const link of uniqueLinks) {
           try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de limite
+
             const artRes = await fetch(link, {
               headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-              }
+              },
+              signal: controller.signal
             });
+            clearTimeout(timeoutId);
+            
             if (!artRes.ok) continue;
 
             const artHtml = await artRes.text();
