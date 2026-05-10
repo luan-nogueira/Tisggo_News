@@ -7,9 +7,17 @@ if (!admin.apps.length) {
     let privateKey = process.env.FIREBASE_PRIVATE_KEY;
     
     if (privateKey) {
-      // Handle cases where the key is quoted or contains literal \n characters
-      privateKey = privateKey.replace(/^['"]|['"]$/g, '');
+      // Remove any quotes that might have been added by Vercel's UI
+      privateKey = privateKey.trim();
+      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.substring(1, privateKey.length - 1);
+      }
+      // Critical: Convert literal \n strings to actual newline characters
       privateKey = privateKey.replace(/\\n/g, '\n');
+    }
+
+    if (!privateKey || !process.env.FIREBASE_CLIENT_EMAIL) {
+      console.error("[Firebase] MISSING CREDENTIALS! Check Vercel Env Vars.");
     }
 
     admin.initializeApp({
@@ -22,8 +30,8 @@ if (!admin.apps.length) {
       storageBucket: `${process.env.FIREBASE_PROJECT_ID || "tisggo-news"}.firebasestorage.app`
     });
     console.log("[Firebase] Admin initialized successfully");
-  } catch (error) {
-    console.error("[Firebase] Admin initialization error:", error);
+  } catch (error: any) {
+    console.error("[Firebase] Admin initialization error:", error.message);
   }
 }
 
