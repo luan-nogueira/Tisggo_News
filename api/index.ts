@@ -1,4 +1,4 @@
-import app from "../server/index.js";
+import app from "../server/index";
 
 // Vercel Entry Point
 export default async (req: any, res: any) => {
