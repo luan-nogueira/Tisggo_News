@@ -303,10 +303,6 @@ export async function automateNews() {
               });
             }
 
-            if (contentHtml.length < 300) {
-              contentHtml = $art('p').map((i, el) => `<p>${$art(el).text().trim()}</p>`).get().join('\n');
-            }
-
             let cleanContent = contentHtml.replace(/<a\b[^>]*>(.*?)<\/a>/gi, '$1');
             for (const regex of FORBIDDEN_WORDS) {
               cleanContent = cleanContent.replace(regex, "");
@@ -314,6 +310,19 @@ export async function automateNews() {
             }
 
             if (cleanContent.length < 300) continue;
+
+            // Detect if it's a table-heavy article (e.g., F1, Brasileirão)
+            const isTableArticle = title.toLowerCase().includes('tabela') || title.toLowerCase().includes('classificação') || cleanContent.includes('Posição') || cleanContent.includes('Pontos');
+            
+            if (isTableArticle) {
+               cleanContent += `
+                <div class="mt-8 p-6 bg-accent/5 border border-accent/20 rounded-2xl text-center">
+                  <p class="text-foreground font-bold mb-4">Esta notícia contém tabelas e classificações detalhadas.</p>
+                  <a href="${link}" target="_blank" class="inline-flex items-center justify-center px-6 py-3 bg-accent text-black font-black rounded-xl hover:bg-yellow-500 transition-all uppercase text-sm">
+                    Ver Tabela Completa na Fonte Original
+                  </a>
+                </div>`;
+            }
 
             const categoryId = await classifyAndGetCategoryId(title, cleanContent, link);
 
