@@ -501,10 +501,98 @@ async function classifyAndGetCategoryId(title: string, content: string, link: st
       "golfe", "natação", "atletismo", "ciclismo", "rugby", "handebol", "ginástica",
       "maratona", "corrida de rua", "triathlon", "esgrima", "judô", "caratê", "wrestling"
     ],
-    "Polícia": ["preso", "apreendido", "polícia militar", "policia civil", "pm preso", "tiro", "assalto", "crime", "delegacia", "tráfico", "homicídio", "acidente fatal", "bombeiros", "resgate", "flagrante", "suspeito preso", "mandado de prisão", "arma de fogo", "revólver", "pistola", "vítima fatal", "morte violenta", "operação policial"],
-    "Economia": ["dólar", "pib", "inflação", "mercado financeiro", "investimento", "taxa selic", "lucro", "economia", "royalties do petróleo", "emprego", "vaga de emprego", "orçamento público", "icms", "imposto de renda", "banco central", "finanças públicas", "licitação", "concurso público"],
-    "Cidades": ["prefeitura de campos", "prefeito de campos", "câmara municipal", "vereador de campos", "obras públicas", "trânsito", "interdição", "saúde pública", "educação pública", "campos dos goytacazes", "farol de são thomé", "guarus", "pelinca", "avenida", "bairro"],
-    "Política": ["deputado", "senador", "habeas corpus", "tribunal", "ministro", "governo federal", "governo estadual", "eleição", "candidato", "partido", "pt", "pf", "polícia federal", "inquérito", "operação", "investigação federal", "quaquá", "maicon cruz"],
+    "Polícia": [
+      // Ocorrências / Crimes
+      "preso", "presa", "apreendido", "apreendida", "detido", "detida", "autuado",
+      "assalto", "roubo", "furto", "latrocínio", "homicídio", "feminicídio", "assassinato",
+      "crime", "criminoso", "bandido", "marginal", "quadrilha", "gangue", "milícia",
+      "tráfico", "droga", "cocaína", "maconha", "crack", "entorpecente", "boca de fumo",
+      // Forças de segurança
+      "polícia militar", "pm", "polícia civil", "polícia federal", "delegacia",
+      "bombeiros", "corpo de bombeiros", "samu", "guarda municipal",
+      // Ações policiais
+      "flagrante", "prisão em flagrante", "mandado de prisão", "mandado de busca",
+      "operação policial", "blitz", "abordagem", "busca e apreensão",
+      "investigação policial", "inquérito policial", "indiciado",
+      // Armas / Violência
+      "arma de fogo", "revólver", "pistola", "fuzil", "espingarda", "faca",
+      "tiro", "baleado", "ferido", "vítima", "lesão corporal",
+      // Acidentes
+      "acidente de trânsito", "colisão", "atropelamento", "capotamento", "batida",
+      "morte no trânsito", "vítima fatal",
+      // Outros
+      "sequestro", "extorsão", "estelionato", "fraude policial", "golpe", "enganação",
+      "resgate", "socorro", "incêndio", "explosão"
+    ],
+    "Economia": [
+      // Macroeconomia
+      "dólar", "euro", "câmbio", "pib", "inflação", "ipca", "igpm", "deflação",
+      "taxa selic", "juros", "banco central", "copom",
+      // Empresas / Mercado
+      "empresa", "mercado financeiro", "bolsa de valores", "ações", "investimento",
+      "lucro", "prejuízo", "falência", "recuperação judicial", "fusão", "aquisição",
+      "startup", "empreendedor", "negócio",
+      // Emprego / Trabalho
+      "emprego", "desemprego", "vaga de emprego", "contratação", "demissão",
+      "carteira de trabalho", "salário mínimo", "reajuste salarial", "concurso público",
+      // Petróleo / Energia
+      "petróleo", "royalties", "pré-sal", "petrobras", "refinaria", "combustível",
+      "gasolina", "diesel", "etanol", "energia elétrica", "tarifa de energia",
+      // Impostos / Finanças públicas
+      "imposto", "icms", "iss", "ir", "imposto de renda", "receita federal",
+      "orçamento público", "licitação", "contrato público", "despesa pública",
+      "tributação", "reforma tributária", "arrecadação",
+      // Comércio
+      "comércio", "exportação", "importação", "balança comercial", "indústria",
+      "agronegócio", "safra", "colheita", "commodities"
+    ],
+    "Cidades": [
+      // Campos e região
+      "campos dos goytacazes", "campos", "farol de são thomé", "guarus", "pelinca",
+      "macaé", "são joão da barra", "quissamã", "cardoso moreira", "são fidélis",
+      "italva", "cambuci", "bom jesus do itabapoana",
+      // Administração municipal
+      "prefeitura de campos", "prefeito de campos", "câmara municipal de campos",
+      "vereador de campos", "secretaria municipal", "administração municipal",
+      // Infraestrutura / Obras
+      "obras públicas", "pavimentação", "asfalto", "calçada", "buraco na via",
+      "interdição de via", "semáforo", "sinalização", "iluminação pública",
+      "ponte", "viaduto", "ciclovia", "obra de drenagem",
+      // Serviços públicos
+      "saúde pública", "ubs", "hospital público", "postos de saúde", "vacina",
+      "educação pública", "escola pública", "matrícula escolar", "merenda escolar",
+      "coleta de lixo", "saneamento", "abastecimento de água", "falta de água",
+      // Trânsito / Mobilidade
+      "trânsito em campos", "engarrafamento", "interdição", "desvio de tráfego",
+      "acidente em campos",
+      // Cultura / Eventos locais
+      "evento em campos", "show em campos", "festival local", "carnaval de campos",
+      "réveillon de campos", "feriado local", "festa popular"
+    ],
+    "Política": [
+      // Cargos
+      "deputado federal", "deputado estadual", "senador", "ministro", "secretário de estado",
+      "governador", "governo federal", "governo estadual", "câmara dos deputados",
+      "senado federal", "assembleia legislativa",
+      // Processos / Investigações
+      "habeas corpus", "inquérito", "investigação federal", "cpi", "comissão parlamentar",
+      "delação premiada", "colaboração premiada", "processo judicial",
+      "tribunal de contas", "tcu", "trf", "stf", "stj", "supremo tribunal federal",
+      // Política local
+      "quaquá", "maicon cruz", "garotinho", "anthony garotinho",
+      "clarissa garotinho", "rosinha", "wladimir garotinho",
+      // Partidos / Eleições
+      "partido político", "pt", "pl", "psdb", "mdb", "pp", "psd", "união brasil",
+      "eleição", "eleições municipais", "eleições estaduais", "urna eletrônica",
+      "candidato", "campanha eleitoral", "tse", "coligação", "chapa",
+      // Operações
+      "operação lava jato", "operação rota fantasma", "operação policia federal",
+      "corrupção", "desvio de verba", "propina", "lavagem de dinheiro",
+      "improbidade administrativa", "licitação fraudulenta",
+      // Federação
+      "reforma política", "pec", "projeto de lei", "votação no congresso",
+      "veto presidencial", "medida provisória", "decreto presidencial"
+    ],
     "Geral": ["notícia", "informação", "portal", "região"]
   };
 
