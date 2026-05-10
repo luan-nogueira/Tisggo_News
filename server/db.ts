@@ -236,14 +236,18 @@ export async function searchArticles(searchTerm: string) {
 
 // CATEGORIES
 export async function getCategories() {
-  const db = getDb();
-  console.log("[Firebase] Fetching categories...");
   try {
-    const snapshot = await db.collection("categories").orderBy("name", "asc").get();
-    console.log("[Firebase] Categories fetched:", snapshot.size);
+    const db = getDb();
+    if ((db as any).error) throw new Error((db as any).error);
+
+    const snapshot = await (db as admin.firestore.Firestore).collection("categories")
+      .orderBy("name", "asc")
+      .get();
+    
+    console.log("[Firebase] Categories found:", snapshot.size);
     return snapshot.docs.map(toData<Category>);
-  } catch (error) {
-    console.error("[Firebase] Error fetching categories:", error);
+  } catch (error: any) {
+    console.error("[Firebase] ERROR fetching categories:", error.message);
     return [];
   }
 }
