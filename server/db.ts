@@ -9,23 +9,40 @@ export function getDb() {
 
   if (!admin.apps.length) {
     try {
-      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-      
-      if (privateKey) {
-        privateKey = privateKey.trim();
-        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-          privateKey = privateKey.substring(1, privateKey.length - 1);
+      let configValue = process.env.FIREBASE_PRIVATE_KEY;
+      let finalConfig: any = {
+        projectId: process.env.FIREBASE_PROJECT_ID || "tisggo-news",
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@tisggo-news.iam.gserviceaccount.com",
+        privateKey: configValue
+      };
+
+      if (configValue) {
+        configValue = configValue.trim();
+        // Check if user pasted the entire JSON file
+        if (configValue.startsWith('{')) {
+          try {
+            const jsonConfig = JSON.parse(configValue);
+            finalConfig.projectId = jsonConfig.project_id;
+            finalConfig.clientEmail = jsonConfig.client_email;
+            finalConfig.privateKey = jsonConfig.private_key;
+            console.log("[Firebase] Detected full JSON config string.");
+          } catch (e) {
+            console.warn("[Firebase] String starts with { but is not valid JSON, treating as raw key.");
+          }
         }
-        privateKey = privateKey.replace(/\\n/g, '\n');
+
+        // Standard cleanup for the private key
+        if (finalConfig.privateKey) {
+          if (finalConfig.privateKey.startsWith('"') && finalConfig.privateKey.endsWith('"')) {
+            finalConfig.privateKey = finalConfig.privateKey.substring(1, finalConfig.privateKey.length - 1);
+          }
+          finalConfig.privateKey = finalConfig.privateKey.replace(/\\n/g, '\n');
+        }
       }
 
       admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID || "tisggo-news",
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@tisggo-news.iam.gserviceaccount.com",
-          privateKey: privateKey,
-        }),
-        databaseURL: `https://${process.env.FIREBASE_PROJECT_ID || "tisggo-news"}.firebaseio.com`,
+        credential: admin.credential.cert(finalConfig),
+        databaseURL: `https://${finalConfig.projectId}.firebaseio.com`,
       });
       console.log("[Firebase] Admin initialized successfully");
     } catch (error: any) {
