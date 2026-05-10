@@ -109,69 +109,26 @@ export async function upsertUser(user: Partial<InsertUser> & { openId: string })
 
 // ARTICLES
 export async function getArticles(pageSize = 20) {
-  console.log("[Firebase] Fetching articles (limit:", pageSize, ")...");
+  console.log("[Firebase] Fetching articles (simplified)...");
   try {
     const db = getDb();
-    if ((db as any).error) {
-       throw new Error((db as any).error);
-    }
+    if ((db as any).error) throw new Error((db as any).error);
 
-    // Try the ideal query first
+    // Simplified query to avoid composite index requirement
     const snapshot = await (db as admin.firestore.Firestore).collection("articles")
-      .where("published", "==", true)
       .orderBy("publishedAt", "desc")
       .limit(pageSize)
       .get();
     
-    console.log("[Firebase] Articles found (ordered):", snapshot.size);
-    return snapshot.docs.map(toData<Article>);
+    let articles = snapshot.docs.map(toData<Article>);
+    // Filter by published in memory if needed
+    articles = articles.filter(a => a.published !== false);
+
+    console.log("[Firebase] Articles found:", articles.length);
+    return articles;
   } catch (error: any) {
     console.error("[Firebase] ERROR fetching articles:", error.message);
-    
-    // EMERGENCY FALLBACK: Just get everything without filters/ordering
-    try {
-      console.warn("[Firebase] Trying emergency fallback query...");
-      const db = getDb();
-      const fallbackSnapshot = await db.collection("articles").limit(pageSize).get();
-      console.log("[Firebase] Fallback articles found:", fallbackSnapshot.size);
-      
-      if (fallbackSnapshot.empty) {
-        return [{
-          id: "debug-error",
-          title: "Atenção: Erro de Conexão com o Banco",
-          content: `O banco de dados respondeu: ${error.message}. Verifique as chaves do Firebase na Vercel.`,
-          excerpt: error.message,
-          published: true,
-          coverImage: "",
-          categoryId: "error",
-          authorId: "system",
-          publishedAt: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          views: 0,
-          slug: "erro-conexao"
-        }] as any[];
-      }
-      
-      return fallbackSnapshot.docs.map(toData<Article>);
-    } catch (fallbackError: any) {
-      console.error("[Firebase] CRITICAL: Fallback also failed:", fallbackError.message);
-      return [{
-        id: "debug-error-critical",
-        title: "Erro Crítico de Inicialização",
-        content: `Falha total: ${fallbackError.message}. Verifique se o FIREBASE_PRIVATE_KEY está completo na Vercel.`,
-        excerpt: fallbackError.message,
-        published: true,
-        coverImage: "",
-        categoryId: "error",
-        authorId: "system",
-        publishedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        views: 0,
-        slug: "erro-critico"
-      }] as any[];
-    }
+    return [];
   }
 }
 
