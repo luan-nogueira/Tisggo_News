@@ -9,47 +9,43 @@ export function getDb() {
 
   if (!admin.apps.length) {
     try {
-      let configValue = process.env.FIREBASE_PRIVATE_KEY;
-      let finalConfig: any = {
-        projectId: process.env.FIREBASE_PROJECT_ID || "tisggo-news",
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@tisggo-news.iam.gserviceaccount.com",
-        privateKey: configValue
-      };
-
-      if (configValue) {
-        configValue = configValue.trim();
-        // Check if user pasted the entire JSON file
-        if (configValue.startsWith('{')) {
-          try {
-            const jsonConfig = JSON.parse(configValue);
-            finalConfig.projectId = jsonConfig.project_id;
-            finalConfig.clientEmail = jsonConfig.client_email;
-            finalConfig.privateKey = jsonConfig.private_key;
-            console.log("[Firebase] Detected full JSON config string.");
-          } catch (e) {
-            console.warn("[Firebase] String starts with { but is not valid JSON, treating as raw key.");
-          }
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+      
+      if (privateKey) {
+        privateKey = privateKey.trim();
+        // Handle full JSON if accidentally pasted, but focus on the raw key
+        if (privateKey.startsWith('{')) {
+          const json = JSON.parse(privateKey);
+          privateKey = json.private_key;
         }
-
-        // Standard cleanup for the private key
-        if (finalConfig.privateKey) {
-          if (finalConfig.privateKey.startsWith('"') && finalConfig.privateKey.endsWith('"')) {
-            finalConfig.privateKey = finalConfig.privateKey.substring(1, finalConfig.privateKey.length - 1);
-          }
-          finalConfig.privateKey = finalConfig.privateKey.replace(/\\n/g, '\n');
+        
+        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+          privateKey = privateKey.substring(1, privateKey.length - 1);
         }
+        privateKey = privateKey.replace(/\\n/g, '\n');
       }
 
+      if (!privateKey) throw new Error("FIREBASE_PRIVATE_KEY is missing or empty");
+
       admin.initializeApp({
-        credential: admin.credential.cert(finalConfig),
-        databaseURL: `https://${finalConfig.projectId}.firebaseio.com`,
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID || "tisggo-news",
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@tisggo-news.iam.gserviceaccount.com",
+          privateKey: privateKey,
+        }),
+        databaseURL: `https://${process.env.FIREBASE_PROJECT_ID || "tisggo-news"}.firebaseio.com`,
       });
       console.log("[Firebase] Admin initialized successfully");
     } catch (error: any) {
-      console.error("[Firebase] Admin initialization error:", error.message);
-      throw new Error(`Firebase Init Failed: ${error.message}`);
+      console.error("[Firebase] Initialization Critical Error:", error.message);
+      // We don't throw here to avoid crashing the whole serverless function
+      // but we store the error to report it via the data methods
+      dbInstance = { error: error.message } as any;
+      return dbInstance;
     }
   }
+  
+  if ((dbInstance as any)?.error) return dbInstance;
   
   dbInstance = admin.firestore();
   return dbInstance;
@@ -115,9 +111,13 @@ export async function upsertUser(user: Partial<InsertUser> & { openId: string })
 export async function getArticles(pageSize = 20) {
   console.log("[Firebase] Fetching articles (limit:", pageSize, ")...");
   try {
-    // Try the ideal query first
     const db = getDb();
-    const snapshot = await db.collection("articles")
+    if ((db as any).error) {
+       throw new Error((db as any).error);
+    }
+
+    // Try the ideal query first
+    const snapshot = await (db as admin.firestore.Firestore).collection("articles")
       .where("published", "==", true)
       .orderBy("publishedAt", "desc")
       .limit(pageSize)
