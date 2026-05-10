@@ -35,6 +35,7 @@ interface NewsSource {
   contentSelector: string;
   imageSelector?: string;
   baseUrl: string;
+  forcedCategory?: string; // Nova propriedade para forçar categoria
 }
 
 const SOURCES: NewsSource[] = [
@@ -73,6 +74,16 @@ const SOURCES: NewsSource[] = [
     contentSelector: '.elementor-widget-theme-post-content, .entry-content, article',
     imageSelector: 'meta[property="og:image"]',
     baseUrl: "https://camposocorrencias.com.br"
+  },
+  {
+    name: "ESPN Brasileirão",
+    url: "https://www.espn.com.br/futebol/liga/_/nome/bra.1",
+    linkSelector: 'section.Card a[href*="/noticia/"]',
+    titleSelector: 'h1.article-header__title, .article-header h1',
+    contentSelector: '.article-body p',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://www.espn.com.br",
+    forcedCategory: "Esportes" // Força tudo da ESPN para Esportes
   }
 ];
 
@@ -88,7 +99,8 @@ const FORBIDDEN_WORDS = [
   /Veja também:[^<]*/gi, /LEIA TAMBÉM:[^<]*/gi,
   /Aviso importante: a total ou parcial[^.]*/gi,
   /reproduzir nosso conteúdo, entre em contato[^.]*/gi,
-  /comercial@[^.]*/gi
+  /comercial@[^.]*/gi,
+  /ESPN/g, /espn\.com\.br/gi, /Siga a ESPN.*?no WhatsApp/gi
 ];
 
 const STOP_WORDS = [
@@ -333,7 +345,12 @@ export async function automateNews() {
                 </div>`;
             }
 
-            const categoryId = await classifyAndGetCategoryId(title, cleanContent, link);
+            let categoryId;
+            if (source.forcedCategory) {
+              categoryId = await getOrCreateCategory(source.forcedCategory);
+            } else {
+              categoryId = await classifyAndGetCategoryId(title, cleanContent, link);
+            }
 
             await db.createArticle({
               title,
