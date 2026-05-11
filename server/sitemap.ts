@@ -6,8 +6,11 @@ export async function generateSitemap(baseUrl: string): Promise<string> {
   const db = await getDb();
   if (!db) return "";
 
-  const articles = await db.select().from(articlesTable).where(eq(articlesTable.published, true));
-  const categories = await db.select().from(categoriesTable);
+  const articlesSnap = await db.collection("articles").where("published", "==", true).get();
+  const categoriesSnap = await db.collection("categories").get();
+  
+  const articles = articlesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const categories = categoriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

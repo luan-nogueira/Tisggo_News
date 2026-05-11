@@ -8,6 +8,7 @@ import { Badge } from "./ui/badge";
 
 import { WeatherWidget } from "./WeatherWidget";
 import { ArrowLeft } from "lucide-react";
+import { getCategoryEmoji } from "@/lib/utils";
 
 interface HeaderProps {
   categories?: any[];
@@ -47,15 +48,7 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
     }
   };
 
-  const getCategoryEmoji = (name: string) => {
-    const n = name.toLowerCase();
-    if (n.includes('esporte')) return '⚽';
-    if (n.includes('polícia')) return '🚨';
-    if (n.includes('cidade')) return '🏙️';
-    if (n.includes('economia')) return '📈';
-    if (n.includes('geral')) return '📰';
-    return '🗞️';
-  };
+
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">

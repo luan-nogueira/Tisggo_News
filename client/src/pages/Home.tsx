@@ -11,16 +11,9 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { FootballWidget } from "@/components/FootballWidget";
 import { AdvertiseModal } from "@/components/AdvertiseModal";
 import { Header } from "@/components/Header";
+import { getCategoryEmoji } from "@/lib/utils";
 
-const getCategoryEmoji = (name: string) => {
-  const n = name.toLowerCase();
-  if (n.includes('esporte')) return '⚽';
-  if (n.includes('polícia')) return '🚨';
-  if (n.includes('cidade')) return '🏙️';
-  if (n.includes('economia')) return '📈';
-  if (n.includes('geral')) return '📰';
-  return '🗞️';
-};
+
 
 const renderMedia = (url: string, alt: string, className: string, hasVideo?: boolean, hideIcon?: boolean) => {
   const isVideo = url.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i);

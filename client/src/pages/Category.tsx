@@ -8,16 +8,9 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { AdvertiseModal } from "@/components/AdvertiseModal";
 import { Header } from "@/components/Header";
+import { getCategoryEmoji } from "@/lib/utils";
 
-const getCategoryEmoji = (name: string) => {
-  const n = name.toLowerCase();
-  if (n.includes('esporte')) return '⚽';
-  if (n.includes('polícia')) return '🚨';
-  if (n.includes('cidade')) return '🏙️';
-  if (n.includes('economia')) return '📈';
-  if (n.includes('geral')) return '📰';
-  return '🗞️';
-};
+
 
 const ITEMS_PER_PAGE = 12;
 

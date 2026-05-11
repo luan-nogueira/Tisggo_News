@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Plus, Trash2, Edit2, Instagram, MessageCircle, ExternalLink, Zap, Crop } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit2, Instagram, MessageCircle, ExternalLink, Zap, Crop, Layout } from "lucide-react";
 import { toast } from "sonner";
 import { MediaCropDialog } from "@/components/MediaCropDialog";
 
