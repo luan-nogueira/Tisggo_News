@@ -61,26 +61,27 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
             >
               <Menu className="w-6 h-6" />
             </button>
-            <Link href="/" className="flex flex-col group">
-              <div className="h-28 sm:h-32 flex items-center">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 shrink-0">
                 <img 
-                  src="/tisgo-logo-v4.png" 
-                  alt="Tisgo News" 
-                  className="h-full w-auto object-contain dark:[filter:invert(1)_hue-rotate(190deg)_brightness(1.5)_saturate(250%)]"
-                  onError={(e) => {
-                    // Fallback para texto caso a imagem não exista
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    const parent = (e.target as HTMLImageElement).parentElement;
-                    if (parent) {
-                      parent.innerHTML = `
-                        <span class="text-4xl sm:text-5xl font-black leading-none tracking-tighter italic">
-                          <span class="text-yellow-500">TISGO</span>
-                          <span class="text-foreground">NEWS</span>
-                        </span>
-                      `;
-                    }
-                  }}
+                  src="/icon.png" 
+                  alt="Tisgo Icon" 
+                  className="w-full h-full object-contain rounded-full border-2 border-accent/20"
+                  onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
                 />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl sm:text-3xl font-black leading-none tracking-tighter italic flex items-center">
+                  <span className="text-accent drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">TISGO</span>
+                  <span className="text-foreground drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">NEWS</span>
+                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="h-[1px] w-3 bg-accent/30" />
+                  <span className="text-[7px] sm:text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
+                    Campos dos Goytacazes
+                  </span>
+                  <div className="h-[1px] w-3 bg-accent/30" />
+                </div>
               </div>
             </Link>
           </div>
