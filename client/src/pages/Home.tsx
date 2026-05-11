@@ -247,7 +247,7 @@ export default function Home() {
               {renderMedia(topBannerSponsor.image, topBannerSponsor.name, "absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700", false, true)}
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
               <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm">
-                Patrocinador Master
+                Patrocinador
               </div>
             </div>
           </div>
