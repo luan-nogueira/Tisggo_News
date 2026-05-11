@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdvertiseModal } from "@/components/AdvertiseModal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Share2, ArrowLeft, Calendar, User, Eye, Link as LinkIcon, MessageCircle, Instagram, ChevronRight } from "lucide-react";
+import { Loader2, Share2, ArrowLeft, Calendar, User, Eye, Link as LinkIcon, MessageCircle, Instagram, ChevronRight, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { ThemeToggle } from "@/components/ThemeToggle";
