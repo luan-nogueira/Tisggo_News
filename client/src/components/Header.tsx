@@ -61,21 +61,24 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
             >
               <Menu className="w-6 h-6" />
             </button>
-            <Link href="/" className="flex flex-col group">
-              <div className="h-10 sm:h-12 flex items-center">
+            <Link href="/" className="flex flex-col group py-2">
+              <div className="h-16 sm:h-20 flex items-center">
                 <img 
                   src="/tisgo-logo.png" 
                   alt="Tisgo News" 
-                  className="h-full w-auto object-contain dark:invert"
+                  className="h-full w-auto object-contain dark:brightness-0 dark:invert"
                   onError={(e) => {
                     // Fallback para texto caso a imagem não exista
                     (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).parentElement!.innerHTML = `
-                      <span class="text-2xl sm:text-3xl font-black leading-none tracking-tighter italic">
-                        <span class="text-yellow-500">TISGO</span>
-                        <span class="text-foreground">NEWS</span>
-                      </span>
-                    `;
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent) {
+                      parent.innerHTML = `
+                        <span class="text-3xl sm:text-4xl font-black leading-none tracking-tighter italic">
+                          <span class="text-yellow-500">TISGO</span>
+                          <span class="text-foreground">NEWS</span>
+                        </span>
+                      `;
+                    }
                   }}
                 />
               </div>
