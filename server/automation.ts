@@ -3,7 +3,7 @@ import * as cheerio from "cheerio";
 import { createArticle } from "./articles-crud.js";
 import { invokeLLM } from "./_core/llm.js";
 
-// Limpa notícias com mais de 7 dias
+// Limpa notícias com mais de 10 dias
 async function cleanupOldArticles() {
   try {
     const firestore = await db.getDb();
@@ -336,12 +336,15 @@ export async function automateNews() {
 
   let progress = 0;
   const firestore = await db.getDb();
+  let successCount = 0;
+
   const updateStatus = async (msg: string, prog: number, active: boolean) => {
     await firestore.collection("automation_status").doc("current").set({
       message: msg,
       progress: prog,
       updatedAt: new Date().toISOString(),
-      isAutomating: active
+      isAutomating: active,
+      lastCount: successCount
     }, { merge: true });
   };
 
@@ -677,7 +680,8 @@ export async function automateNews() {
               aiRewritten: true,
             });
 
-            await updateStatus(`Postada com sucesso em ${categoryName}!`, progress, true);
+            successCount++;
+            await updateStatus(`Postada com sucesso em ${categoryName}! (${successCount} total)`, progress, true);
 
             results.push({ title: finalTitle, status: "success", source: source.name });
           } catch (err) { }

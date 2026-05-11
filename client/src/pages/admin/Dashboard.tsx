@@ -283,7 +283,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-black text-foreground uppercase tracking-tighter mb-2">Limpeza Automática</h3>
-                  <p className="text-muted-foreground text-sm mb-6 leading-relaxed">Apagar notícias com mais de 7 dias para manter o site rápido e leve.</p>
+                  <p className="text-muted-foreground text-sm mb-6 leading-relaxed">Apagar notícias com mais de 10 dias para manter o site rápido e leve.</p>
                   
                   <div className="flex items-center gap-3">
                     <button 
@@ -315,7 +315,10 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-foreground uppercase tracking-tighter">O Robô está trabalhando</h3>
-                  <p className="text-muted-foreground text-sm font-bold animate-pulse">{automationStatus.message}</p>
+                  <p className="text-muted-foreground text-sm font-bold animate-pulse">
+                    {automationStatus.message} 
+                    {automationStatus.lastCount > 0 && ` — ${automationStatus.lastCount} capturadas`}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
