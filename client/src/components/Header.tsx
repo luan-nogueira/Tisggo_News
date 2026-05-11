@@ -62,10 +62,23 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
               <Menu className="w-6 h-6" />
             </button>
             <Link href="/" className="flex flex-col group">
-              <span className="text-2xl sm:text-3xl font-black leading-none tracking-tighter italic">
-                <span className="text-accent drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">TISGO</span>
-                <span className="text-foreground drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">NEWS</span>
-              </span>
+              <div className="h-10 sm:h-12 flex items-center">
+                <img 
+                  src="/logo.png" 
+                  alt="Tisgo News" 
+                  className="h-full w-auto object-contain"
+                  onError={(e) => {
+                    // Fallback para texto caso a imagem não exista
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).parentElement!.innerHTML = `
+                      <span class="text-2xl sm:text-3xl font-black leading-none tracking-tighter italic">
+                        <span class="text-yellow-500">TISGO</span>
+                        <span class="text-foreground">NEWS</span>
+                      </span>
+                    `;
+                  }}
+                />
+              </div>
               <div className="flex items-center gap-2 mt-1">
                 <div className="h-[1px] w-4 bg-accent/50" />
                 <span className="text-[8px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em] whitespace-nowrap">
