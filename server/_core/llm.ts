@@ -283,6 +283,50 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     response_format,
   } = params;
 
+  // Se for chave do Gemini (AIza...), usa a API Nativa do Google para máxima estabilidade
+  if (ENV.forgeApiKey.startsWith("AIza")) {
+    const model = "gemini-1.5-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
+    
+    const geminiPayload = {
+      contents: messages.map(m => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }]
+      })),
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.7,
+      }
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(geminiPayload),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Gemini Native API failed: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar sua resposta.";
+
+    // Retorna no formato compatível que o restante do site espera
+    return {
+      id: "gemini-" + Date.now(),
+      created: Date.now(),
+      model: model,
+      choices: [{
+        index: 0,
+        message: { role: "assistant", content: text },
+        finish_reason: "stop"
+      }]
+    };
+  }
+
+  // Caso contrário, continua com o formato OpenAI (Forge/ChatGPT)
   const payload: Record<string, unknown> = {
     model: "gemini-1.5-flash",
     messages: messages.map(normalizeMessage),
