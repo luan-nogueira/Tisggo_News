@@ -52,7 +52,7 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-2">
+      <div className="max-w-7xl mx-auto px-4 py-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
@@ -62,18 +62,18 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
               <Menu className="w-6 h-6" />
             </button>
             <Link href="/" className="flex flex-col group">
-              <div className="h-16 sm:h-20 flex items-center">
+              <div className="h-20 sm:h-24 flex items-center">
                 <img 
                   src="/tisgo-logo-v3.png" 
                   alt="Tisgo News" 
-                  className="h-full w-auto object-contain dark:[filter:invert(1)_hue-rotate(180deg)_brightness(1.2)_saturate(1.5)]"
+                  className="h-full w-auto object-contain dark:[filter:invert(1)_hue-rotate(170deg)_brightness(1.5)_saturate(250%)]"
                   onError={(e) => {
                     // Fallback para texto caso a imagem não exista
                     (e.target as HTMLImageElement).style.display = 'none';
                     const parent = (e.target as HTMLImageElement).parentElement;
                     if (parent) {
                       parent.innerHTML = `
-                        <span class="text-3xl sm:text-4xl font-black leading-none tracking-tighter italic">
+                        <span class="text-4xl sm:text-5xl font-black leading-none tracking-tighter italic">
                           <span class="text-yellow-500">TISGO</span>
                           <span class="text-foreground">NEWS</span>
                         </span>
