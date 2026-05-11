@@ -1,0 +1,17 @@
+{
+  "name": "Tisgo News Portal",
+  "short_name": "Tisgo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#D69E2E",
+  "description": "Portal de notícias premium de Campos dos Goytacazes",
+  "icons": [
+    {
+      "src": "/news-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
