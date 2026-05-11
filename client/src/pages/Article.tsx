@@ -253,8 +253,18 @@ export default function Article() {
         <div className="w-full px-4 mt-8 mb-12">
           <div className="article-body-wrapper article-body-content">
             <div 
+              className="prose prose-invert max-w-none"
               dangerouslySetInnerHTML={{ 
-                __html: DOMPurify.sanitize(article.content.includes('<p') ? article.content : `<p>${article.content.replace(/\n/g, '</p><p>')}</p>`)
+                __html: DOMPurify.sanitize(
+                  article.content.includes('<p') 
+                    ? article.content 
+                    : article.content
+                        .replace(/\r\n/g, '\n')
+                        .replace(/([a-z0-9,])\n([a-z0-9])/gi, '$1 $2') // Une linhas que terminam em letra/número e começam em letra/número
+                        .split('\n\n')
+                        .map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+                        .join('')
+                )
               }} 
             />
           </div>
