@@ -288,8 +288,12 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     const model = "gemini-1.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
     
-    const geminiPayload = {
-      contents: messages.map(m => ({
+    // Gemini requires system messages as system_instruction, not in contents
+    const systemMsg = messages.find(m => m.role === "system");
+    const chatMessages = messages.filter(m => m.role !== "system");
+
+    const geminiPayload: any = {
+      contents: chatMessages.map(m => ({
         role: m.role === "assistant" ? "model" : "user",
         parts: [{ text: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }]
       })),
@@ -298,6 +302,13 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
         temperature: 0.7,
       }
     };
+
+    // Adiciona o system_instruction se existir
+    if (systemMsg) {
+      geminiPayload.system_instruction = {
+        parts: [{ text: typeof systemMsg.content === "string" ? systemMsg.content : JSON.stringify(systemMsg.content) }]
+      };
+    }
 
     const response = await fetch(url, {
       method: "POST",
