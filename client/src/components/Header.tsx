@@ -64,9 +64,9 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
             <Link href="/" className="flex flex-col group">
               <div className="h-10 sm:h-12 flex items-center">
                 <img 
-                  src="/logo.png" 
+                  src="/tisgo-logo.png" 
                   alt="Tisgo News" 
-                  className="h-full w-auto object-contain"
+                  className="h-full w-auto object-contain dark:invert"
                   onError={(e) => {
                     // Fallback para texto caso a imagem não exista
                     (e.target as HTMLImageElement).style.display = 'none';
