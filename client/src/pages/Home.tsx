@@ -283,7 +283,12 @@ export default function Home() {
                           {article.title}
                         </h1>
                         <p className="text-white/80 text-xs md:text-sm line-clamp-2 mb-6 max-w-xl leading-relaxed hidden md:block drop-shadow">
-                          {(article.excerpt || article.content).replace(/<[^>]*>/g, '').substring(0, 140)}...
+                          {(() => {
+                            const text = (article.excerpt || article.content).replace(/<[^>]*>/g, '');
+                            if (text.length <= 160) return text;
+                            const truncated = text.substring(0, 160);
+                            return truncated.substring(0, Math.max(truncated.lastIndexOf(' '), 0)) + '...';
+                          })()}
                         </p>
                         <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-white/60">
                           <span>{formatDate(article.publishedAt || article.createdAt)}</span>
@@ -353,7 +358,12 @@ export default function Home() {
                               {article.title}
                             </h3>
                             <p className="text-xs text-gray-400 line-clamp-2 mb-3">
-                              {(article.excerpt || article.content).replace(/<[^>]*>/g, '').substring(0, 100)}...
+                              {(() => {
+                                const text = (article.excerpt || article.content).replace(/<[^>]*>/g, '');
+                                if (text.length <= 100) return text;
+                                const truncated = text.substring(0, 100);
+                                return truncated.substring(0, Math.max(truncated.lastIndexOf(' '), 0)) + '...';
+                              })()}
                             </p>
                             <div className="flex items-center justify-between text-xs text-gray-500">
                               <span>{formatDate(article.publishedAt || article.createdAt)}</span>
@@ -448,7 +458,12 @@ export default function Home() {
                                {article.title}
                              </h4>
                              <p className="text-xs text-muted-foreground mt-2 line-clamp-2 hidden sm:block">
-                               {(article.excerpt || article.content).replace(/<[^>]*>/g, '').substring(0, 80)}...
+                               {(() => {
+                                 const text = (article.excerpt || article.content).replace(/<[^>]*>/g, '');
+                                 if (text.length <= 85) return text;
+                                 const truncated = text.substring(0, 85);
+                                 return truncated.substring(0, Math.max(truncated.lastIndexOf(' '), 0)) + '...';
+                               })()}
                              </p>
                           </div>
                         </Link>
