@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdvertiseModal } from "@/components/AdvertiseModal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Share2, ArrowLeft, Calendar, User, Eye, Link as LinkIcon, MessageCircle, Instagram, ChevronRight, Zap } from "lucide-react";
+import { Loader2, Share2, ArrowLeft, Calendar, User, Eye, Link as LinkIcon, MessageCircle, Instagram, ChevronRight, Zap, Facebook } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -143,68 +143,70 @@ export default function Article() {
           <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-6" />
 
           {/* Share Buttons */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-sm font-bold text-gray-400">Compartilhar:</span>
-            <Button
-              size="sm"
-              className="bg-[#25D366] text-white hover:bg-[#128C7E] transition-all duration-300 font-bold border-none"
-              onClick={() => {
-                const url = window.location.href;
-                const text = `Confira esta notícia no Tisgo News: ${article.title}`;
-                window.open(
-                  `https://api.whatsapp.com/send?text=${encodeURIComponent(text + " " + url)}`,
-                  '_blank'
-                );
-              }}
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              WhatsApp
-            </Button>
-            <Button
-              size="sm"
-              className="bg-accent text-black hover:bg-yellow-500 transition-all duration-300 font-bold"
-              onClick={() => {
-                const url = window.location.href;
-                window.open(
-                  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-                  '_blank'
-                );
-              }}
-            >
-              <Share2 className="w-4 h-4 mr-2" />
-              Facebook
-            </Button>
-            <Button
-              size="sm"
-              className="bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white hover:opacity-90 transition-all duration-300 font-bold border-none"
-              onClick={() => {
-                const url = window.location.href;
-                if (navigator.share) {
-                  navigator.share({
-                    title: article.title,
-                    url: url
-                  }).catch(console.error);
-                } else {
-                  navigator.clipboard.writeText(url);
-                  alert('Link copiado para compartilhar no Instagram!');
-                }
-              }}
-            >
-              <Instagram className="w-4 h-4 mr-2" />
-              Instagram
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-gray-700 hover:border-accent text-gray-400 hover:text-accent transition-all duration-300 font-bold"
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                alert('Link copiado!');
-              }}
-            >
-              <LinkIcon className="w-4 h-4 mr-2" />
-              Copiar
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Compartilhar:</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                className="h-8 px-3 text-[10px] bg-[#25D366] text-white hover:bg-[#128C7E] transition-all font-black border-none"
+                onClick={() => {
+                  const url = window.location.href;
+                  const text = `Confira esta notícia no Tisgo News: ${article.title}`;
+                  window.open(
+                    `https://api.whatsapp.com/send?text=${encodeURIComponent(text + " " + url)}`,
+                    '_blank'
+                  );
+                }}
+              >
+                <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
+                WhatsApp
+              </Button>
+              <Button
+                size="sm"
+                className="h-8 px-3 text-[10px] bg-[#1877F2] text-white hover:bg-[#166fe5] transition-all font-black border-none"
+                onClick={() => {
+                  const url = window.location.href;
+                  window.open(
+                    `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+                    '_blank'
+                  );
+                }}
+              >
+                <Facebook className="w-3.5 h-3.5 mr-1.5" />
+                Facebook
+              </Button>
+              <Button
+                size="sm"
+                className="h-8 px-3 text-[10px] bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white hover:opacity-90 transition-all font-black border-none"
+                onClick={() => {
+                  const url = window.location.href;
+                  if (navigator.share) {
+                    navigator.share({
+                      title: article.title,
+                      url: url
+                    }).catch(console.error);
+                  } else {
+                    navigator.clipboard.writeText(url);
+                    alert('Link copiado para compartilhar!');
+                  }
+                }}
+              >
+                <Instagram className="w-3.5 h-3.5 mr-1.5" />
+                Instagram
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 px-3 text-[10px] border-border hover:border-accent text-muted-foreground hover:text-accent transition-all font-black"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("Link copiado!");
+                }}
+              >
+                <LinkIcon className="w-3.5 h-3.5 mr-1.5" />
+                Copiar
+              </Button>
+            </div>
           </div>
         </div>
 
