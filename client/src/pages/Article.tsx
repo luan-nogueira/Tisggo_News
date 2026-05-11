@@ -253,16 +253,17 @@ export default function Article() {
         <div className="w-full px-4 mt-8 mb-12">
           <div className="article-body-wrapper article-body-content">
             <div 
-              className="prose prose-invert max-w-none"
+              className="prose prose-invert max-w-none break-words [hyphens:none] [word-break:normal]"
+              style={{ overflowWrap: 'anywhere' }}
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(
                   article.content.includes('<p') 
                     ? article.content 
                     : article.content
                         .replace(/\r\n/g, '\n')
-                        .replace(/([a-z0-9,])\n([a-z0-9])/gi, '$1 $2') // Une linhas que terminam em letra/número e começam em letra/número
+                        .replace(/([a-z0-9,-])\n([a-z0-9,-])/gi, '$1$2') // Une palavras cortadas mesmo com hífens
                         .split('\n\n')
-                        .map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+                        .map(p => `<p>${p.replace(/\n/g, ' ')}</p>`) // Transforma quebras simples em espaços
                         .join('')
                 )
               }} 
