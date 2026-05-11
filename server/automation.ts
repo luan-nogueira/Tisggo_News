@@ -216,6 +216,7 @@ TAREFAS:
 3. RESUMO: Crie um "lead" ou resumo (excerpt) instigante de no máximo 200 caracteres.
 4. TÍTULO: Crie um título magnético (clickbait ético) que resuma bem a notícia.
 5. LIMPEZA: Remova absolutamente qualquer menção a fontes originais (ex: "segundo o G1", "conforme o Ururau"), nomes de repórteres de outros veículos ou convites para seguir outros canais.
+6. FILTRAGEM: Ignore completamente blocos de texto que pareçam ser "Leia também", "Veja mais", anúncios, créditos de imagem ou links para outras matérias que possam ter vindo no texto original. Foque APENAS na história principal.
 
 FORMATO DE RETORNO (JSON):
 {
@@ -312,16 +313,25 @@ async function processRetroactiveRewrites() {
 }
 
 const STOP_WORDS = [
+  /Leia também/i,
   /Leia tambm/i,
   /Veja mais/i,
-  /Confira tambm/i,
+  /Confira também/i,
   /Publicidade/i,
+  /Continua após a publicidade/i,
   /Continua aps a publicidade/i,
+  /Faça parte do nosso grupo/i,
   /Faa parte do nosso grupo/i,
-  /Receba as principais notcias/i,
+  /Receba as principais notícias/i,
   /ururau\.com\.br/i,
   /Foto:/i,
+  /VÍDEO:/i,
   /VDEO:/i,
+  /WhatsApp/i,
+  /Inscreva-se/i,
+  /Siga o/i,
+  /Clique aqui/i,
+  /Reprodução/i,
 ];
 
 async function getOrCreateCategory(name: string) {
