@@ -168,12 +168,12 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
 
       {/* Mobile Category Scroll Bar */}
       <div className="xl:hidden border-b border-border bg-card/50 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-6 px-4 py-3 whitespace-nowrap">
+        <div className="flex items-center gap-10 px-6 py-4 whitespace-nowrap">
           {categories?.map((cat) => (
             <Link 
               key={cat.id} 
               href={`/category/${cat.slug}`} 
-              className={`text-[11px] font-black uppercase transition-colors flex items-center gap-1.5 ${String(cat.id) === String(currentCategoryId) ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
+              className={`text-[11px] font-black uppercase transition-colors flex items-center gap-2.5 ${String(cat.id) === String(currentCategoryId) ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
             >
               <span>{getCategoryEmoji(cat.name)}</span>
               {cat.name}
@@ -215,7 +215,7 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
                         key={cat.id} 
                         href={`/category/${cat.slug}`}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 p-2 rounded-lg transition-colors text-sm font-bold uppercase ${String(cat.id) === String(currentCategoryId) ? 'bg-accent/10 text-accent' : 'hover:bg-muted'}`}
+                        className={`flex items-center gap-4 p-3 rounded-lg transition-colors text-sm font-bold uppercase ${String(cat.id) === String(currentCategoryId) ? 'bg-accent/10 text-accent' : 'hover:bg-muted'}`}
                       >
                         <span className="text-xl">{getCategoryEmoji(cat.name)}</span>
                         {cat.name}
