@@ -283,8 +283,8 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     response_format,
   } = params;
 
-  // Se for chave do Gemini (AIza...), usa a API Nativa do Google para máxima estabilidade
-  if (ENV.forgeApiKey.startsWith("AIza")) {
+  // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa do Google para máxima estabilidade
+  if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
     const model = "gemini-1.5-flash-8b";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
     
