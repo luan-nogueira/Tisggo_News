@@ -22,22 +22,12 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
     max_tokens,
   } = params;
 
-  // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa com o modelo mais compatível
+  // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa com o modelo confirmado pelo Discovery
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
-    const model = "gemini-1.5-flash"; // Voltando para o flash mas com URL nativa simplificada
+    // Usando o modelo confirmado pelo log de diagnóstico do usuário
+    const model = "gemini-2.0-flash"; 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
     
-    // DIAGNÓSTICO: Listar modelos disponíveis
-    try {
-      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${ENV.forgeApiKey}`;
-      const listRes = await fetch(listUrl);
-      const listData = await listRes.json();
-      console.log(`[Gemini Discovery] Available models: ${JSON.stringify(listData.models?.map((m: any) => m.name))}`);
-    } catch (e) {
-      console.error(`[Gemini Discovery ERROR] Failed to list models: ${e}`);
-    }
-    
-    // Simplificando as mensagens para o formato que o Google ama
     const contents = messages
       .filter(m => m.role !== "system")
       .map(m => ({
@@ -47,7 +37,7 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
 
     const body: any = { contents };
     
-    // Adiciona personalidade se houver
+    // Adiciona personalidade (system_instruction)
     const systemMessage = messages.find(m => m.role === "system");
     if (systemMessage) {
       body.system_instruction = {
