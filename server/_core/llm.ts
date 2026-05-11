@@ -286,7 +286,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa do Google para máxima estabilidade
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
     const model = "gemini-1.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
     
     // Gemini requires system messages as system_instruction, not in contents
     const systemMsg = messages.find(m => m.role === "system");
