@@ -59,6 +59,20 @@ async function startServer() {
   } else {
     serveStatic(app);
   }
+  
+  // Endpoint para manter o site vivo (ping)
+  app.get("/api/ping", (_req, res) => {
+    res.json({ status: "alive", timestamp: new Date().toISOString() });
+  });
+
+  // Mecanismo de auto-ping para o plano gratuito do Render
+  setInterval(() => {
+    const url = process.env.RENDER_EXTERNAL_URL;
+    if (url) {
+      fetch(`${url}/api/ping`).catch(() => {});
+      console.log("[Keep-Alive] Auto-ping enviado");
+    }
+  }, 10 * 60 * 1000); // 10 minutos
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
