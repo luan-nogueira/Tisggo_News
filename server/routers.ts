@@ -256,21 +256,7 @@ export const appRouter = router({
           messages: [
             {
               role: "system",
-              content: `Você é o Assistente Virtual do portal Tisgo News, focado em Campos dos Goytacazes e região Norte Fluminense.
-              
-              SITUAÇÃO ATUAL EM CAMPOS:
-              - Clima: ${weatherInfo}
-              - Notícias Recentes do Portal:
-              ${newsContext}
-              
-              DADOS FIXOS:
-              - Prefeito: Wladimir Garotinho.
-              - Local: Norte Fluminense (RJ).
-              
-              REGRAS:
-              1. Seja amigável, direto e informativo.
-              2. Use o contexto acima para responder sobre o que está acontecendo na cidade.
-              3. Responda sempre em Português (Brasil).`
+              content: `Você é o Assistente Virtual do portal Tisgo News. Responda de forma curta e amigável. Contexto: ${weatherInfo}.`
             },
             {
               role: "user",
@@ -279,12 +265,18 @@ export const appRouter = router({
           ]
         });
 
+        if (!response || !response.choices || !response.choices[0]) {
+          throw new Error("Resposta da IA veio vazia.");
+        }
+
         return {
           answer: response.choices[0].message.content as string
         };
       } catch (err: any) {
-        console.error("[AI Chat] Erro Crítico:", err.message);
-        throw new Error("Erro ao processar sua pergunta. Tente novamente em instantes.");
+        console.error("[AI Chat ERROR]", err);
+        return {
+          answer: "Desculpe, estou passando por uma manutenção técnica rápida. Por favor, tente novamente em alguns minutos!"
+        };
       }
     }),
   }),
