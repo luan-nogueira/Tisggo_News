@@ -29,13 +29,18 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
   // Se for chave do Gemini (AIza... ou AQ...), usa o endpoint de compatibilidade da OpenAI do Google
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
     const model = "gemini-1.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${ENV.forgeApiKey}`;
+    // Removendo ?key= da URL para usar apenas headers se necessário
+    const url = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
     
-    console.log(`[Gemini OpenAI] Sending request to: ${url.replace(ENV.forgeApiKey, "***")}`);
+    console.log(`[Gemini OpenAI] Sending request to: ${url}`);
     
-    const response = await fetch(url, {
+    const response = await fetch(`${url}?key=${ENV.forgeApiKey}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "x-goog-api-key": ENV.forgeApiKey,
+        "Authorization": `Bearer ${ENV.forgeApiKey}`
+      },
       body: JSON.stringify({
         model,
         messages,
@@ -56,11 +61,7 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
   }
 
   // Fallback para OpenAI/Forge (Legado)
-  const url = ENV.forgeApiKey.startsWith("AIza") 
-    ? `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${ENV.forgeApiKey}`
-    : (ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
-      ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
-      : "https://forge.manus.im/v1/chat/completions");
+  const url = "https://forge.manus.im/v1/chat/completions";
 
   const response = await fetch(url, {
     method: "POST",
