@@ -116,24 +116,51 @@ export default function Home() {
 
   // Specific Categories for Layout Sections
   const getArticlesByCategory = (slug: string, limit = 4) => {
-    const category = categories?.find(c => c.slug === slug);
+    // Procura por slug exato ou nome (normalizado)
+    const category = categories?.find(c => 
+      c.slug === slug || 
+      c.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "") === slug
+    );
     if (!category) return [];
     return uniqueArticles
-      .filter(a => String(a.id) !== featuredArticles[0]?.id) // Skip main featured
+      .filter(a => !featuredArticles.find(f => f.id === a.id)) // Skip featured
       .filter(a => String(a.categoryId) === String(category.id))
       .slice(0, limit);
   };
 
   const politicsArticles = getArticlesByCategory('politica', 4);
   const policeArticles = getArticlesByCategory('policia', 4);
-  const cityArticles = getArticlesByCategory('cidade', 4);
+  const cityArticles = getArticlesByCategory('cidades', 6); // Aumentado para 6
 
   const remainingArticles = uniqueArticles.filter(a => !featuredArticles.find(f => f.id === a.id));
   const sidebarArticles = remainingArticles.slice(0, 5);
-  const gridArticles = remainingArticles.filter(a => 
-    !politicsArticles.find(p => p.id === a.id) && 
-    !policeArticles.find(p => p.id === a.id)
-  ).slice(0, 12);
+  
+  const gridArticles = (() => {
+    const list = remainingArticles.filter(a => 
+      !politicsArticles.find(p => p.id === a.id) && 
+      !policeArticles.find(p => p.id === a.id) &&
+      !cityArticles.find(p => p.id === a.id)
+    );
+    
+    // Diversify grid articles
+    const categoriesSet = new Set();
+    const diversified: any[] = [];
+    const others: any[] = [];
+    
+    list.forEach(article => {
+      if (!categoriesSet.has(article.categoryId) && diversified.length < 12) {
+        diversified.push(article);
+        categoriesSet.add(article.categoryId);
+      } else {
+        others.push(article);
+      }
+    });
+    
+    while (diversified.length < 12 && others.length > 0) {
+      diversified.push(others.shift());
+    }
+    return diversified;
+  })();
 
   useEffect(() => {
     if (featuredArticles.length > 0) {
@@ -322,6 +349,33 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
+
+                {/* City Section (Campos dos Goytacazes) */}
+                {cityArticles.length > 0 && (
+                  <div className="bg-accent/5 p-6 rounded-2xl border border-accent/10">
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                          <span className="text-xl">🏙️</span>
+                        </div>
+                        <h2 className="text-2xl font-black uppercase text-foreground">Campos dos Goytacazes</h2>
+                      </div>
+                      <Link href="/category/cidades" className="text-xs font-black text-accent hover:underline tracking-widest">VER TUDO</Link>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {cityArticles.map(article => (
+                        <Link key={article.id} href={`/article/${article.slug}`} className="group flex gap-4 items-center">
+                           <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                             {renderMedia(article.coverImage || "", article.title, "w-full h-full object-cover group-hover:scale-110 transition-transform duration-500")}
+                           </div>
+                           <h4 className="text-sm font-bold text-foreground line-clamp-2 group-hover:text-accent transition-colors">
+                             {article.title}
+                           </h4>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Politics Section */}
                 {politicsArticles.length > 0 && (
