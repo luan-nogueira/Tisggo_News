@@ -27,6 +27,16 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
     const model = "gemini-1.5-flash"; // Voltando para o flash mas com URL nativa simplificada
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
     
+    // DIAGNÓSTICO: Listar modelos disponíveis
+    try {
+      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${ENV.forgeApiKey}`;
+      const listRes = await fetch(listUrl);
+      const listData = await listRes.json();
+      console.log(`[Gemini Discovery] Available models: ${JSON.stringify(listData.models?.map((m: any) => m.name))}`);
+    } catch (e) {
+      console.error(`[Gemini Discovery ERROR] Failed to list models: ${e}`);
+    }
+    
     // Simplificando as mensagens para o formato que o Google ama
     const contents = messages
       .filter(m => m.role !== "system")
