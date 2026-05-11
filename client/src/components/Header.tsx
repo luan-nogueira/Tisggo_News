@@ -54,17 +54,17 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
     <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-1">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-8">
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="xl:hidden p-2 text-foreground hover:text-accent transition-colors"
             >
               <Menu className="w-6 h-6" />
             </button>
-            <Link href="/" className="flex items-center gap-3 group">
+            <Link href="/" className="flex items-center gap-3 group shrink-0">
               <div className="w-12 h-12 sm:w-14 sm:h-14 shrink-0">
                 <img 
-                  src="/icon.png" 
+                  src="/brand-icon.png" 
                   alt="Tisgo Icon" 
                   className="w-full h-full object-contain rounded-full border-2 border-accent/20"
                   onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
@@ -86,7 +86,7 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
             </Link>
           </div>
 
-          <nav className="hidden xl:flex items-center gap-4">
+          <nav className="hidden xl:flex items-center gap-6">
             {categories?.slice(0, 8).map((cat) => (
               <Link 
                 key={cat.id} 
