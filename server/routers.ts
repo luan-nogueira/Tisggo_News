@@ -217,58 +217,75 @@ export const appRouter = router({
       question: z.string(),
       context: z.string().optional()
     })).mutation(async ({ input }) => {
-      const { invokeLLM } = await import("./_core/llm.js");
-      const { getArticles } = await import("./db.js");
-      
-      // Busca notícias recentes
-      const recentArticles = await getArticles(10);
-      const newsContext = recentArticles.map(a => `- ${a.title}: ${a.excerpt}`).join("\n");
-
-      // Tenta buscar o clima de Campos via wttr.in (simples e rápido)
-      let weatherInfo = "Informação de clima indisponível no momento.";
       try {
-        const weatherRes = await fetch("https://wttr.in/Campos+dos+Goytacazes?format=%C+%t+%w");
-        if (weatherRes.ok) {
-          weatherInfo = await weatherRes.text();
-        }
-      } catch (e) {
-        console.error("Erro ao buscar clima:", e);
-      }
+        const { invokeLLM } = await import("./_core/llm.js");
+        const { getArticles } = await import("./db.js");
+        
+        console.log(`[AI Chat] Pergunta recebida: "${input.question}"`);
 
-      const response = await invokeLLM({
-        messages: [
-          {
-            role: "system",
-            content: `Você é o Assistente Virtual do portal Tisgo News, focado em Campos dos Goytacazes e região.
-            
-            CLIMA ATUAL EM CAMPOS: ${weatherInfo}
-            
-            NOTÍCIAS RECENTES DO PORTAL:
-            ${newsContext}
-            
-            INFORMAÇÕES DE REFERÊNCIA (CAMPOS-RJ):
-            - Prefeito Atual: Wladimir Garotinho.
-            - Localização: Norte Fluminense.
-            - População: Aprox. 480 mil habitantes.
-            - Principais Rios: Rio Paraíba do Sul.
-            
-            DIRETRIZES:
-            1. Seja o maior especialista em Campos dos Goytacazes.
-            2. Se perguntarem sobre o clima, use a informação acima.
-            3. Se perguntarem sobre notícias, use o contexto do portal.
-            4. Você tem conhecimento geral atualizado (GPT-4o). Pode responder sobre quem é o prefeito, eventos na Pelinca, Farol de São Tomé, etc.
-            5. Responda de forma curta, direta e amigável.`
-          },
-          {
-            role: "user",
-            content: input.question
+        // Busca notícias recentes com timeout curto para não travar
+        let newsContext = "Nenhuma notícia recente disponível no momento.";
+        try {
+          const recentArticles = await getArticles(5);
+          if (recentArticles && recentArticles.length > 0) {
+            newsContext = recentArticles.map(a => `- ${a.title}: ${a.excerpt}`).join("\n");
           }
-        ]
-      });
+        } catch (dbErr) {
+          console.error("[AI Chat] Erro ao buscar notícias:", dbErr);
+        }
 
-      return {
-        answer: response.choices[0].message.content as string
-      };
+        // Tenta buscar o clima de Campos com timeout para segurança
+        let weatherInfo = "Informação de clima temporariamente indisponível.";
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 segundos de limite
+          
+          const weatherRes = await fetch("https://wttr.in/Campos+dos+Goytacazes?format=%C+%t+%w", { 
+            signal: controller.signal 
+          });
+          clearTimeout(timeoutId);
+          
+          if (weatherRes.ok) {
+            weatherInfo = await weatherRes.text();
+          }
+        } catch (e) {
+          console.log("[AI Chat] Clima indisponível ou timeout.");
+        }
+
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `Você é o Assistente Virtual do portal Tisgo News, focado em Campos dos Goytacazes e região Norte Fluminense.
+              
+              SITUAÇÃO ATUAL EM CAMPOS:
+              - Clima: ${weatherInfo}
+              - Notícias Recentes do Portal:
+              ${newsContext}
+              
+              DADOS FIXOS:
+              - Prefeito: Wladimir Garotinho.
+              - Local: Norte Fluminense (RJ).
+              
+              REGRAS:
+              1. Seja amigável, direto e informativo.
+              2. Use o contexto acima para responder sobre o que está acontecendo na cidade.
+              3. Responda sempre em Português (Brasil).`
+            },
+            {
+              role: "user",
+              content: input.question
+            }
+          ]
+        });
+
+        return {
+          answer: response.choices[0].message.content as string
+        };
+      } catch (err: any) {
+        console.error("[AI Chat] Erro Crítico:", err.message);
+        throw new Error("Erro ao processar sua pergunta. Tente novamente em instantes.");
+      }
     }),
   }),
 });
