@@ -36,7 +36,8 @@ interface NewsSource {
   contentSelector: string;
   imageSelector?: string;
   baseUrl: string;
-  forcedCategory?: string; // Nova propriedade para forçar categoria
+  forcedCategory?: string;
+  limit?: number; // Limite de notícias por ciclo
 }
 
 const SOURCES: NewsSource[] = [
@@ -47,7 +48,8 @@ const SOURCES: NewsSource[] = [
     titleSelector: 'h1.content-head__title, .content-head__title',
     contentSelector: '.content-text__container, .content-text, .entry-content',
     imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://ge.globo.com"
+    baseUrl: "https://ge.globo.com",
+    limit: 6
   },
   {
     name: "g1 Norte Fluminense",
@@ -56,7 +58,8 @@ const SOURCES: NewsSource[] = [
     titleSelector: 'h1.content-head__title',
     contentSelector: '.content-text__container, .content-text',
     imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://g1.globo.com"
+    baseUrl: "https://g1.globo.com",
+    limit: 8
   },
   {
     name: "Ururau",
@@ -65,7 +68,8 @@ const SOURCES: NewsSource[] = [
     titleSelector: 'h1, h2.titulo',
     contentSelector: 'article, .content-article, .post-content, .texto-materia, #texto-materia',
     imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://www.ururau.com.br"
+    baseUrl: "https://www.ururau.com.br",
+    limit: 6
   },
   {
     name: "Campos Ocorrências",
@@ -74,7 +78,41 @@ const SOURCES: NewsSource[] = [
     titleSelector: 'h1, .entry-title',
     contentSelector: '.elementor-widget-theme-post-content, .entry-content, article',
     imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://camposocorrencias.com.br"
+    baseUrl: "https://camposocorrencias.com.br",
+    limit: 5
+  },
+  {
+    name: "ESPN Brasileirão",
+    url: "https://www.espn.com.br/futebol/liga/_/nome/bra.1",
+    linkSelector: 'a.realStory, a[class*="realStory"]',
+    titleSelector: 'h1.article-header__title, .article-header h1, h1',
+    contentSelector: '.article-body p, .article-body',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://www.espn.com.br",
+    forcedCategory: "Esportes",
+    limit: 2
+  },
+  {
+    name: "GE Brasileirão",
+    url: "https://ge.globo.com/futebol/brasileirao-serie-a/",
+    linkSelector: 'a.feed-post-link',
+    titleSelector: 'h1.content-head__title, h1',
+    contentSelector: '.content-text__container, .article__content p',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "",
+    forcedCategory: "Esportes",
+    limit: 2
+  },
+  {
+    name: "UOL Esporte",
+    url: "https://www.uol.com.br/esporte/futebol/campeonatos/brasileirao/",
+    linkSelector: 'a.hyperlink, .thumbnails-item a',
+    titleSelector: 'h1.titulo, .content-head__title, h1',
+    contentSelector: '.text p, .content-text__container',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "",
+    forcedCategory: "Esportes",
+    limit: 2
   },
   {
     name: "J3 News",
@@ -425,7 +463,7 @@ export async function automateNews() {
           }
         });
 
-        const uniqueLinks = [...new Set(links)].slice(0, 5);
+        const uniqueLinks = [...new Set(links)].slice(0, source.limit || 5);
 
         for (const link of uniqueLinks) {
           if (await checkStop()) {
