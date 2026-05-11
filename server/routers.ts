@@ -212,6 +212,46 @@ export const appRouter = router({
       return { topArticles };
     }),
   }),
+  ai: router({
+    ask: publicProcedure.input(z.object({
+      question: z.string(),
+      context: z.string().optional()
+    })).mutation(async ({ input }) => {
+      const { invokeLLM } = await import("./_core/llm.js");
+      const { getArticles } = await import("./db.js");
+      
+      // Busca notícias recentes para dar contexto à IA
+      const recentArticles = await getArticles(10);
+      const newsContext = recentArticles.map(a => `- ${a.title}: ${a.excerpt}`).join("\n");
+
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content: `Você é o Assistente Virtual do portal Tisgo News. Sua missão é ajudar os leitores com informações baseadas nas notícias do portal e conhecimentos gerais.
+            
+            CONTEXTO RECENTE DO PORTAL:
+            ${newsContext}
+            
+            DIRETRIZES:
+            1. Seja educado, profissional e ágil.
+            2. Se a pergunta for sobre notícias recentes, use o contexto fornecido acima.
+            3. Se não souber a resposta sobre algo específico do portal, convide o usuário a continuar acompanhando as atualizações.
+            4. Responda sempre em Português do Brasil.
+            5. Use um tom amigável e informativo.`
+          },
+          {
+            role: "user",
+            content: input.question
+          }
+        ]
+      });
+
+      return {
+        answer: response.choices[0].message.content as string
+      };
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

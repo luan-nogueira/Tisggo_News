@@ -40,6 +40,8 @@ function Router() {
   );
 }
 
+import { ChatWidget } from "@/components/ChatWidget";
+
 function App() {
   return (
     <ErrorBoundary>
@@ -47,6 +49,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <ChatWidget />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
