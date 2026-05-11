@@ -20,49 +20,51 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
     messages,
     temperature,
     max_tokens,
-    responseFormat,
-    response_format,
-    outputSchema,
-    output_schema,
   } = params;
 
-  // Se for chave do Gemini (AIza... ou AQ...), usa o endpoint de compatibilidade da OpenAI do Google
+  // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa com o modelo mais compatível
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
-    const model = "gemini-1.5-flash";
-    // Removendo ?key= da URL para usar apenas headers se necessário
-    const url = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
+    const model = "gemini-1.5-flash"; // Voltando para o flash mas com URL nativa simplificada
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
     
-    console.log(`[Gemini OpenAI] Sending request to: ${url}`);
+    // Simplificando as mensagens para o formato que o Google ama
+    const contents = messages
+      .filter(m => m.role !== "system")
+      .map(m => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }]
+      }));
+
+    const body: any = { contents };
     
-    const response = await fetch(`${url}?key=${ENV.forgeApiKey}`, {
+    // Adiciona personalidade se houver
+    const systemMessage = messages.find(m => m.role === "system");
+    if (systemMessage) {
+      body.system_instruction = {
+        parts: [{ text: systemMessage.content }]
+      };
+    }
+
+    console.log(`[Gemini Native] Sending request to: ${url.replace(ENV.forgeApiKey, "***")}`);
+    
+    const response = await fetch(url, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "x-goog-api-key": ENV.forgeApiKey,
-        "Authorization": `Bearer ${ENV.forgeApiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: temperature ?? 0.7,
-        max_tokens: max_tokens || 2048,
-        response_format: response_format || responseFormat
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[Gemini OpenAI ERROR] Status: ${response.status} - Body: ${errorText}`);
-      throw new Error(`Gemini OpenAI API failed: ${response.status} - ${errorText}`);
+      console.error(`[Gemini Native ERROR] Status: ${response.status} - Body: ${errorText}`);
+      throw new Error(`Gemini Native API failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || "Desculpe, não consegui processar sua resposta.";
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar.";
   }
 
-  // Fallback para OpenAI/Forge (Legado)
+  // Fallback (Forge/OpenAI)
   const url = "https://forge.manus.im/v1/chat/completions";
-
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -74,15 +76,8 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
       messages,
       temperature: temperature ?? 0.7,
       max_tokens: max_tokens,
-      response_format: response_format || responseFormat,
     }),
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`[LLM ERROR] Status: ${response.status} - Body: ${errorText}`);
-    throw new Error(`LLM API failed: ${response.status} - ${errorText}`);
-  }
 
   const data = await response.json();
   return data.choices[0].message.content;
