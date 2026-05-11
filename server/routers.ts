@@ -220,25 +220,44 @@ export const appRouter = router({
       const { invokeLLM } = await import("./_core/llm.js");
       const { getArticles } = await import("./db.js");
       
-      // Busca notícias recentes para dar contexto à IA
+      // Busca notícias recentes
       const recentArticles = await getArticles(10);
       const newsContext = recentArticles.map(a => `- ${a.title}: ${a.excerpt}`).join("\n");
+
+      // Tenta buscar o clima de Campos via wttr.in (simples e rápido)
+      let weatherInfo = "Informação de clima indisponível no momento.";
+      try {
+        const weatherRes = await fetch("https://wttr.in/Campos+dos+Goytacazes?format=%C+%t+%w");
+        if (weatherRes.ok) {
+          weatherInfo = await weatherRes.text();
+        }
+      } catch (e) {
+        console.error("Erro ao buscar clima:", e);
+      }
 
       const response = await invokeLLM({
         messages: [
           {
             role: "system",
-            content: `Você é o Assistente Virtual do portal Tisgo News. Sua missão é ajudar os leitores com informações baseadas nas notícias do portal e conhecimentos gerais.
+            content: `Você é o Assistente Virtual do portal Tisgo News, focado em Campos dos Goytacazes e região.
             
-            CONTEXTO RECENTE DO PORTAL:
+            CLIMA ATUAL EM CAMPOS: ${weatherInfo}
+            
+            NOTÍCIAS RECENTES DO PORTAL:
             ${newsContext}
             
+            INFORMAÇÕES DE REFERÊNCIA (CAMPOS-RJ):
+            - Prefeito Atual: Wladimir Garotinho.
+            - Localização: Norte Fluminense.
+            - População: Aprox. 480 mil habitantes.
+            - Principais Rios: Rio Paraíba do Sul.
+            
             DIRETRIZES:
-            1. Seja educado, profissional e ágil.
-            2. Se a pergunta for sobre notícias recentes, use o contexto fornecido acima.
-            3. Se não souber a resposta sobre algo específico do portal, convide o usuário a continuar acompanhando as atualizações.
-            4. Responda sempre em Português do Brasil.
-            5. Use um tom amigável e informativo.`
+            1. Seja o maior especialista em Campos dos Goytacazes.
+            2. Se perguntarem sobre o clima, use a informação acima.
+            3. Se perguntarem sobre notícias, use o contexto do portal.
+            4. Você tem conhecimento geral atualizado (GPT-4o). Pode responder sobre quem é o prefeito, eventos na Pelinca, Farol de São Tomé, etc.
+            5. Responda de forma curta, direta e amigável.`
           },
           {
             role: "user",
