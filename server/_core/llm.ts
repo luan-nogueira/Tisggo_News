@@ -1,392 +1,88 @@
-import { ENV } from "./env";
-
-export type Role = "system" | "user" | "assistant" | "tool" | "function";
-
-export type TextContent = {
-  type: "text";
-  text: string;
-};
-
-export type ImageContent = {
-  type: "image_url";
-  image_url: {
-    url: string;
-    detail?: "auto" | "low" | "high";
-  };
-};
-
-export type FileContent = {
-  type: "file_url";
-  file_url: {
-    url: string;
-    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4" ;
-  };
-};
-
-export type MessageContent = string | TextContent | ImageContent | FileContent;
+import { ENV } from "./env.ts";
 
 export type Message = {
-  role: Role;
-  content: MessageContent | MessageContent[];
-  name?: string;
-  tool_call_id?: string;
+  role: "user" | "assistant" | "system";
+  content: string;
 };
 
-export type Tool = {
-  type: "function";
-  function: {
-    name: string;
-    description?: string;
-    parameters?: Record<string, unknown>;
-  };
-};
-
-export type ToolChoicePrimitive = "none" | "auto" | "required";
-export type ToolChoiceByName = { name: string };
-export type ToolChoiceExplicit = {
-  type: "function";
-  function: {
-    name: string;
-  };
-};
-
-export type ToolChoice =
-  | ToolChoicePrimitive
-  | ToolChoiceByName
-  | ToolChoiceExplicit;
-
-export type InvokeParams = {
+export type LLMParams = {
   messages: Message[];
-  tools?: Tool[];
-  toolChoice?: ToolChoice;
-  tool_choice?: ToolChoice;
-  maxTokens?: number;
+  temperature?: number;
   max_tokens?: number;
-  outputSchema?: OutputSchema;
-  output_schema?: OutputSchema;
-  responseFormat?: ResponseFormat;
-  response_format?: ResponseFormat;
+  responseFormat?: { type: "json_object" };
+  response_format?: { type: "json_object" };
+  outputSchema?: any;
+  output_schema?: any;
 };
 
-export type ToolCall = {
-  id: string;
-  type: "function";
-  function: {
-    name: string;
-    arguments: string;
-  };
-};
-
-export type InvokeResult = {
-  id: string;
-  created: number;
-  model: string;
-  choices: Array<{
-    index: number;
-    message: {
-      role: Role;
-      content: string | Array<TextContent | ImageContent | FileContent>;
-      tool_calls?: ToolCall[];
-    };
-    finish_reason: string | null;
-  }>;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-};
-
-export type JsonSchema = {
-  name: string;
-  schema: Record<string, unknown>;
-  strict?: boolean;
-};
-
-export type OutputSchema = JsonSchema;
-
-export type ResponseFormat =
-  | { type: "text" }
-  | { type: "json_object" }
-  | { type: "json_schema"; json_schema: JsonSchema };
-
-const ensureArray = (
-  value: MessageContent | MessageContent[]
-): MessageContent[] => (Array.isArray(value) ? value : [value]);
-
-const normalizeContentPart = (
-  part: MessageContent
-): TextContent | ImageContent | FileContent => {
-  if (typeof part === "string") {
-    return { type: "text", text: part };
-  }
-
-  if (part.type === "text") {
-    return part;
-  }
-
-  if (part.type === "image_url") {
-    return part;
-  }
-
-  if (part.type === "file_url") {
-    return part;
-  }
-
-  throw new Error("Unsupported message content part");
-};
-
-const normalizeMessage = (message: Message) => {
-  const { role, name, tool_call_id } = message;
-
-  if (role === "tool" || role === "function") {
-    const content = ensureArray(message.content)
-      .map(part => (typeof part === "string" ? part : JSON.stringify(part)))
-      .join("\n");
-
-    return {
-      role,
-      name,
-      tool_call_id,
-      content,
-    };
-  }
-
-  const contentParts = ensureArray(message.content).map(normalizeContentPart);
-
-  // If there's only text content, collapse to a single string for compatibility
-  if (contentParts.length === 1 && contentParts[0].type === "text") {
-    return {
-      role,
-      name,
-      content: contentParts[0].text,
-    };
-  }
-
-  return {
-    role,
-    name,
-    content: contentParts,
-  };
-};
-
-const normalizeToolChoice = (
-  toolChoice: ToolChoice | undefined,
-  tools: Tool[] | undefined
-): "none" | "auto" | ToolChoiceExplicit | undefined => {
-  if (!toolChoice) return undefined;
-
-  if (toolChoice === "none" || toolChoice === "auto") {
-    return toolChoice;
-  }
-
-  if (toolChoice === "required") {
-    if (!tools || tools.length === 0) {
-      throw new Error(
-        "tool_choice 'required' was provided but no tools were configured"
-      );
-    }
-
-    if (tools.length > 1) {
-      throw new Error(
-        "tool_choice 'required' needs a single tool or specify the tool name explicitly"
-      );
-    }
-
-    return {
-      type: "function",
-      function: { name: tools[0].function.name },
-    };
-  }
-
-  if ("name" in toolChoice) {
-    return {
-      type: "function",
-      function: { name: toolChoice.name },
-    };
-  }
-
-  return toolChoice;
-};
-
-const resolveApiUrl = () => {
-  if (ENV.forgeApiKey.startsWith("AIza")) {
-    return `https://generativelanguage.googleapis.com/v1/openai/chat/completions?key=${ENV.forgeApiKey}`;
-  }
-  return ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
-    ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
-    : "https://forge.manus.im/v1/chat/completions";
-};
-
-const assertApiKey = () => {
-  if (!ENV.forgeApiKey) {
-    throw new Error("OPENAI_API_KEY is not configured");
-  }
-};
-
-const normalizeResponseFormat = ({
-  responseFormat,
-  response_format,
-  outputSchema,
-  output_schema,
-}: {
-  responseFormat?: ResponseFormat;
-  response_format?: ResponseFormat;
-  outputSchema?: OutputSchema;
-  output_schema?: OutputSchema;
-}):
-  | { type: "json_schema"; json_schema: JsonSchema }
-  | { type: "text" }
-  | { type: "json_object" }
-  | undefined => {
-  const explicitFormat = responseFormat || response_format;
-  if (explicitFormat) {
-    if (
-      explicitFormat.type === "json_schema" &&
-      !explicitFormat.json_schema?.schema
-    ) {
-      throw new Error(
-        "responseFormat json_schema requires a defined schema object"
-      );
-    }
-    return explicitFormat;
-  }
-
-  const schema = outputSchema || output_schema;
-  if (!schema) return undefined;
-
-  if (!schema.name || !schema.schema) {
-    throw new Error("outputSchema requires both name and schema");
-  }
-
-  return {
-    type: "json_schema",
-    json_schema: {
-      name: schema.name,
-      schema: schema.schema,
-      ...(typeof schema.strict === "boolean" ? { strict: schema.strict } : {}),
-    },
-  };
-};
-
-export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
-  assertApiKey();
-
+export const invokeLLM = async (params: LLMParams): Promise<string> => {
   const {
     messages,
-    tools,
-    toolChoice,
-    tool_choice,
-    outputSchema,
-    output_schema,
+    temperature,
+    max_tokens,
     responseFormat,
     response_format,
+    outputSchema,
+    output_schema,
   } = params;
 
-  // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa do Google para máxima estabilidade
+  // Se for chave do Gemini (AIza... ou AQ...), usa o endpoint de compatibilidade da OpenAI do Google
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
-    const model = "gemini-1.5-flash-latest";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
+    const model = "gemini-1.5-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${ENV.forgeApiKey}`;
     
-    // Gemini requires system messages as system_instruction, not in contents
-    const systemMsg = messages.find(m => m.role === "system");
-    const chatMessages = messages.filter(m => m.role !== "system");
-
-    const geminiPayload: any = {
-      contents: chatMessages.map(m => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }]
-      })),
-      generationConfig: {
-        maxOutputTokens: 2048,
-        temperature: 0.7,
-      }
-    };
-
-    // Adiciona o system_instruction se existir
-    if (systemMsg) {
-      geminiPayload.system_instruction = {
-        parts: [{ text: typeof systemMsg.content === "string" ? systemMsg.content : JSON.stringify(systemMsg.content) }]
-      };
-    }
-
-    console.log(`[Gemini] Sending request to: ${url.replace(ENV.forgeApiKey, "***")}`);
-    console.log(`[Gemini] Message count: ${chatMessages.length}, Has system: ${!!systemMsg}`);
-
+    console.log(`[Gemini OpenAI] Sending request to: ${url.replace(ENV.forgeApiKey, "***")}`);
+    
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(geminiPayload),
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: temperature ?? 0.7,
+        max_tokens: max_tokens || 2048,
+        response_format: response_format || responseFormat
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[Gemini ERROR] Status: ${response.status} - Body: ${errorText}`);
-      throw new Error(`Gemini Native API failed: ${response.status} - ${errorText}`);
+      console.error(`[Gemini OpenAI ERROR] Status: ${response.status} - Body: ${errorText}`);
+      throw new Error(`Gemini OpenAI API failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar sua resposta.";
-
-    // Retorna no formato compatível que o restante do site espera
-    return {
-      id: "gemini-" + Date.now(),
-      created: Date.now(),
-      model: model,
-      choices: [{
-        index: 0,
-        message: { role: "assistant", content: text },
-        finish_reason: "stop"
-      }]
-    };
+    return data.choices?.[0]?.message?.content || "Desculpe, não consegui processar sua resposta.";
   }
 
-  // Caso contrário, continua com o formato OpenAI (Forge/ChatGPT)
-  const payload: Record<string, unknown> = {
-    model: "gemini-1.5-flash",
-    messages: messages.map(normalizeMessage),
-  };
+  // Fallback para OpenAI/Forge (Legado)
+  const url = ENV.forgeApiKey.startsWith("AIza") 
+    ? `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${ENV.forgeApiKey}`
+    : (ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
+      ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
+      : "https://forge.manus.im/v1/chat/completions");
 
-  if (tools && tools.length > 0) {
-    payload.tools = tools;
-  }
-
-  const normalizedToolChoice = normalizeToolChoice(
-    toolChoice || tool_choice,
-    tools
-  );
-  if (normalizedToolChoice) {
-    payload.tool_choice = normalizedToolChoice;
-  }
-
-  payload.max_tokens = 32768;
-
-  const normalizedResponseFormat = normalizeResponseFormat({
-    responseFormat,
-    response_format,
-    outputSchema,
-    output_schema,
-  });
-
-  if (normalizedResponseFormat) {
-    payload.response_format = normalizedResponseFormat;
-  }
-
-  const response = await fetch(resolveApiUrl(), {
+  const response = await fetch(url, {
     method: "POST",
     headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${ENV.forgeApiKey}`,
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${ENV.forgeApiKey}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages,
+      temperature: temperature ?? 0.7,
+      max_tokens: max_tokens,
+      response_format: response_format || responseFormat,
+    }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(
-      `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
-    );
+    console.error(`[LLM ERROR] Status: ${response.status} - Body: ${errorText}`);
+    throw new Error(`LLM API failed: ${response.status} - ${errorText}`);
   }
 
-  return (await response.json()) as InvokeResult;
-}
+  const data = await response.json();
+  return data.choices[0].message.content;
+};
