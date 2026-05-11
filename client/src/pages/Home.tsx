@@ -62,6 +62,7 @@ export default function Home() {
   const sidebarSponsor = sponsors?.find(s => s.location === 'sidebar' && s.active);
   const horizontalSponsor = sponsors?.find(s => s.location === 'horizontal_bottom' && s.active);
   const middleSponsor = sponsors?.find(s => s.location === 'horizontal_middle' && s.active);
+  const topBannerSponsor = sponsors?.find(s => (s.location === 'top_banner' || s.location === 'top') && s.active);
 
 
   const { data: articles, isLoading: articlesLoading } = trpc.articles.list.useQuery();
@@ -234,6 +235,24 @@ export default function Home() {
       />
 
       <main className="max-w-[1600px] mx-auto px-4 py-8">
+        {topBannerSponsor && (
+          <div className="mb-8">
+            <div 
+              className="w-full h-24 md:h-32 bg-card border border-accent/20 rounded-xl flex items-center justify-center group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg"
+              onClick={() => {
+                if (topBannerSponsor.whatsapp) window.open(topBannerSponsor.whatsapp, '_blank');
+                else if (topBannerSponsor.instagram) window.open(topBannerSponsor.instagram, '_blank');
+              }}
+            >
+              {renderMedia(topBannerSponsor.image, topBannerSponsor.name, "absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700", false, true)}
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm">
+                Patrocinador Master
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12 items-start">
           <div className="lg:col-span-2 space-y-8">
             {featuredArticles.length > 0 && (
