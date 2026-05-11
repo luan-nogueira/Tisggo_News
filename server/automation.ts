@@ -272,18 +272,18 @@ async function processRetroactiveRewrites() {
     const dbInstance = db.getDb() as any;
     if (dbInstance.error) return;
 
-    // Fetch articles from the last 3 days
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    // Fetch articles from the last 2 days to fix grammar
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
     const snapshot = await dbInstance.collection("articles")
-      .where("publishedAt", ">=", threeDaysAgo)
+      .where("publishedAt", ">=", twoDaysAgo)
       .get();
 
     const articles = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
     
-    // Filter articles that have a sourceUrl but haven't been rewritten yet
-    const toRewrite = articles.filter((a: any) => a.sourceUrl && !a.aiRewritten);
+    // Rewrite articles that were source-based to ensure the new grammar rules are applied
+    const toRewrite = articles.filter((a: any) => a.sourceUrl);
 
     if (toRewrite.length === 0) {
       console.log("[Robô] Nenhuma notícia antiga pendente de re-escrita.");
