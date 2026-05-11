@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Zap, Instagram, MessageCircle, Facebook } from "lucide-react";
+import { Eye, Zap, Instagram, MessageCircle, Facebook, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
@@ -258,13 +258,13 @@ export default function Home() {
                   onClick={(e) => { e.preventDefault(); setCurrentSlide((prev) => (prev - 1 + featuredArticles.length) % featuredArticles.length); }}
                   className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/50 hover:bg-accent hover:text-black text-white rounded-full transition-all backdrop-blur-md flex items-center justify-center"
                 >
-                  <Eye className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
+                  <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
                 <button 
                   onClick={(e) => { e.preventDefault(); setCurrentSlide((prev) => (prev + 1) % featuredArticles.length); }}
                   className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 bg-black/50 hover:bg-accent hover:text-black text-white rounded-full transition-all backdrop-blur-md flex items-center justify-center"
                 >
-                  <Eye className="w-5 h-5 md:w-6 md:h-6" />
+                  <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
 
                 <div className="absolute bottom-6 right-10 flex gap-2 z-20">
