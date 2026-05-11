@@ -310,6 +310,9 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
       };
     }
 
+    console.log(`[Gemini] Sending request to: ${url.replace(ENV.forgeApiKey, "***")}`);
+    console.log(`[Gemini] Message count: ${chatMessages.length}, Has system: ${!!systemMsg}`);
+
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -318,6 +321,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[Gemini ERROR] Status: ${response.status} - Body: ${errorText}`);
       throw new Error(`Gemini Native API failed: ${response.status} - ${errorText}`);
     }
 
