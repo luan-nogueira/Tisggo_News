@@ -17,7 +17,7 @@ interface HeaderProps {
   showBack?: boolean;
 }
 
-export function Header({ categories, currentCategoryId, onOpenAdvertise }: HeaderProps) {
+export function Header({ categories, currentCategoryId, onOpenAdvertise, showWeather, showBack }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
