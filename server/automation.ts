@@ -202,7 +202,13 @@ async function processArticleWithAI(originalTitle: string, originalContent: stri
   try {
     console.log(`[Robô Inteligente] Analisando e processando notícia: "${originalTitle.substring(0, 40)}..."`);
     
-    const textOnly = originalContent.replace(/<[^>]*>/g, ' ').trim();
+    // Limpeza profunda: remove hifens suaves, quebras de linha que cortam palavras e espaços duplos
+    const textOnly = originalContent
+      .replace(/\u00ad/g, '') // Remove soft hyphens
+      .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+      .replace(/([a-z])-\s*\n\s*([a-z])/gi, '$1$2') // Une palavras cortadas por hífen e quebra de linha
+      .replace(/\s+/g, ' ') // Normaliza espaços
+      .trim();
     
     const response = await invokeLLM({
       messages: [
@@ -212,12 +218,12 @@ async function processArticleWithAI(originalTitle: string, originalContent: stri
 
 TAREFAS:
 1. REESCRITA TOTAL: Transforme o texto original em um conteúdo NOVO e AUTORAL. Use vocabulário rico, gramática PERFEITA e tom jornalístico de elite.
-2. INTEGRIDADE: NUNCA corte palavras ou frases no meio. Certifique-se de que cada parágrafo tenha início, meio e fim.
+2. INTEGRIDADE: NUNCA corte palavras ou frases no meio. Una palavras que vieram quebradas da fonte (ex: "Flumin ense" -> "Fluminense", "elefa nte" -> "elefante").
 3. CLASSIFICAÇÃO: Identifique a melhor categoria (Política, Polícia, Esportes, Cidade, Economia, Geral).
 4. RESUMO: Crie um "lead" ou resumo (excerpt) instigante de no máximo 200 caracteres, SEMpre terminando em uma frase completa.
 5. TÍTULO: Crie um título magnético (clickbait ético) que resuma bem a notícia.
-6. LIMPEZA: Remova absolutamente qualquer menção a fontes originais (ex: "segundo o G1", "conforme o Ururau").
-7. FILTRAGEM: Ignore blocos de texto irrelevantes (anúncios, créditos de imagem).
+6. LIMPEZA: Remova absolutamente qualquer menção a fontes originais.
+7. FILTRAGEM: Ignore blocos de texto irrelevantes.
 
 FORMATO DE RETORNO (JSON):
 {
