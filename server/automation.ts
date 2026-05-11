@@ -77,36 +77,6 @@ const SOURCES: NewsSource[] = [
     baseUrl: "https://camposocorrencias.com.br"
   },
   {
-    name: "ESPN Brasileirão",
-    url: "https://www.espn.com.br/futebol/liga/_/nome/bra.1",
-    linkSelector: 'a.realStory, a[class*="realStory"]',
-    titleSelector: 'h1.article-header__title, .article-header h1, h1',
-    contentSelector: '.article-body p, .article-body',
-    imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://www.espn.com.br",
-    forcedCategory: "Esportes"
-  },
-  {
-    name: "GE Brasileirão",
-    url: "https://ge.globo.com/futebol/brasileirao-serie-a/",
-    linkSelector: 'a.feed-post-link',
-    titleSelector: 'h1.content-head__title, h1',
-    contentSelector: '.content-text__container, .article__content p',
-    imageSelector: 'meta[property="og:image"]',
-    baseUrl: "",
-    forcedCategory: "Esportes"
-  },
-  {
-    name: "UOL Esporte",
-    url: "https://www.uol.com.br/esporte/futebol/campeonatos/brasileirao/",
-    linkSelector: 'a.hyperlink, .thumbnails-item a',
-    titleSelector: 'h1.titulo, .content-head__title, h1',
-    contentSelector: '.text p, .content-text__container',
-    imageSelector: 'meta[property="og:image"]',
-    baseUrl: "",
-    forcedCategory: "Esportes"
-  },
-  {
     name: "J3 News",
     url: "https://j3news.com/",
     linkSelector: 'a[href*="/noticias/"], a[href*="/campos/"]',
