@@ -211,7 +211,7 @@ const normalizeToolChoice = (
 
 const resolveApiUrl = () => {
   if (ENV.forgeApiKey.startsWith("AIza")) {
-    return `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
+    return `https://generativelanguage.googleapis.com/v1/openai/chat/completions?key=${ENV.forgeApiKey}`;
   }
   return ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
     ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
