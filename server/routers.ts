@@ -265,12 +265,12 @@ export const appRouter = router({
           ]
         });
 
-        if (!response || !response.choices || !response.choices[0]) {
+        if (!response) {
           throw new Error("Resposta da IA veio vazia.");
         }
-
+        
         return {
-          answer: response.choices[0].message.content as string
+          answer: response
         };
       } catch (err: any) {
         console.error("[AI Chat ERROR]", err);
