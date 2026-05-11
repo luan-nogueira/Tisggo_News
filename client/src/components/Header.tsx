@@ -53,8 +53,8 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-1">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-12 shrink-0">
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="xl:hidden p-2 text-foreground hover:text-accent transition-colors"
@@ -86,7 +86,7 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
             </Link>
           </div>
 
-          <nav className="hidden xl:flex items-center gap-6">
+          <nav className="hidden xl:flex items-center gap-4">
             {categories?.slice(0, 8).map((cat) => (
               <Link 
                 key={cat.id} 
