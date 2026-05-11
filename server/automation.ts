@@ -49,7 +49,7 @@ const SOURCES: NewsSource[] = [
     contentSelector: '.content-text__container, .content-text, .entry-content',
     imageSelector: 'meta[property="og:image"]',
     baseUrl: "https://ge.globo.com",
-    limit: 6
+    limit: 3
   },
   {
     name: "g1 Norte Fluminense",
@@ -59,7 +59,7 @@ const SOURCES: NewsSource[] = [
     contentSelector: '.content-text__container, .content-text',
     imageSelector: 'meta[property="og:image"]',
     baseUrl: "https://g1.globo.com",
-    limit: 8
+    limit: 4
   },
   {
     name: "Ururau",
@@ -69,7 +69,7 @@ const SOURCES: NewsSource[] = [
     contentSelector: 'article, .content-article, .post-content, .texto-materia, #texto-materia',
     imageSelector: 'meta[property="og:image"]',
     baseUrl: "https://www.ururau.com.br",
-    limit: 6
+    limit: 10
   },
   {
     name: "Campos Ocorrências",
@@ -79,7 +79,7 @@ const SOURCES: NewsSource[] = [
     contentSelector: '.elementor-widget-theme-post-content, .entry-content, article',
     imageSelector: 'meta[property="og:image"]',
     baseUrl: "https://camposocorrencias.com.br",
-    limit: 5
+    limit: 8
   },
   {
     name: "ESPN Brasileirão",
@@ -121,7 +121,8 @@ const SOURCES: NewsSource[] = [
     titleSelector: 'h1.entry-title, h1',
     contentSelector: '.td-post-content, .entry-content',
     imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://j3news.com"
+    baseUrl: "https://j3news.com",
+    limit: 15
   },
   {
     name: "NF Notícias",
@@ -130,7 +131,8 @@ const SOURCES: NewsSource[] = [
     titleSelector: 'h1, .titulo-noticia',
     contentSelector: '.noticia_texto, #texto-materia, .entry-content',
     imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://www.nfnoticias.com.br"
+    baseUrl: "https://www.nfnoticias.com.br",
+    limit: 12
   },
   {
     name: "Manchete RJ",
@@ -139,7 +141,8 @@ const SOURCES: NewsSource[] = [
     titleSelector: 'h1.post-title, h1',
     contentSelector: '.post-content, .entry-content, #content-area',
     imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://manheterj.com.br"
+    baseUrl: "https://manheterj.com.br",
+    limit: 12
   },
   {
     name: "Folha da Manhã",
@@ -148,7 +151,8 @@ const SOURCES: NewsSource[] = [
     titleSelector: 'h1, .titulo-materia',
     contentSelector: '.texto-materia, .entry-content, article',
     imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://www.fmanha.com.br"
+    baseUrl: "https://www.fmanha.com.br",
+    limit: 12
   }
 ];
 
