@@ -302,8 +302,9 @@ function GamesView({ data }: { data: any[] }) {
                 </>
               ) : (
                 <>
-                  <span className="text-sm font-black text-accent">{game.time}</span>
-                  <span className="text-[9px] text-muted-foreground">Agendado</span>
+                  <span className="text-[9px] font-bold text-muted-foreground mb-0.5">{game.date}</span>
+                  <span className="text-sm font-black text-accent leading-none">{game.time}</span>
+                  <span className="text-[8px] text-muted-foreground/60 uppercase mt-1 tracking-tighter">Agendado</span>
                 </>
               )}
             </div>

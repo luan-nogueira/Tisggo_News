@@ -141,8 +141,16 @@ export async function getBrasileiraoGames(): Promise<Game[]> {
       let dateStr = "";
       try {
         const d = new Date(event.date);
-        time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-        dateStr = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+        time = d.toLocaleTimeString("pt-BR", { 
+          hour: "2-digit", 
+          minute: "2-digit",
+          timeZone: "America/Sao_Paulo"
+        });
+        dateStr = d.toLocaleDateString("pt-BR", { 
+          day: "2-digit", 
+          month: "2-digit",
+          timeZone: "America/Sao_Paulo"
+        });
       } catch {}
 
       return {
