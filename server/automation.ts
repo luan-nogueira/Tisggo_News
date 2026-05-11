@@ -331,10 +331,6 @@ async function getOrCreateCategory(name: string) {
 export async function automateNews() {
   console.log("[Automation] Starting news automation cycle...");
   
-  // 1. Process retroactive rewrites for existing articles
-  await processRetroactiveRewrites();
-
-  let progress = 0;
   const firestore = await db.getDb();
   let successCount = 0;
 
@@ -347,6 +343,12 @@ export async function automateNews() {
       lastCount: successCount
     }, { merge: true });
   };
+
+  // Inicializa status imediatamente para o Admin ver
+  await updateStatus("Iniciando robô...", 0, true);
+
+  // Roda re-escrita retroativa em paralelo para não travar o ciclo principal
+  processRetroactiveRewrites().catch(err => console.error("[Retroactive] Error:", err));
 
   const checkStop = async () => {
     const doc = await firestore.collection("automation_status").doc("current").get();
