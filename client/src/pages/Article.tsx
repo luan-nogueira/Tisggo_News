@@ -257,14 +257,15 @@ export default function Article() {
               style={{ overflowWrap: 'anywhere' }}
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(
-                  article.content.includes('<p') 
+                  (article.content.includes('<p') 
                     ? article.content 
                     : article.content
                         .replace(/\r\n/g, '\n')
-                        .replace(/([a-z0-9,-])\n([a-z0-9,-])/gi, '$1$2') // Une palavras cortadas mesmo com hífens
                         .split('\n\n')
-                        .map(p => `<p>${p.replace(/\n/g, ' ')}</p>`) // Transforma quebras simples em espaços
+                        .map(p => `<p>${p.replace(/\n/g, ' ')}</p>`)
                         .join('')
+                  ).replace(/-\s*\n\s*/g, '-') // Força a união de hífens quebrados no HTML final
+                   .replace(/>\s*</g, '><') // Remove espaços entre tags que podem causar quebras
                 )
               }} 
             />

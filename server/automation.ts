@@ -204,9 +204,10 @@ async function processArticleWithAI(originalTitle: string, originalContent: stri
     
     // Limpeza profunda: remove hifens suaves, quebras de linha que cortam palavras e espaços duplos
     const textOnly = originalContent
-      .replace(/\u00ad/g, '') // Remove soft hyphens
+      .replace(/[\u00AD\u200B\u200C\u200D\u2060\uFEFF]/g, '') // Remove soft hyphens e outros caracteres invisíveis
+      .replace(/-\s*\n\s*/g, '-') // Une palavras que terminam em hífen e quebra de linha (mantendo o hífen)
+      .replace(/([a-z0-9])\n([a-z0-9])/gi, '$1 $2') // Une linhas que quebram palavras sem hífen
       .replace(/<[^>]*>/g, ' ') // Remove HTML tags
-      .replace(/([a-z])-\s*\n\s*([a-z])/gi, '$1$2') // Une palavras cortadas por hífen e quebra de linha
       .replace(/\s+/g, ' ') // Normaliza espaços
       .trim();
     
