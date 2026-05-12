@@ -117,10 +117,11 @@ export async function getArticles(pageSize = 20) {
     const db = ensureDb();
     const snapshot = await db.collection("articles")
       .orderBy("publishedAt", "desc")
-      .limit(pageSize)
+      .limit(60)
       .get();
     
-    return snapshot.docs.map(toData<Article>);
+    const allMapped = snapshot.docs.map(toData<Article>);
+    return allMapped.filter(a => a.published !== false).slice(0, pageSize);
   } catch (error: any) {
     console.error("[Firebase] ERROR fetching articles:", error.message);
     return [];
@@ -210,8 +211,9 @@ export async function getArticlesByCategory(categoryId: string, limit = 20, offs
       query = query.orderBy("publishedAt", "desc");
     }
 
-    const snapshot = await query.limit(limit).get();
-    return snapshot.docs.map(toData<Article>);
+    const snapshot = await query.limit(60).get();
+    const mapped = snapshot.docs.map(toData<Article>);
+    return mapped.filter(a => a.published !== false).slice(0, limit);
   } catch (error: any) {
     console.error("[Firebase] ERROR fetching articles by category:", error.message);
     
@@ -221,16 +223,17 @@ export async function getArticlesByCategory(categoryId: string, limit = 20, offs
       const db = ensureDb();
       const snapshot = await db.collection("articles")
         .where("categoryId", "==", categoryId)
-        .limit(limit)
+        .limit(60)
         .get();
       
       const articles = snapshot.docs.map(toData<Article>);
+      const approved = articles.filter(a => a.published !== false);
       // Sort in memory as a temporary fix
-      return articles.sort((a: any, b: any) => {
+      return approved.sort((a: any, b: any) => {
         const dateA = a.publishedAt ? (a.publishedAt.toDate?.() || new Date(a.publishedAt)).getTime() : 0;
         const dateB = b.publishedAt ? (b.publishedAt.toDate?.() || new Date(b.publishedAt)).getTime() : 0;
         return dateB - dateA;
-      });
+      }).slice(0, limit);
     } catch (fallbackError: any) {
       console.error("[Firebase] Fallback query also failed:", fallbackError.message);
       return [];

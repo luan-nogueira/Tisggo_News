@@ -14,6 +14,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  getAllArticlesAdmin,
   getDb,
 } from "./db.js";
 import { generateSitemap } from "./sitemap.js";
@@ -76,6 +77,14 @@ export const appRouter = router({
     }),
     delete: adminProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
       return deleteArticle(input);
+    }),
+    listAdmin: adminProcedure.query(async () => {
+      return getAllArticlesAdmin();
+    }),
+    approve: adminProcedure.input(z.string()).mutation(async ({ input }) => {
+      const { updateArticle } = await import("./db.js");
+      await updateArticle(input, { published: true } as any);
+      return { success: true };
     }),
     automate: publicProcedure.mutation(async ({ ctx }) => {
       // Roda em segundo plano para evitar timeout da página

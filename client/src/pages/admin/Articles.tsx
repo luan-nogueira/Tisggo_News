@@ -2,28 +2,34 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
-import { Sparkles, Plus, Edit2, Trash2, Eye, Search, Filter, Loader2, RefreshCw, Upload } from "lucide-react";
+import { Sparkles, Plus, Edit2, Trash2, Eye, Search, Filter, Loader2, RefreshCw, Upload, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export default function AdminArticles() {
-  const { data: articles, isLoading, refetch } = trpc.articles.list.useQuery();
+  const { data: articles, isLoading, refetch } = trpc.articles.listAdmin.useQuery();
   const { data: categories } = trpc.categories.list.useQuery();
   const deleteMutation = trpc.articles.delete.useMutation();
   const generateArticleMutation = trpc.ai.generateArticle.useMutation();
   const createArticleMutation = trpc.articles.create.useMutation();
   const automateNews = trpc.articles.automate.useMutation();
   const uploadImageMutation = trpc.sponsors.uploadImage.useMutation();
+  const approveMutation = trpc.articles.approve.useMutation();
   
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"drafts" | "published">("drafts");
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isAutomating, setIsAutomating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiResult, setAiResult] = useState<any>(null);
 
-  const filteredArticles = articles?.filter(a => 
+  const publishedArticles = articles?.filter(a => a.published !== false);
+  const draftArticles = articles?.filter(a => a.published === false);
+
+  const targetPool = activeTab === "drafts" ? draftArticles : publishedArticles;
+  const filteredArticles = targetPool?.filter(a => 
     a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.author.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -62,6 +68,16 @@ export default function AdminArticles() {
     }
   };
 
+  const handleApprove = async (id: string) => {
+    try {
+      await approveMutation.mutateAsync(id);
+      toast.success("Notícia aprovada e publicada no site com sucesso!");
+      refetch();
+    } catch (err: any) {
+      toast.error("Erro ao aprovar notícia: " + err.message);
+    }
+  };
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -94,6 +110,37 @@ export default function AdminArticles() {
             </Button>
           </Link>
         </div>
+      </div>
+
+      {/* Abas Premium de Controle Editorial */}
+      <div className="flex border-b border-border gap-8 pt-2">
+        <button
+          onClick={() => setActiveTab("drafts")}
+          className={`pb-4 font-black text-lg uppercase transition-all relative flex items-center gap-2 ${
+            activeTab === "drafts" ? "text-accent" : "text-muted-foreground hover:text-white"
+          }`}
+        >
+          Aguardando Aprovação
+          {draftArticles?.length ? (
+            <span className="bg-yellow-500 text-black text-xs font-black px-2 py-0.5 rounded-full animate-pulse">
+              {draftArticles.length}
+            </span>
+          ) : null}
+          {activeTab === "drafts" && (
+            <motion.div className="absolute bottom-0 left-0 right-0 h-1 bg-accent" layoutId="adminTab" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("published")}
+          className={`pb-4 font-black text-lg uppercase transition-all relative ${
+            activeTab === "published" ? "text-accent" : "text-muted-foreground hover:text-white"
+          }`}
+        >
+          Publicados ({publishedArticles?.length || 0})
+          {activeTab === "published" && (
+            <motion.div className="absolute bottom-0 left-0 right-0 h-1 bg-accent" layoutId="adminTab" />
+          )}
+        </button>
       </div>
 
       {/* Modal Redator IA */}
@@ -340,6 +387,16 @@ export default function AdminArticles() {
                   </div>
 
                   <div className="flex items-center gap-3 pr-2">
+                    {article.published === false && (
+                      <Button
+                        onClick={() => handleApprove(String(article.id))}
+                        disabled={approveMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl gap-2 h-11 px-4"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="hidden md:inline">Aprovar e Publicar</span>
+                      </Button>
+                    )}
                     <Link href={`/admin/articles/${article.id}/edit`}>
                       <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl w-11 h-11 border border-transparent hover:border-accent/20">
                         <Edit2 className="w-5 h-5" />
