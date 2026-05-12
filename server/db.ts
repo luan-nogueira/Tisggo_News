@@ -139,6 +139,21 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
       if (docSnap.exists) return toData<Article>(docSnap);
     } catch (e) {}
     
+    // Fallback flexível para ignorar divergências de hash final nas URLs compartilhadas
+    try {
+      const cleanSlug = slug.replace(/-[a-z0-9]{5,8}$/, "");
+      const recentSnap = await db.collection("articles").orderBy("createdAt", "desc").limit(50).get();
+      for (const doc of recentSnap.docs) {
+        const data = doc.data();
+        if (data && data.slug) {
+          const docCleanSlug = data.slug.replace(/-[a-z0-9]{5,8}$/, "");
+          if (docCleanSlug === cleanSlug || data.slug.includes(cleanSlug) || slug.includes(docCleanSlug)) {
+            return toData<Article>(doc);
+          }
+        }
+      }
+    } catch (e) {}
+    
     return null;
   } catch (error: any) {
     console.error("[Firebase] ERROR fetching article by slug:", error.message);

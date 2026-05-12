@@ -128,16 +128,29 @@ async function startServer() {
       const ogTitle = (article.title || "Tisgo News").replace(/"/g, '&quot;');
       const rawText = (article.excerpt || article.content || "").replace(/<[^>]*>/g, '');
       const ogDesc = (rawText.length > 160 ? rawText.substring(0, 160) + '...' : rawText).replace(/"/g, '&quot;');
-      const ogImage = article.coverImage || "https://tisgonews.com/news-icon.png";
-      const host = req.get('host') || "tisgonews.com.br";
+      
+      const host = req.get('host') || "tisgo.com.br";
       const protocol = host.includes("localhost") ? "http" : "https";
       const fullUrl = `${protocol}://${host}/article/${slug}`;
+
+      let ogImage = article.coverImage || "";
+      if (!ogImage || ogImage.trim() === "" || ogImage.includes("tisgonews.com")) {
+        ogImage = `${protocol}://${host}/news-icon.png`;
+      } else if (ogImage.startsWith("//")) {
+        ogImage = `https:${ogImage}`;
+      } else if (ogImage.startsWith("/")) {
+        ogImage = `${protocol}://${host}${ogImage}`;
+      }
 
       const metaTags = `
         <title>${ogTitle}</title>
         <meta property="og:title" content="${ogTitle}" />
         <meta property="og:description" content="${ogDesc}" />
         <meta property="og:image" content="${ogImage}" />
+        <meta property="og:image:secure_url" content="${ogImage}" />
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content="${fullUrl}" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Tisgo News" />
