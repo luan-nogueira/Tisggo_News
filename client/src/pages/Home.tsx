@@ -496,12 +496,23 @@ export default function Home() {
                         {sponsor.whatsapp && <MessageCircle className="w-3 h-3 text-accent" />}
                       </div>
                     </div>
-                    <div className="p-3 h-48 relative bg-gradient-to-b from-black/5 to-black/20 flex items-center justify-center">
-                      <img 
-                        src={sponsor.image} 
-                        alt={sponsor.name} 
-                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[160px]" 
-                      />
+                    <div className="p-3 h-48 relative bg-gradient-to-b from-black/5 to-black/20 flex items-center justify-center overflow-hidden">
+                      {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
+                        <video 
+                          src={sponsor.image} 
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[160px]" 
+                          autoPlay 
+                          muted 
+                          loop 
+                          playsInline 
+                        />
+                      ) : (
+                        <img 
+                          src={sponsor.image} 
+                          alt={sponsor.name} 
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[160px]" 
+                        />
+                      )}
                     </div>
                     {(sponsor.instagram || sponsor.whatsapp) && (
                       <div className="p-2.5 bg-accent/5 flex justify-center gap-6 border-t border-accent/10">

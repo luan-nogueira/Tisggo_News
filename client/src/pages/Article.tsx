@@ -311,12 +311,23 @@ export default function Article() {
                       {sponsor.whatsapp && <MessageCircle className="w-2.5 h-2.5 text-accent" />}
                     </div>
                   </div>
-                  <div className="p-2 h-36 relative bg-gradient-to-b from-black/5 to-black/20 flex items-center justify-center flex-grow">
-                    <img 
-                      src={sponsor.image} 
-                      alt={sponsor.name} 
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[120px]" 
-                    />
+                  <div className="p-2 h-36 relative bg-gradient-to-b from-black/5 to-black/20 flex items-center justify-center flex-grow overflow-hidden">
+                    {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
+                      <video 
+                        src={sponsor.image} 
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[120px]" 
+                        autoPlay 
+                        muted 
+                        loop 
+                        playsInline 
+                      />
+                    ) : (
+                      <img 
+                        src={sponsor.image} 
+                        alt={sponsor.name} 
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[120px]" 
+                      />
+                    )}
                   </div>
                   {(sponsor.instagram || sponsor.whatsapp) && (
                     <div className="p-2 bg-accent/5 flex justify-center gap-4 border-t border-accent/10">
