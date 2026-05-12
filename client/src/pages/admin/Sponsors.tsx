@@ -132,9 +132,9 @@ export default function AdminSponsors() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-black text-foreground uppercase tracking-tighter">Patrocinadores</h2>
+          <h2 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tighter">Patrocinadores</h2>
           <p className="text-muted-foreground text-sm">Gerencie os anúncios e parceiros do portal.</p>
         </div>
         {!isEditing && (
@@ -142,7 +142,7 @@ export default function AdminSponsors() {
             setIsEditing(true); 
             setCurrentSponsor(null);
             setFormState({ name: "", image: "", location: "sidebar", whatsapp: "", instagram: "" });
-          }} className="bg-accent text-black font-bold">
+          }} className="bg-accent text-black font-bold w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" /> Novo Patrocinador
           </Button>
         )}
@@ -278,12 +278,12 @@ export default function AdminSponsors() {
                   />
                 </div>
               </div>
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={upsertMutation.isPending} className="bg-accent text-black font-bold">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button type="submit" disabled={upsertMutation.isPending} className="bg-accent text-black font-bold flex-1 sm:flex-none">
                   {upsertMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Salvar Patrocinador
                 </Button>
-                <Button type="button" variant="ghost" onClick={() => setIsEditing(false)} className="text-gray-400">Cancelar</Button>
+                <Button type="button" variant="outline" onClick={() => setIsEditing(false)} className="border-border text-muted-foreground flex-1 sm:flex-none">Cancelar</Button>
               </div>
             </form>
           </CardContent>

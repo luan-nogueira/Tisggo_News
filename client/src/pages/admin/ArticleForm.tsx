@@ -134,27 +134,45 @@ export default function ArticleForm() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-20">
       {/* Header Premium */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card p-6 rounded-3xl border border-border shadow-sm">
-        <div className="flex items-center gap-6">
+      <div className="bg-card p-4 md:p-6 rounded-3xl border border-border shadow-sm">
+        <div className="flex items-center gap-4 mb-4 md:mb-0">
           <Button 
             variant="outline" 
             size="icon" 
             onClick={() => navigate("/admin/articles")}
-            className="rounded-2xl border-border hover:bg-muted w-12 h-12"
+            className="rounded-2xl border-border hover:bg-muted w-11 h-11 flex-shrink-0"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground uppercase">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl md:text-3xl font-black tracking-tight text-foreground uppercase truncate">
               {id ? "Editar Notícia" : "Nova Publicação"}
             </h1>
-            <p className="text-muted-foreground text-sm font-medium mt-1">
+            <p className="text-muted-foreground text-xs md:text-sm font-medium mt-0.5 hidden sm:block">
               {id ? "Ajuste os detalhes da sua notícia" : "Crie um novo conteúdo de impacto para o Tisgo News"}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex gap-3 md:hidden mt-3">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/admin/articles")}
+            className="flex-1 rounded-2xl font-bold text-muted-foreground h-11"
+          >
+            Descartar
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSaving} 
+            className="flex-1 rounded-2xl h-11 bg-accent text-black font-black hover:bg-yellow-500"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+            {id ? "Salvar" : "Publicar"}
+          </Button>
+        </div>
+
+        <div className="hidden md:flex items-center justify-end gap-3 -mt-10">
           <Button 
             variant="ghost" 
             onClick={() => navigate("/admin/articles")}
@@ -173,9 +191,9 @@ export default function ArticleForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content Area */}
-        <div className="lg:col-span-2 space-y-8">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sidebar — aparece primeiro no mobile */}
+        <div className="space-y-6 lg:order-2 lg:col-start-3 lg:row-start-1">
           <Card className="bg-card border-border rounded-[32px] overflow-hidden p-8 space-y-8">
             <div className="space-y-6">
               <div className="flex items-center gap-2 text-accent">
@@ -256,8 +274,8 @@ export default function ArticleForm() {
           </Card>
         </div>
 
-        {/* Sidebar Controls */}
-        <div className="space-y-8">
+        {/* Main Content Area — ocupa as 2 colunas no desktop */}
+        <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 space-y-6">
           {/* Metadata Card */}
           <Card className="bg-card border-border rounded-[32px] p-6 space-y-6 shadow-sm">
             <div className="flex items-center gap-2 text-accent">

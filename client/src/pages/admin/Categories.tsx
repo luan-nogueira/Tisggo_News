@@ -21,9 +21,9 @@ export default function AdminCategories() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Gerenciar Categorias</h1>
-        <Button className="gap-2" onClick={() => alert("Criação de categorias em breve!")}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold">Gerenciar Categorias</h1>
+        <Button className="gap-2 w-full sm:w-auto" onClick={() => alert("Criação de categorias em breve!")}>
           <Plus className="w-4 h-4" />
           Nova Categoria
         </Button>
