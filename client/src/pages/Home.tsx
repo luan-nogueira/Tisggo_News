@@ -138,18 +138,16 @@ export default function Home() {
   const sidebarArticles = remainingArticles.slice(0, 5);
   
   const gridArticles = (() => {
-    const list = remainingArticles.filter(a => 
-      !politicsArticles.find(p => p.id === a.id) && 
-      !policeArticles.find(p => p.id === a.id) &&
-      !cityArticles.find(p => p.id === a.id)
-    );
+    // Garante que as novas notícias recém-postadas apareçam instantaneamente no feed de "Últimas Notícias",
+    // pegando cronologicamente as primeiras mais recentes e mesclando o restante de forma variada.
+    const newest = remainingArticles.slice(0, 6);
+    const rest = remainingArticles.slice(6);
     
-    // Diversify grid articles
-    const categoriesSet = new Set();
-    const diversified: any[] = [];
+    const categoriesSet = new Set(newest.map(a => a.categoryId));
+    const diversified: any[] = [...newest];
     const others: any[] = [];
     
-    list.forEach(article => {
+    rest.forEach(article => {
       if (!categoriesSet.has(article.categoryId) && diversified.length < 12) {
         diversified.push(article);
         categoriesSet.add(article.categoryId);
