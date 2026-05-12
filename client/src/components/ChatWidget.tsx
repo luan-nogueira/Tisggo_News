@@ -33,10 +33,19 @@ export function ChatWidget() {
 
     const userMessage = input.trim();
     setInput("");
+    
+    // Captura o histórico atual antes de adicionar a nova mensagem do usuário
+    const history = messages
+      .filter((_, idx) => idx > 0) // ignora o cumprimento fixo inicial
+      .slice(-6); // envia as últimas 6 interações para o contexto
+
     setMessages(prev => [...prev, { role: "user", content: userMessage }]);
 
     try {
-      const response = await askMutation.mutateAsync({ question: userMessage });
+      const response = await askMutation.mutateAsync({ 
+        question: userMessage,
+        history: history as any
+      });
       setMessages(prev => [...prev, { role: "assistant", content: response.answer }]);
     } catch (error) {
       setMessages(prev => [...prev, { 

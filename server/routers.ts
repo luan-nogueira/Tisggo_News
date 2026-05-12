@@ -215,7 +215,11 @@ export const appRouter = router({
   ai: router({
     ask: publicProcedure.input(z.object({
       question: z.string(),
-      context: z.string().optional()
+      context: z.string().optional(),
+      history: z.array(z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string()
+      })).optional()
     })).mutation(async ({ input }) => {
       try {
         const { invokeLLM } = await import("./_core/llm.js");
@@ -226,21 +230,22 @@ export const appRouter = router({
         // Busca notícias recentes com timeout curto para não travar
         let newsContext = "Nenhuma notícia recente disponível no momento.";
         try {
-          const recentArticles = await getArticles(5);
+          const recentArticles = await getArticles(10);
           if (recentArticles && recentArticles.length > 0) {
-            newsContext = recentArticles.map(a => `- ${a.title}: ${a.excerpt}`).join("\n");
+            newsContext = recentArticles.map(a => `- Título: "${a.title}" | Resumo: "${a.excerpt}"`).join("\n");
           }
         } catch (dbErr) {
           console.error("[AI Chat] Erro ao buscar notícias:", dbErr);
         }
 
-        // Tenta buscar o clima de Campos com timeout para segurança
+        // Tenta buscar o clima de Campos com timeout para segurança e força o formato Métrico (Celsius)
         let weatherInfo = "Informação de clima temporariamente indisponível.";
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 segundos de limite
           
-          const weatherRes = await fetch("https://wttr.in/Campos+dos+Goytacazes?format=%C+%t+%w", { 
+          const weatherRes = await fetch("https://wttr.in/Campos+dos+Goytacazes?format=%C+%t+%w&m", { 
+            headers: { "Accept-Language": "pt-BR" },
             signal: controller.signal 
           });
           clearTimeout(timeoutId);
@@ -252,18 +257,30 @@ export const appRouter = router({
           console.log("[AI Chat] Clima indisponível ou timeout.");
         }
 
-        const response = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content: `Você é o Assistente Virtual do portal Tisgo News. Responda de forma curta e amigável. Contexto: ${weatherInfo}.`
-            },
-            {
-              role: "user",
-              content: input.question
-            }
-          ]
-        });
+        const systemPrompt = `Você é o Assistente Virtual oficial do portal Tisgo News (focado em Campos dos Goytacazes, Macaé e região do Norte Fluminense).
+Sua missão é responder de forma curta, prestativa e muito amigável.
+REGRAS CRÍTICAS:
+1. Responda SEMPRE em português do Brasil.
+2. Ao mencionar temperaturas ou clima, use EXCLUSIVAMENTE graus Celsius (°C) e quilômetros por hora (km/h). NUNCA mencione Fahrenheit.
+3. Baseie-se prioritariamente no contexto das últimas notícias abaixo para informar o leitor sobre o que está acontecendo no portal e na região.
+
+[Últimas Notícias do Portal Tisgo News]
+${newsContext}
+
+[Clima Atual em Campos dos Goytacazes]
+${weatherInfo}`;
+
+        const messages: any[] = [
+          { role: "system", content: systemPrompt }
+        ];
+
+        if (input.history && input.history.length > 0) {
+          messages.push(...input.history);
+        }
+
+        messages.push({ role: "user", content: input.question });
+
+        const response = await invokeLLM({ messages });
 
         if (!response) {
           throw new Error("Resposta da IA veio vazia.");
@@ -277,6 +294,52 @@ export const appRouter = router({
         return {
           answer: "Desculpe, estou passando por uma manutenção técnica rápida. Por favor, tente novamente em alguns minutos!"
         };
+      }
+    }),
+
+    generateArticle: adminProcedure.input(z.object({
+      prompt: z.string()
+    })).mutation(async ({ input }) => {
+      const { invokeLLM } = await import("./_core/llm.js");
+      
+      const systemPrompt = `Você é um jornalista profissional e redator-chefe do portal Tisgo News.
+Sua tarefa é gerar uma notícia completa, bem escrita, com credibilidade e formatada em HTML limpo a partir do rascunho ou assunto fornecido.
+Retorne o resultado estritamente no seguinte formato JSON puro (sem marcações de bloco de código):
+{
+  "title": "Título chamativo e profissional para a matéria",
+  "excerpt": "Resumo conciso de 2 linhas para a capa da notícia",
+  "content": "<p>Primeiro parágrafo da notícia bem elaborado...</p><p>Segundo parágrafo detalhando o fato...</p>",
+  "categorySlug": "cidades"
+}`;
+
+      try {
+        const responseText = await invokeLLM({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Rascunho/Assunto para gerar a matéria:\n${input.prompt}` }
+          ]
+        });
+
+        let cleanJsonStr = responseText.trim();
+        if (cleanJsonStr.startsWith("```json")) {
+          cleanJsonStr = cleanJsonStr.replace(/^```json/, "").replace(/```$/, "").trim();
+        } else if (cleanJsonStr.startsWith("```")) {
+          cleanJsonStr = cleanJsonStr.replace(/^```/, "").replace(/```$/, "").trim();
+        }
+
+        const data = JSON.parse(cleanJsonStr);
+        return {
+          title: data.title || "Título Gerado",
+          excerpt: data.excerpt || "Resumo gerado automaticamente pela IA.",
+          content: data.content || "<p>Conteúdo gerado pela IA...</p>",
+          categorySlug: data.categorySlug || "cidades"
+        };
+      } catch (err: any) {
+        console.error("[AI Generate Article ERROR]", err);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Falha ao gerar matéria pela IA. Tente reescrever o rascunho."
+        });
       }
     }),
   }),

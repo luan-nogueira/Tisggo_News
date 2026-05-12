@@ -59,7 +59,8 @@ export default function Home() {
   const [isAdvertiseOpen, setIsAdvertiseOpen] = useState(false);
 
   const { data: sponsors } = trpc.sponsors.list.useQuery();
-  const sidebarSponsor = sponsors?.find(s => s.location === 'sidebar' && s.active);
+  const sidebarSponsors = sponsors?.filter(s => s.location === 'sidebar' && s.active) || [];
+  const sidebarSponsor = sidebarSponsors[0];
   const horizontalSponsor = sponsors?.find(s => s.location === 'horizontal_bottom' && s.active);
   const middleSponsor = sponsors?.find(s => s.location === 'horizontal_middle' && s.active);
   const topBannerSponsor = sponsors?.find(s => (s.location === 'top_banner' || s.location === 'top') && s.active);
@@ -244,9 +245,10 @@ export default function Home() {
                 else if (topBannerSponsor.instagram) window.open(topBannerSponsor.instagram, '_blank');
               }}
             >
-              {renderMedia(topBannerSponsor.image, topBannerSponsor.name, "absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700", false, true)}
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm">
+              <div className="absolute inset-0 p-2 flex items-center justify-center bg-gradient-to-r from-black/5 via-black/10 to-black/5">
+                <img src={topBannerSponsor.image} alt={topBannerSponsor.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+              </div>
+              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10">
                 Patrocinador
               </div>
             </div>
@@ -476,36 +478,61 @@ export default function Home() {
           </div>
 
           <div className="space-y-6">
-            {sidebarSponsor ? (
-              <div 
-                className="bg-card border border-accent/20 rounded-xl overflow-hidden shadow-lg group cursor-pointer"
-                onClick={() => {
-                  if (sidebarSponsor.whatsapp) window.open(sidebarSponsor.whatsapp, '_blank');
-                  else if (sidebarSponsor.instagram) window.open(sidebarSponsor.instagram, '_blank');
-                }}
-              >
-                <div className="bg-accent/10 px-4 py-2 border-b border-accent/20 flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase text-accent tracking-widest">Patrocínio</span>
-                  <div className="flex gap-2">
-                    {sidebarSponsor.instagram && <Instagram className="w-3 h-3 text-accent" />}
-                    {sidebarSponsor.whatsapp && <MessageCircle className="w-3 h-3 text-accent" />}
+            {sidebarSponsors.length > 0 ? (
+              <div className="space-y-6">
+                {sidebarSponsors.map((sponsor) => (
+                  <div 
+                    key={sponsor.id}
+                    className="bg-card border border-accent/20 rounded-xl overflow-hidden shadow-lg group cursor-pointer relative"
+                    onClick={() => {
+                      if (sponsor.whatsapp) window.open(sponsor.whatsapp, '_blank');
+                      else if (sponsor.instagram) window.open(sponsor.instagram, '_blank');
+                    }}
+                  >
+                    <div className="bg-accent/10 px-4 py-2 border-b border-accent/20 flex justify-between items-center backdrop-blur-sm">
+                      <span className="text-[10px] font-black uppercase text-accent tracking-widest">{sponsor.name || "Patrocínio"}</span>
+                      <div className="flex gap-2">
+                        {sponsor.instagram && <Instagram className="w-3 h-3 text-accent" />}
+                        {sponsor.whatsapp && <MessageCircle className="w-3 h-3 text-accent" />}
+                      </div>
+                    </div>
+                    <div className="p-3 h-48 relative bg-gradient-to-b from-black/5 to-black/20 flex items-center justify-center">
+                      <img 
+                        src={sponsor.image} 
+                        alt={sponsor.name} 
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[160px]" 
+                      />
+                    </div>
+                    {(sponsor.instagram || sponsor.whatsapp) && (
+                      <div className="p-2.5 bg-accent/5 flex justify-center gap-6 border-t border-accent/10">
+                        {sponsor.instagram && (
+                          <a 
+                            href={sponsor.instagram} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-accent transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Instagram className="w-3.5 h-3.5" />
+                            <span>Instagram</span>
+                          </a>
+                        )}
+                        {sponsor.whatsapp && (
+                          <a 
+                            href={sponsor.whatsapp} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-accent transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>WhatsApp</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div className="p-0 h-48 relative">
-                  {renderMedia(sidebarSponsor.image, sidebarSponsor.name, "w-full h-full object-cover group-hover:scale-105 transition-transform duration-500", false, true)}
-                </div>
-                <div className="p-3 bg-accent/5 flex justify-center gap-4">
-                   {sidebarSponsor.instagram && (
-                     <a href={sidebarSponsor.instagram} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-accent transition-colors">
-                       <Instagram className="w-4 h-4" />
-                     </a>
-                   )}
-                   {sidebarSponsor.whatsapp && (
-                     <a href={sidebarSponsor.whatsapp} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-accent transition-colors">
-                       <MessageCircle className="w-4 h-4" />
-                     </a>
-                   )}
-                </div>
+                ))}
               </div>
             ) : (
               <div 
@@ -572,9 +599,10 @@ export default function Home() {
                 else if (middleSponsor.instagram) window.open(middleSponsor.instagram, '_blank');
               }}
             >
-              {renderMedia(middleSponsor.image, middleSponsor.name, "absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700", false, true)}
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm">
+              <div className="absolute inset-0 p-2 flex items-center justify-center bg-gradient-to-r from-black/5 via-black/10 to-black/5">
+                <img src={middleSponsor.image} alt={middleSponsor.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+              </div>
+              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10">
                 Patrocinador
               </div>
             </div>

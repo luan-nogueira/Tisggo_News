@@ -2,15 +2,23 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
-import { Sparkles, Plus, Edit2, Trash2, Eye, Search, Filter } from "lucide-react";
+import { Sparkles, Plus, Edit2, Trash2, Eye, Search, Filter, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function AdminArticles() {
   const { data: articles, isLoading, refetch } = trpc.articles.list.useQuery();
+  const { data: categories } = trpc.categories.list.useQuery();
   const deleteMutation = trpc.articles.delete.useMutation();
+  const generateArticleMutation = trpc.ai.generateArticle.useMutation();
+  const createArticleMutation = trpc.articles.create.useMutation();
+  
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiResult, setAiResult] = useState<any>(null);
 
   const filteredArticles = articles?.filter(a => 
     a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -46,15 +54,145 @@ export default function AdminArticles() {
           <h1 className="text-4xl font-black uppercase text-white tracking-tighter">Artigos</h1>
           <p className="text-gray-500 text-sm font-medium">Gerencie o conteúdo do portal Tisgo</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button 
+            onClick={() => setIsAiModalOpen(true)}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-5 py-6 h-auto text-base shadow-lg hover:opacity-90 transition-all border-none flex items-center gap-2"
+          >
+            <Sparkles className="w-5 h-5 animate-pulse text-yellow-300" />
+            Gerar Matéria IA
+          </Button>
+
           <Link href="/admin/articles/new">
-            <Button className="bg-accent text-black hover:bg-yellow-500 font-bold px-6 py-6 h-auto text-lg shadow-lg shadow-accent/20">
+            <Button className="bg-accent text-black hover:bg-yellow-500 font-bold px-6 py-6 h-auto text-base shadow-lg shadow-accent/20">
               <Plus className="w-5 h-5 mr-2" />
               Novo Artigo
             </Button>
           </Link>
         </div>
       </div>
+
+      {/* Modal Redator IA */}
+      {isAiModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border border-border rounded-3xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl relative"
+          >
+            <h2 className="text-2xl font-black uppercase mb-2 text-white flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-accent animate-pulse" />
+              Redator IA Tisgo News
+            </h2>
+            <p className="text-xs text-muted-foreground mb-6">
+              Digite os fatos, um rascunho ou informações preliminares. Nossa IA apurará e estruturará a notícia profissionalmente.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold uppercase text-muted-foreground block mb-2">Rascunho / Fatos da Matéria:</label>
+                <textarea 
+                  rows={5}
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="Ex: A Defesa Civil emitiu alerta de chuvas fortes para o litoral. Evite áreas alagadas..."
+                  className="w-full bg-background border border-border rounded-xl p-3 text-sm focus:ring-2 focus:ring-accent outline-none text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+
+              {generateArticleMutation.isPending && (
+                <div className="py-8 flex flex-col items-center justify-center text-center gap-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                  <p className="text-xs font-bold animate-pulse text-muted-foreground">A IA está estruturando a manchete, o lide e a formatação HTML limpa...</p>
+                </div>
+              )}
+
+              {aiResult && !generateArticleMutation.isPending && (
+                <div className="bg-background/50 border border-accent/20 rounded-2xl p-4 space-y-4 mt-4 animate-fade-in">
+                  <div className="border-b border-border pb-2">
+                    <span className="text-[10px] font-black uppercase text-accent tracking-widest block">Título Sugerido:</span>
+                    <h3 className="text-lg font-bold text-foreground">{aiResult.title}</h3>
+                  </div>
+
+                  <div className="border-b border-border pb-2">
+                    <span className="text-[10px] font-black uppercase text-accent tracking-widest block">Resumo (Capa):</span>
+                    <p className="text-xs text-muted-foreground">{aiResult.excerpt}</p>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-accent tracking-widest block mb-1">Conteúdo da Matéria (Pré-visualização HTML):</span>
+                    <div 
+                      className="text-xs text-foreground/90 bg-muted/30 p-3 rounded-lg max-h-40 overflow-y-auto border border-border space-y-2 prose prose-invert"
+                      dangerouslySetInnerHTML={{ __html: aiResult.content }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-3 justify-end pt-4 border-t border-border mt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsAiModalOpen(false);
+                    setAiResult(null);
+                  }}
+                  className="rounded-xl border-border text-muted-foreground"
+                >
+                  Fechar
+                </Button>
+
+                {!aiResult ? (
+                  <Button 
+                    onClick={async () => {
+                      if (!aiPrompt.trim()) return toast.error("Digite algum assunto ou rascunho primeiro!");
+                      try {
+                        const res = await generateArticleMutation.mutateAsync({ prompt: aiPrompt });
+                        setAiResult(res);
+                        toast.success("Matéria elaborada! Revise e aprove abaixo.");
+                      } catch (err: any) {
+                        toast.error(err.message || "Erro ao gerar matéria");
+                      }
+                    }}
+                    disabled={generateArticleMutation.isPending || !aiPrompt.trim()}
+                    className="bg-accent text-black font-bold rounded-xl hover:bg-yellow-500"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Elaborar Matéria
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={async () => {
+                      try {
+                        const targetCat = categories?.find(c => c.slug === aiResult.categorySlug) || categories?.[0];
+                        await createArticleMutation.mutateAsync({
+                          title: aiResult.title,
+                          excerpt: aiResult.excerpt,
+                          content: aiResult.content,
+                          categoryId: targetCat ? String(targetCat.id) : "1",
+                          author: "IA Tisgo News",
+                          published: true
+                        });
+                        toast.success("Notícia publicada com sucesso no portal!");
+                        setIsAiModalOpen(false);
+                        setAiResult(null);
+                        setAiPrompt("");
+                        refetch();
+                      } catch (err: any) {
+                        toast.error(err.message || "Erro ao publicar notícia");
+                      }
+                    }}
+                    disabled={createArticleMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl"
+                  >
+                    {createArticleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Aprovar e Publicar Imediatamente
+                  </Button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       <div className="flex flex-col md:flex-row gap-4 items-center bg-muted/40 p-4 rounded-2xl border border-border">
         <div className="relative flex-1 w-full">

@@ -1,6 +1,8 @@
 // Forced redeploy: 2026-05-11 16:14 - Auth header fix
 import "dotenv/config";
 import express from "express";
+import fs from "fs";
+import path from "path";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -67,6 +69,70 @@ async function startServer() {
       console.log("[Keep-Alive] Auto-ping enviado");
     }
   }, 10 * 60 * 1000); // 10 minutos
+
+  // Interceptador SSR de Open Graph para gerar cards ricos no WhatsApp e Redes Sociais
+  app.get("/article/:slug", async (req, res, next) => {
+    try {
+      const { getArticleBySlug } = await import("../db.js");
+      const article = await getArticleBySlug(req.params.slug);
+      
+      if (!article) {
+        return next();
+      }
+
+      // Localiza o index.html gerado na pasta client ou dist
+      const possibleIndexPaths = [
+        path.resolve(import.meta.dirname, "../dist/index.html"),
+        path.resolve(import.meta.dirname, "../../dist/index.html"),
+        path.resolve(process.cwd(), "dist/index.html"),
+        path.resolve(import.meta.dirname, "../../client/index.html")
+      ];
+
+      let indexPath = "";
+      for (const p of possibleIndexPaths) {
+        if (fs.existsSync(p)) {
+          indexPath = p;
+          break;
+        }
+      }
+
+      if (!indexPath) {
+        return next();
+      }
+
+      let html = await fs.promises.readFile(indexPath, "utf-8");
+
+      const ogTitle = (article.title || "Tisgo News").replace(/"/g, '&quot;');
+      const rawText = (article.excerpt || article.content || "").replace(/<[^>]*>/g, '');
+      const ogDesc = (rawText.length > 160 ? rawText.substring(0, 160) + '...' : rawText).replace(/"/g, '&quot;');
+      const ogImage = article.coverImage || "https://tisgonews.com/news-icon.png";
+      const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+
+      const metaTags = `
+        <title>${ogTitle}</title>
+        <meta property="og:title" content="${ogTitle}" />
+        <meta property="og:description" content="${ogDesc}" />
+        <meta property="og:image" content="${ogImage}" />
+        <meta property="og:url" content="${fullUrl}" />
+        <meta property="og:type" content="article" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="${ogTitle}" />
+        <meta name="twitter:description" content="${ogDesc}" />
+        <meta name="twitter:image" content="${ogImage}" />
+      `;
+
+      if (html.includes("</head>")) {
+        // Limpa a tag title original para não duplicar
+        html = html.replace(/<title>.*?<\/title>/i, "");
+        html = html.replace("</head>", `${metaTags}</head>`);
+      }
+
+      res.status(200).set({ "Content-Type": "text/html" }).send(html);
+    } catch (err) {
+      console.error("[SSR Open Graph ERROR]", err);
+      next();
+    }
+  });
 
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {

@@ -23,6 +23,8 @@ export default function Article() {
     { categoryId: article?.categoryId || "", orderBy: 'recent' },
     { enabled: !!article?.categoryId }
   );
+  const { data: sponsors } = trpc.sponsors.list.useQuery();
+  const sidebarSponsors = sponsors?.filter(s => s.location === 'sidebar' && s.active) || [];
 
   useSEO({
     title: article?.title || "Artigo",
@@ -253,8 +255,8 @@ export default function Article() {
         <div className="w-full px-4 mt-8 mb-12">
           <div className="article-body-wrapper article-body-content">
             <div 
-              className="prose prose-invert max-w-none break-words [hyphens:none] [word-break:normal]"
-              style={{ overflowWrap: 'anywhere' }}
+              className="prose prose-invert max-w-none text-foreground leading-relaxed"
+              style={{ overflowWrap: 'normal', wordBreak: 'normal', hyphens: 'none' }}
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(
                   (article.content.includes('<p') 
@@ -287,6 +289,68 @@ export default function Article() {
             </p>
           </div>
         </div>
+
+        {/* Sponsors Section inside Article view */}
+        {sidebarSponsors.length > 0 && (
+          <div className="max-w-4xl mx-auto mb-16">
+            <h3 className="text-xs font-black uppercase text-accent mb-6 tracking-widest text-center">Patrocinadores Destaque</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {sidebarSponsors.map((sponsor) => (
+                <div 
+                  key={sponsor.id}
+                  className="bg-card border border-accent/20 rounded-xl overflow-hidden shadow-lg group cursor-pointer relative flex flex-col"
+                  onClick={() => {
+                    if (sponsor.whatsapp) window.open(sponsor.whatsapp, '_blank');
+                    else if (sponsor.instagram) window.open(sponsor.instagram, '_blank');
+                  }}
+                >
+                  <div className="bg-accent/10 px-3 py-1.5 border-b border-accent/20 flex justify-between items-center backdrop-blur-sm">
+                    <span className="text-[9px] font-black uppercase text-accent tracking-widest truncate">{sponsor.name || "Patrocínio"}</span>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      {sponsor.instagram && <Instagram className="w-2.5 h-2.5 text-accent" />}
+                      {sponsor.whatsapp && <MessageCircle className="w-2.5 h-2.5 text-accent" />}
+                    </div>
+                  </div>
+                  <div className="p-2 h-36 relative bg-gradient-to-b from-black/5 to-black/20 flex items-center justify-center flex-grow">
+                    <img 
+                      src={sponsor.image} 
+                      alt={sponsor.name} 
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[120px]" 
+                    />
+                  </div>
+                  {(sponsor.instagram || sponsor.whatsapp) && (
+                    <div className="p-2 bg-accent/5 flex justify-center gap-4 border-t border-accent/10">
+                      {sponsor.instagram && (
+                        <a 
+                          href={sponsor.instagram} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-accent transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Instagram className="w-3 h-3" />
+                          <span>Instagram</span>
+                        </a>
+                      )}
+                      {sponsor.whatsapp && (
+                        <a 
+                          href={sponsor.whatsapp} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-accent transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                          <span>WhatsApp</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Related Articles Section */}
         <section className="max-w-4xl mx-auto border-t border-border pt-12">
