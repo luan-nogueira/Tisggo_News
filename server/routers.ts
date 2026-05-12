@@ -311,8 +311,8 @@ ${weatherInfo}`;
     })).mutation(async ({ input }) => {
       const { invokeLLM } = await import("./_core/llm.js");
       
-      // Tenta extrair a imagem original caso o usuário tenha colado a URL do site de origem
       let scrapedImage = "";
+      let realTimeWebContext = "";
       const urlMatch = input.prompt.match(/https?:\/\/[^\s]+/) || input.prompt.match(/www\.[^\s]+/);
       if (urlMatch) {
         try {
@@ -330,7 +330,13 @@ ${weatherInfo}`;
             const urlObj = new URL(targetUrl);
             scrapedImage = `${urlObj.origin}${scrapedImage.startsWith('/') ? '' : '/'}${scrapedImage}`;
           }
-          console.log("[AI Scraper] Imagem original extraída do site:", scrapedImage);
+          
+          $('script, style, nav, footer, header, aside, iframe, .ads').remove();
+          const pageText = $('h1, h2, article, .content, .post, p').text().replace(/\s+/g, ' ').trim().substring(0, 10000);
+          if (pageText) {
+            realTimeWebContext = `\n\n--- CONTEÚDO EXTRAÍDO DA URL NA INTERNET EM TEMPO REAL ---\n${pageText}`;
+          }
+          console.log("[AI Scraper] Link interpretado na internet em tempo real com sucesso!");
         } catch (e) {
           console.error("[Scrape Cover Image Warning]", e);
         }
@@ -353,18 +359,16 @@ Retorne o resultado estritamente no seguinte formato JSON puro (sem marcações 
         const responseText = await invokeLLM({
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: `Rascunho/Assunto para gerar a matéria:\n${input.prompt}` }
-          ]
+            { role: "user", content: `Rascunho/Assunto para gerar a matéria:\n${input.prompt}${realTimeWebContext}` }
+          ],
+          responseFormat: { type: "json_object" }
         });
 
         let cleanJsonStr = responseText.trim();
-        if (cleanJsonStr.startsWith("```json")) {
-          cleanJsonStr = cleanJsonStr.replace(/^```json/, "").replace(/```$/, "").trim();
-        } else if (cleanJsonStr.startsWith("```")) {
-          cleanJsonStr = cleanJsonStr.replace(/^```/, "").replace(/```$/, "").trim();
-        }
+        const jsonMatch = cleanJsonStr.match(/\{[\s\S]*\}/);
+        const jsonToParse = jsonMatch ? jsonMatch[0] : cleanJsonStr;
 
-        const data = JSON.parse(cleanJsonStr);
+        const data = JSON.parse(jsonToParse);
         return {
           title: data.title || "Título Gerado",
           excerpt: data.excerpt || "Resumo gerado automaticamente pela IA.",

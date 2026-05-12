@@ -136,12 +136,12 @@ const SOURCES: NewsSource[] = [
   },
   {
     name: "Manchete RJ",
-    url: "https://manheterj.com.br/",
+    url: "https://mancheterj.com/",
     linkSelector: 'a[href*="/noticia/"]',
     titleSelector: 'h1.post-title, h1',
     contentSelector: '.post-content, .entry-content, #content-area',
     imageSelector: 'meta[property="og:image"]',
-    baseUrl: "https://manheterj.com.br",
+    baseUrl: "https://mancheterj.com",
     limit: 12
   },
   {
