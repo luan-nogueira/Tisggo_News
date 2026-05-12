@@ -168,7 +168,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-10 p-6 md:p-12 min-h-screen bg-background transition-colors duration-500">
+    <div className="space-y-8 md:space-y-10 p-4 md:p-12 min-h-screen bg-background transition-colors duration-500">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-accent transition-colors">
@@ -234,16 +234,16 @@ export default function Dashboard() {
         </div>
         
         {/* Automation Settings */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black uppercase text-accent flex items-center gap-3">
+        <div className="mb-8 md:mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h2 className="text-xl md:text-2xl font-black uppercase text-accent flex items-center gap-3">
               <Settings className="w-6 h-6" />
               Configurações do Robô
             </h2>
             <Button 
               onClick={handleSaveSettings}
               disabled={isSaving}
-              className="bg-accent text-black hover:bg-yellow-500 font-black"
+              className="bg-accent text-black hover:bg-yellow-500 font-black w-full sm:w-auto"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "SALVAR CONFIGURAÇÕES"}
             </Button>
@@ -390,53 +390,53 @@ export default function Dashboard() {
 
         {/* Articles Management */}
         <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl">
-          <div className="flex items-center justify-between p-6 border-b border-border bg-accent/5">
-            <h2 className="text-2xl font-black uppercase text-foreground">Gerenciar Notícias</h2>
-            <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col gap-4 p-4 md:p-6 border-b border-border bg-accent/5">
+            <h2 className="text-xl md:text-2xl font-black uppercase text-foreground">Gerenciar Notícias</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <Button
                 onClick={() => runCleanup.mutate()}
                 disabled={runCleanup.isPending}
-                className="bg-background text-foreground hover:bg-red-500/10 font-bold flex items-center gap-2 border border-border"
+                className="bg-background text-foreground hover:bg-red-500/10 font-bold flex items-center justify-center gap-2 border border-border h-10 text-xs px-3"
               >
                 {runCleanup.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-red-500 flex-shrink-0" />
                 ) : (
-                  <ShieldCheck className="w-4 h-4 text-red-500" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
                 )}
-                Faxina Profunda (Remover Marcas/Erros)
+                <span className="truncate">Faxina Profunda</span>
               </Button>
               <Button
                 onClick={() => runRecategorize.mutate()}
                 disabled={runRecategorize.isPending}
-                className="bg-background text-foreground hover:bg-accent/10 font-bold flex items-center gap-2 border border-border"
+                className="bg-background text-foreground hover:bg-accent/10 font-bold flex items-center justify-center gap-2 border border-border h-10 text-xs px-3"
               >
                 {runRecategorize.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-accent flex-shrink-0" />
                 ) : (
-                  <Plus className="w-4 h-4 text-accent" />
+                  <Plus className="w-3.5 h-3.5 text-accent flex-shrink-0" />
                 )}
-                Organizar Categorias
+                <span className="truncate">Organizar Cats.</span>
               </Button>
               <Button
                 onClick={handleAutomate}
                 disabled={isStopping}
-                className={`font-bold flex items-center gap-2 border transition-all ${
+                className={`font-bold flex items-center justify-center gap-2 border transition-all h-10 text-xs px-3 ${
                   automationStatus?.isAutomating 
                   ? "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20" 
                   : "bg-background text-foreground hover:bg-accent/10 border-border"
                 }`}
               >
                 {automationStatus?.isAutomating ? (
-                  isStopping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />
+                  isStopping ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Trash2 className="w-3.5 h-3.5 flex-shrink-0" />
                 ) : (
-                  (isAutomating) ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Sparkles className="w-4 h-4 text-accent" />
+                  (isAutomating) ? <Loader2 className="w-3.5 h-3.5 animate-spin text-accent flex-shrink-0" /> : <Sparkles className="w-3.5 h-3.5 text-accent flex-shrink-0" />
                 )}
-                {automationStatus?.isAutomating ? "PARAR ROBÔ" : "Buscar Agora"}
+                <span className="truncate">{automationStatus?.isAutomating ? "PARAR ROBÔ" : "Buscar Agora"}</span>
               </Button>
-              <Link href="/admin/articles/new">
-                <Button className="bg-accent text-black hover:bg-yellow-500 font-black flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  NOVA NOTÍCIA
+              <Link href="/admin/articles/new" className="w-full">
+                <Button className="bg-accent text-black hover:bg-yellow-500 font-black flex items-center justify-center gap-2 w-full h-10 text-xs px-3">
+                  <Plus className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">NOVA NOTÍCIA</span>
                 </Button>
               </Link>
             </div>

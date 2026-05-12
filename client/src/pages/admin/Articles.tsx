@@ -80,32 +80,32 @@ export default function AdminArticles() {
 
   return (
     <div className="space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-4xl font-black uppercase text-white tracking-tighter">Artigos</h1>
+          <h1 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tighter">Artigos</h1>
           <p className="text-gray-500 text-sm font-medium">Gerencie o conteúdo do portal Tisgo</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Button 
             onClick={handleAutomate}
             disabled={isAutomating}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-6 h-auto text-base shadow-lg transition-all border-none flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 text-sm shadow-lg transition-all border-none flex items-center justify-center gap-2 w-full"
           >
-            {isAutomating ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <RefreshCw className="w-5 h-5 text-white" />}
+            {isAutomating ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <RefreshCw className="w-4 h-4 text-white" />}
             Buscar Automático
           </Button>
 
           <Button 
             onClick={() => setIsAiModalOpen(true)}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-5 py-6 h-auto text-base shadow-lg hover:opacity-90 transition-all border-none flex items-center gap-2"
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold h-12 text-sm shadow-lg hover:opacity-90 transition-all border-none flex items-center justify-center gap-2 w-full"
           >
-            <Sparkles className="w-5 h-5 animate-pulse text-yellow-300" />
+            <Sparkles className="w-4 h-4 animate-pulse text-yellow-300" />
             Gerar Matéria IA
           </Button>
 
-          <Link href="/admin/articles/new">
-            <Button className="bg-accent text-black hover:bg-yellow-500 font-bold px-6 py-6 h-auto text-base shadow-lg shadow-accent/20">
-              <Plus className="w-5 h-5 mr-2" />
+          <Link href="/admin/articles/new" className="w-full">
+            <Button className="bg-accent text-black hover:bg-yellow-500 font-bold h-12 text-sm shadow-lg shadow-accent/20 w-full flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" />
               Novo Artigo
             </Button>
           </Link>
@@ -354,62 +354,72 @@ export default function AdminArticles() {
               className="group"
             >
               <div className="bg-card border border-border hover:border-accent/40 transition-all duration-300 rounded-[24px] overflow-hidden shadow-sm hover:shadow-accent/5">
-                <div className="flex items-center p-5 gap-6">
-                  <div className="hidden md:block w-24 h-24 rounded-2xl bg-muted overflow-hidden flex-shrink-0 border border-border">
-                    {article.coverImage ? (
-                      <img src={article.coverImage} className="w-full h-full object-cover" alt="" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-                        <Sparkles className="w-6 h-6 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Badge className={`${article.published === true ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'} text-[10px] font-black uppercase rounded-lg border px-3`}>
-                        {article.published === true ? "Publicado" : "Rascunho"}
-                      </Badge>
+                {/* Layout interno: imagem + info + ações */}
+                <div className="flex flex-col p-4 gap-3 md:flex-row md:items-center md:p-5 md:gap-6">
+
+                  {/* Linha superior: imagem + meta */}
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div className="hidden md:block w-24 h-24 rounded-2xl bg-muted overflow-hidden flex-shrink-0 border border-border">
+                      {article.coverImage ? (
+                        <img src={article.coverImage} className="w-full h-full object-cover" alt="" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+                          <Sparkles className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
-                    <h3 className="font-black text-xl text-foreground group-hover:text-accent transition-colors truncate mb-2">
-                      {article.title}
-                    </h3>
-                    <div className="flex items-center gap-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-                      <span className="flex items-center gap-1.5 bg-muted px-2 py-0.5 rounded-md border border-border">
-                        <Eye className="w-3 h-3 text-accent" />
-                        {article.views || 0}
-                      </span>
-                      <span>•</span>
-                      <span>{formatDate(article.createdAt)}</span>
-                      <span>•</span>
-                      <span className="text-muted-foreground">Por {article.author}</span>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <Badge className={`${
+                          article.published === true
+                            ? 'bg-green-500/10 text-green-600 border-green-500/20'
+                            : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+                        } text-[10px] font-black uppercase rounded-lg border px-3`}>
+                          {article.published === true ? "Publicado" : "Rascunho"}
+                        </Badge>
+                      </div>
+                      <h3 className="font-black text-base md:text-xl text-foreground group-hover:text-accent transition-colors line-clamp-2 md:truncate mb-1.5">
+                        {article.title}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        <span className="flex items-center gap-1.5 bg-muted px-2 py-0.5 rounded-md border border-border">
+                          <Eye className="w-3 h-3 text-accent" />
+                          {article.views || 0}
+                        </span>
+                        <span className="hidden xs:inline">•</span>
+                        <span>{formatDate(article.createdAt)}</span>
+                        <span className="hidden xs:inline">•</span>
+                        <span className="text-muted-foreground">Por {article.author}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 pr-2">
+                  {/* Linha de ações — sempre visíveis */}
+                  <div className="flex items-center gap-2 pt-2 md:pt-0 border-t border-border md:border-none md:pr-2 flex-wrap">
                     {article.published === false && (
                       <Button
                         onClick={() => handleApprove(String(article.id))}
                         disabled={approveMutation.isPending}
-                        className="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl gap-2 h-11 px-4"
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl gap-2 h-10 px-4 flex-1 md:flex-none text-sm"
                       >
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="hidden md:inline">Aprovar e Publicar</span>
+                        <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                        <span>Aprovar e Publicar</span>
                       </Button>
                     )}
                     <Link href={`/admin/articles/${article.id}/edit`}>
-                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl w-11 h-11 border border-transparent hover:border-accent/20">
-                        <Edit2 className="w-5 h-5" />
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl w-10 h-10 border border-transparent hover:border-accent/20">
+                        <Edit2 className="w-4 h-4" />
                       </Button>
                     </Link>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl w-11 h-11 border border-transparent hover:border-red-500/20"
+                      className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl w-10 h-10 border border-transparent hover:border-red-500/20"
                       onClick={() => handleDelete(String(article.id))}
                       disabled={deleteMutation.isPending}
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
