@@ -603,26 +603,6 @@ export default function Dashboard() {
                 </div>
               )}
               
-              {articles.length >= 20 && (
-                <div className="p-4 border-t border-border flex justify-center gap-4">
-                  {limit > 20 && (
-                    <Button 
-                      onClick={() => setLimit(prev => Math.max(20, prev - 20))}
-                      variant="ghost"
-                      className="text-muted-foreground hover:text-foreground font-bold text-xs uppercase"
-                    >
-                      Ver menos
-                    </Button>
-                  )}
-                  <Button 
-                    onClick={() => setLimit(prev => prev + 20)}
-                    variant="outline"
-                    className="border-accent text-accent hover:bg-accent hover:text-black font-black text-xs uppercase px-8"
-                  >
-                    Carregar mais notícias
-                  </Button>
-                </div>
-              )}
             </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
