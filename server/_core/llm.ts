@@ -24,8 +24,8 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
 
   // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa com o modelo confirmado pelo Discovery
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
-    // Usando a versão Lite que costuma ter cotas mais livres
-    const model = "gemini-flash-lite-latest"; 
+    // Usando gemini-1.5-flash pela altíssima obediência a esquemas JSON e quotas otimizadas
+    const model = "gemini-1.5-flash"; 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
     
     const contents = messages
@@ -36,6 +36,12 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
       }));
 
     const body: any = { contents };
+    
+    const isJsonRequested = params.responseFormat?.type === "json_object" || params.response_format?.type === "json_object";
+    body.generationConfig = {
+      temperature: temperature ?? 0.7,
+      ...(isJsonRequested ? { responseMimeType: "application/json" } : {})
+    };
     
     // Adiciona personalidade (system_instruction)
     const systemMessage = messages.find(m => m.role === "system");

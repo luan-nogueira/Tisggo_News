@@ -244,12 +244,9 @@ FORMATO DE RETORNO (JSON):
     });
 
     let cleanJsonStr = response.trim();
-    if (cleanJsonStr.startsWith("```json")) {
-      cleanJsonStr = cleanJsonStr.replace(/^```json/, "").replace(/```$/, "").trim();
-    } else if (cleanJsonStr.startsWith("```")) {
-      cleanJsonStr = cleanJsonStr.replace(/^```/, "").replace(/```$/, "").trim();
-    }
-    const result = JSON.parse(cleanJsonStr);
+    const jsonMatch = cleanJsonStr.match(/\{[\s\S]*\}/);
+    const jsonToParse = jsonMatch ? jsonMatch[0] : cleanJsonStr;
+    const result = JSON.parse(jsonToParse);
     
     // Se o score de qualidade for muito baixo, avisamos o robô
     if (result.qualityScore < 0.3) {
