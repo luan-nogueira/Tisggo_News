@@ -304,12 +304,14 @@ ${weatherInfo}`;
       
       const systemPrompt = `Você é um jornalista profissional e redator-chefe do portal Tisgo News.
 Sua tarefa é gerar uma notícia completa, bem escrita, com credibilidade e formatada em HTML limpo a partir do rascunho ou assunto fornecido.
+Escolha e retorne no campo "coverImage" uma URL pública e funcional de imagem ilustrativa em alta qualidade adequada ao tema da notícia.
 Retorne o resultado estritamente no seguinte formato JSON puro (sem marcações de bloco de código):
 {
   "title": "Título chamativo e profissional para a matéria",
   "excerpt": "Resumo conciso de 2 linhas para a capa da notícia",
   "content": "<p>Primeiro parágrafo da notícia bem elaborado...</p><p>Segundo parágrafo detalhando o fato...</p>",
-  "categorySlug": "cidades"
+  "categorySlug": "cidades",
+  "coverImage": "https://picsum.photos/1200/800?random=1"
 }`;
 
       try {
@@ -332,7 +334,8 @@ Retorne o resultado estritamente no seguinte formato JSON puro (sem marcações 
           title: data.title || "Título Gerado",
           excerpt: data.excerpt || "Resumo gerado automaticamente pela IA.",
           content: data.content || "<p>Conteúdo gerado pela IA...</p>",
-          categorySlug: data.categorySlug || "cidades"
+          categorySlug: data.categorySlug || "cidades",
+          coverImage: data.coverImage || "https://picsum.photos/1200/800?random=1"
         };
       } catch (err: any) {
         console.error("[AI Generate Article ERROR]", err);

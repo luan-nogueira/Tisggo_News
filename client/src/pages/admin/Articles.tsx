@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
-import { Sparkles, Plus, Edit2, Trash2, Eye, Search, Filter, Loader2 } from "lucide-react";
+import { Sparkles, Plus, Edit2, Trash2, Eye, Search, Filter, Loader2, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,11 @@ export default function AdminArticles() {
   const deleteMutation = trpc.articles.delete.useMutation();
   const generateArticleMutation = trpc.ai.generateArticle.useMutation();
   const createArticleMutation = trpc.articles.create.useMutation();
+  const automateNews = trpc.articles.automate.useMutation();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isAutomating, setIsAutomating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiResult, setAiResult] = useState<any>(null);
 
@@ -47,6 +49,18 @@ export default function AdminArticles() {
     }
   };
 
+  const handleAutomate = async () => {
+    try {
+      setIsAutomating(true);
+      await automateNews.mutateAsync();
+      toast.success("Busca automática iniciada! Apurando novas pautas em segundo plano.");
+    } catch (error: any) {
+      toast.error("Erro ao acionar busca de notícias.");
+    } finally {
+      setIsAutomating(false);
+    }
+  };
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -55,6 +69,15 @@ export default function AdminArticles() {
           <p className="text-gray-500 text-sm font-medium">Gerencie o conteúdo do portal Tisgo</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <Button 
+            onClick={handleAutomate}
+            disabled={isAutomating}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-6 h-auto text-base shadow-lg transition-all border-none flex items-center gap-2"
+          >
+            {isAutomating ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <RefreshCw className="w-5 h-5 text-white" />}
+            Buscar Automático
+          </Button>
+
           <Button 
             onClick={() => setIsAiModalOpen(true)}
             className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-5 py-6 h-auto text-base shadow-lg hover:opacity-90 transition-all border-none flex items-center gap-2"
@@ -109,6 +132,30 @@ export default function AdminArticles() {
 
               {aiResult && !generateArticleMutation.isPending && (
                 <div className="bg-background/50 border border-accent/20 rounded-2xl p-4 space-y-4 mt-4 animate-fade-in">
+                  <div className="border-b border-border pb-2 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div className="md:col-span-2 space-y-1">
+                      <span className="text-[10px] font-black uppercase text-accent tracking-widest block">Imagem de Capa da Matéria:</span>
+                      <input 
+                        type="text" 
+                        value={aiResult.coverImage || ""} 
+                        onChange={(e) => setAiResult({ ...aiResult, coverImage: e.target.value })}
+                        placeholder="URL da imagem..."
+                        className="w-full bg-background border border-border rounded-lg p-2 text-xs text-foreground outline-none focus:border-accent"
+                      />
+                      <span className="text-[9px] text-muted-foreground block">A IA buscou esta imagem. Altere se necessário.</span>
+                    </div>
+                    {aiResult.coverImage && (
+                      <div className="h-20 rounded-xl overflow-hidden bg-muted border border-border relative">
+                        <img 
+                          src={aiResult.coverImage} 
+                          alt="Capa" 
+                          className="w-full h-full object-cover" 
+                          onError={(e)=>{ (e.target as any).src = "https://picsum.photos/800/600?random=2"; }} 
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   <div className="border-b border-border pb-2">
                     <span className="text-[10px] font-black uppercase text-accent tracking-widest block">Título Sugerido:</span>
                     <h3 className="text-lg font-bold text-foreground">{aiResult.title}</h3>
@@ -120,7 +167,7 @@ export default function AdminArticles() {
                   </div>
 
                   <div>
-                    <span className="text-[10px] font-black uppercase text-accent tracking-widest block mb-1">Conteúdo da Matéria (Pré-visualização HTML):</span>
+                    <span className="text-[10px] font-black uppercase text-accent tracking-widest block mb-1">Notícia Completa para Aprovação (HTML):</span>
                     <div 
                       className="text-xs text-foreground/90 bg-muted/30 p-3 rounded-lg max-h-40 overflow-y-auto border border-border space-y-2 prose prose-invert"
                       dangerouslySetInnerHTML={{ __html: aiResult.content }}
@@ -169,7 +216,8 @@ export default function AdminArticles() {
                           excerpt: aiResult.excerpt,
                           content: aiResult.content,
                           categoryId: targetCat ? String(targetCat.id) : "1",
-                          author: "IA Tisgo News",
+                          author: "Equipe Editorial",
+                          coverImage: aiResult.coverImage || "",
                           published: true
                         });
                         toast.success("Notícia publicada com sucesso no portal!");

@@ -159,13 +159,13 @@ export function ChatWidget() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="group relative flex items-center justify-center w-16 h-16 bg-accent rounded-full shadow-2xl hover:shadow-accent/40 transition-all duration-300"
+        className="group relative flex items-center justify-center w-12 h-12 bg-accent rounded-full shadow-2xl hover:shadow-accent/40 transition-all duration-300"
       >
         <div className="absolute inset-0 bg-accent rounded-full animate-ping opacity-20 group-hover:opacity-40" />
         {isOpen ? (
-          <X className="w-7 h-7 text-black relative z-10" />
+          <X className="w-5 h-5 text-black relative z-10" />
         ) : (
-          <Sparkles className="w-7 h-7 text-black relative z-10" />
+          <Sparkles className="w-5 h-5 text-black relative z-10" />
         )}
       </motion.button>
     </div>

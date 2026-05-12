@@ -243,7 +243,13 @@ FORMATO DE RETORNO (JSON):
       responseFormat: { type: "json_object" }
     });
 
-    const result = JSON.parse(response.choices[0].message.content as string);
+    let cleanJsonStr = response.trim();
+    if (cleanJsonStr.startsWith("```json")) {
+      cleanJsonStr = cleanJsonStr.replace(/^```json/, "").replace(/```$/, "").trim();
+    } else if (cleanJsonStr.startsWith("```")) {
+      cleanJsonStr = cleanJsonStr.replace(/^```/, "").replace(/```$/, "").trim();
+    }
+    const result = JSON.parse(cleanJsonStr);
     
     // Se o score de qualidade for muito baixo, avisamos o robô
     if (result.qualityScore < 0.3) {
