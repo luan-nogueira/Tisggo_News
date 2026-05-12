@@ -42,6 +42,8 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   const app = express();
+  // Confia no proxy reverso do Render para que req.protocol seja resolvido corretamente como https
+  app.set("trust proxy", true);
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
@@ -146,8 +148,8 @@ async function startServer() {
       `;
 
       if (html.includes("</head>")) {
-        // Limpa a tag title original para não duplicar
-        html = html.replace(/<title>.*?<\/title>/i, "");
+        // Limpa a tag title original para não duplicar, cobrindo quebras de linha
+        html = html.replace(/<title>[\s\S]*?<\/title>/i, "");
         html = html.replace("</head>", `${metaTags}</head>`);
       } else {
         html = `<head>${metaTags}</head>` + html;
