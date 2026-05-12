@@ -501,15 +501,6 @@ export default function Home() {
                         src={sponsor.image} 
                         alt={sponsor.name} 
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[160px]" 
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          if (e.currentTarget.parentElement) {
-                            const span = document.createElement('div');
-                            span.className = 'flex flex-col items-center justify-center text-center p-4 w-full h-full';
-                            span.innerHTML = `<span class="text-xl font-black tracking-wider text-foreground/90 uppercase">${sponsor.name || "Parceiro"}</span><span class="text-[9px] text-muted-foreground uppercase tracking-widest mt-1 block">Apoio Oficial</span>`;
-                            e.currentTarget.parentElement.appendChild(span);
-                          }
-                        }}
                       />
                     </div>
                     {(sponsor.instagram || sponsor.whatsapp) && (
