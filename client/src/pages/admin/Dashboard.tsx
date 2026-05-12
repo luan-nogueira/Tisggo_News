@@ -17,8 +17,7 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
-  const [limit, setLimit] = useState(20);
-  const { data: articles, isLoading: articlesLoading } = trpc.articles.list.useQuery(limit);
+  const { data: articles, isLoading: articlesLoading } = trpc.articles.listAdmin.useQuery();
   const { data: categories } = trpc.categories.list.useQuery();
   const deleteArticle = trpc.articles.delete.useMutation();
   const automateNews = trpc.articles.automate.useMutation();
@@ -31,6 +30,7 @@ export default function Dashboard() {
     onSuccess: (count) => {
       toast.success(`Faxina concluída! ${count} notícias foram limpas.`);
       utils.articles.list.invalidate();
+      utils.articles.listAdmin.invalidate();
     },
     onError: (err) => {
       toast.error(`Erro na faxina: ${err.message}`);
@@ -41,6 +41,7 @@ export default function Dashboard() {
     onSuccess: (count) => {
       toast.success(`Organização concluída! ${count} notícias foram movidas.`);
       utils.articles.list.invalidate();
+      utils.articles.listAdmin.invalidate();
     },
     onError: (err) => {
       toast.error(`Erro na organização: ${err.message}`);

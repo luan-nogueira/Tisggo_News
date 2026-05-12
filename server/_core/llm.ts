@@ -25,7 +25,7 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
   // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa com o modelo confirmado pelo Discovery
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
     // Usando gemini-1.5-flash pela altíssima obediência a esquemas JSON e quotas otimizadas
-    const model = "gemini-1.5-flash-latest"; 
+    const model = "gemini-2.0-flash"; 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
     
     const contents = messages
