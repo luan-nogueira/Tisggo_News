@@ -302,16 +302,42 @@ ${weatherInfo}`;
     })).mutation(async ({ input }) => {
       const { invokeLLM } = await import("./_core/llm.js");
       
+      // Tenta extrair a imagem original caso o usuário tenha colado a URL do site de origem
+      let scrapedImage = "";
+      const urlMatch = input.prompt.match(/https?:\/\/[^\s]+/) || input.prompt.match(/www\.[^\s]+/);
+      if (urlMatch) {
+        try {
+          const targetUrl = urlMatch[0].startsWith("http") ? urlMatch[0] : `https://${urlMatch[0]}`;
+          const cheerio = await import("cheerio");
+          const res = await fetch(targetUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+          });
+          const html = await res.text();
+          const $ = cheerio.load(html);
+          scrapedImage = $('meta[property="og:image"]').attr('content') || 
+                         $('meta[name="twitter:image"]').attr('content') || 
+                         $('article img').first().attr('src') || "";
+          if (scrapedImage && !scrapedImage.startsWith("http")) {
+            const urlObj = new URL(targetUrl);
+            scrapedImage = `${urlObj.origin}${scrapedImage.startsWith('/') ? '' : '/'}${scrapedImage}`;
+          }
+          console.log("[AI Scraper] Imagem original extraída do site:", scrapedImage);
+        } catch (e) {
+          console.error("[Scrape Cover Image Warning]", e);
+        }
+      }
+
       const systemPrompt = `Você é um jornalista profissional e redator-chefe do portal Tisgo News.
-Sua tarefa é gerar uma notícia completa, bem escrita, com credibilidade e formatada em HTML limpo a partir do rascunho ou assunto fornecido.
-Escolha e retorne no campo "coverImage" uma URL pública e funcional de imagem ilustrativa em alta qualidade adequada ao tema da notícia.
+Sua tarefa é gerar uma notícia completa, bem escrita, com credibilidade e formatada em HTML limpo a partir do rascunho ou link fornecido.
+DIRETRIZ CRÍTICA SOBRE MARCAS D'ÁGUA E DIREITOS:
+1. Jamais mencione no texto termos como "Foto com marca d'água", "Créditos da foto", "Foto de reprodução", "Foto do portal X" ou nomes de portais concorrentes.
+2. O texto gerado deve ser completamente limpo, focado estritamente no fato jornalístico.
 Retorne o resultado estritamente no seguinte formato JSON puro (sem marcações de bloco de código):
 {
   "title": "Título chamativo e profissional para a matéria",
   "excerpt": "Resumo conciso de 2 linhas para a capa da notícia",
   "content": "<p>Primeiro parágrafo da notícia bem elaborado...</p><p>Segundo parágrafo detalhando o fato...</p>",
-  "categorySlug": "cidades",
-  "coverImage": "https://picsum.photos/1200/800?random=1"
+  "categorySlug": "cidades"
 }`;
 
       try {
@@ -335,7 +361,7 @@ Retorne o resultado estritamente no seguinte formato JSON puro (sem marcações 
           excerpt: data.excerpt || "Resumo gerado automaticamente pela IA.",
           content: data.content || "<p>Conteúdo gerado pela IA...</p>",
           categorySlug: data.categorySlug || "cidades",
-          coverImage: data.coverImage || "https://picsum.photos/1200/800?random=1"
+          coverImage: scrapedImage || ""
         };
       } catch (err: any) {
         console.error("[AI Generate Article ERROR]", err);

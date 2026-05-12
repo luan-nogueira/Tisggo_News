@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
-import { Sparkles, Plus, Edit2, Trash2, Eye, Search, Filter, Loader2, RefreshCw } from "lucide-react";
+import { Sparkles, Plus, Edit2, Trash2, Eye, Search, Filter, Loader2, RefreshCw, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ export default function AdminArticles() {
   const generateArticleMutation = trpc.ai.generateArticle.useMutation();
   const createArticleMutation = trpc.articles.create.useMutation();
   const automateNews = trpc.articles.automate.useMutation();
+  const uploadImageMutation = trpc.sponsors.uploadImage.useMutation();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -135,14 +136,44 @@ export default function AdminArticles() {
                   <div className="border-b border-border pb-2 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                     <div className="md:col-span-2 space-y-1">
                       <span className="text-[10px] font-black uppercase text-accent tracking-widest block">Imagem de Capa da Matéria:</span>
-                      <input 
-                        type="text" 
-                        value={aiResult.coverImage || ""} 
-                        onChange={(e) => setAiResult({ ...aiResult, coverImage: e.target.value })}
-                        placeholder="URL da imagem..."
-                        className="w-full bg-background border border-border rounded-lg p-2 text-xs text-foreground outline-none focus:border-accent"
-                      />
-                      <span className="text-[9px] text-muted-foreground block">A IA buscou esta imagem. Altere se necessário.</span>
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          value={aiResult.coverImage || ""} 
+                          onChange={(e) => setAiResult({ ...aiResult, coverImage: e.target.value })}
+                          placeholder="URL da imagem ou faça upload..."
+                          className="flex-1 bg-background border border-border rounded-lg p-2 text-xs text-foreground outline-none focus:border-accent"
+                        />
+                        <label className="bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30 rounded-lg px-3 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors flex-shrink-0">
+                          {uploadImageMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                          <span>Upload</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onloadend = async () => {
+                                try {
+                                  const res = await uploadImageMutation.mutateAsync({
+                                    base64: reader.result as string,
+                                    fileName: file.name,
+                                    contentType: file.type || "image/jpeg"
+                                  });
+                                  setAiResult(prev => ({ ...prev, coverImage: res.url }));
+                                  toast.success("Imagem enviada com sucesso!");
+                                } catch (err: any) {
+                                  toast.error("Erro no upload da imagem");
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }} 
+                          />
+                        </label>
+                      </div>
+                      <span className="text-[9px] text-muted-foreground block">A IA buscou da fonte original. Altere ou suba do seu PC se preferir.</span>
                     </div>
                     {aiResult.coverImage && (
                       <div className="h-20 rounded-xl overflow-hidden bg-muted border border-border relative">
