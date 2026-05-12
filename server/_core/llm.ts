@@ -24,9 +24,8 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
 
   // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa com o modelo confirmado pelo Discovery
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
-    // Usando gemini-1.5-flash pela altíssima obediência a esquemas JSON e quotas otimizadas
-    const model = "gemini-2.0-flash"; 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
+    // Array de alta disponibilidade: alterna quotas gratuitas distintas automaticamente em caso de exaustão
+    const modelsToTry = ["gemini-flash-lite-latest", "gemini-1.5-flash", "gemini-2.0-flash"];
     
     const contents = messages
       .filter(m => m.role !== "system")
@@ -51,22 +50,36 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
       };
     }
 
-    console.log(`[Gemini Native] Sending request to: ${url.replace(ENV.forgeApiKey, "***")}`);
-    
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    let lastErrorText = "";
+    for (const model of modelsToTry) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
+      console.log(`[Gemini Native] Attempting generation with quota tier: ${model}`);
+      
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[Gemini Native ERROR] Status: ${response.status} - Body: ${errorText}`);
-      throw new Error(`Gemini Native API failed: ${response.status} - ${errorText}`);
+        if (!response.ok) {
+          lastErrorText = await response.text();
+          console.warn(`[Gemini Native Warning] Tier ${model} returned status ${response.status}. Switching to backup quota bucket...`);
+          continue;
+        }
+
+        const data = await response.json();
+        const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (outputText) {
+          return outputText;
+        }
+      } catch (e: any) {
+        console.warn(`[Gemini Native Failover] Network error on ${model}: ${e.message}. Retrying next bucket...`);
+      }
     }
 
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar.";
+    console.error(`[Gemini Native EXHAUSTED] All native free-tier buckets consumed. Last API reply: ${lastErrorText}`);
+    // Se todos os buckets nativos estiverem esgotados, segue automaticamente para a proxy reserva da Manus/Forge
   }
 
   // Fallback (Forge/OpenAI)
