@@ -70,11 +70,18 @@ async function startServer() {
     }
   }, 10 * 60 * 1000); // 10 minutos
 
-  // Interceptador SSR de Open Graph para gerar cards ricos no WhatsApp e Redes Sociais
-  app.get("/article/:slug", async (req, res, next) => {
+  // Interceptador SSR de Open Graph universal para gerar cards ricos no WhatsApp e Redes Sociais
+  app.use(async (req, res, next) => {
+    const urlPath = req.path || req.url || "";
+    const match = urlPath.match(/\/article\/([^\/?#]+)/);
+    if (!match) {
+      return next();
+    }
+
+    const slug = match[1];
     try {
       const { getArticleBySlug } = await import("../db.js");
-      const article = await getArticleBySlug(req.params.slug);
+      const article = await getArticleBySlug(slug);
       
       if (!article) {
         return next();
@@ -96,17 +103,33 @@ async function startServer() {
         }
       }
 
-      if (!indexPath) {
-        return next();
+      let html = "";
+      if (indexPath) {
+        html = await fs.promises.readFile(indexPath, "utf-8");
+      } else {
+        // Fallback dinâmico garantido caso o arquivo estático principal não seja localizado no filesystem da Vercel
+        html = `<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tisgo News</title>
+    <link rel="icon" type="image/png" href="/news-icon.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>`;
       }
-
-      let html = await fs.promises.readFile(indexPath, "utf-8");
 
       const ogTitle = (article.title || "Tisgo News").replace(/"/g, '&quot;');
       const rawText = (article.excerpt || article.content || "").replace(/<[^>]*>/g, '');
       const ogDesc = (rawText.length > 160 ? rawText.substring(0, 160) + '...' : rawText).replace(/"/g, '&quot;');
       const ogImage = article.coverImage || "https://tisgonews.com/news-icon.png";
-      const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+      const host = req.get('host') || "tisgonews.com.br";
+      const protocol = host.includes("localhost") ? "http" : "https";
+      const fullUrl = `${protocol}://${host}/article/${slug}`;
 
       const metaTags = `
         <title>${ogTitle}</title>
@@ -115,6 +138,7 @@ async function startServer() {
         <meta property="og:image" content="${ogImage}" />
         <meta property="og:url" content="${fullUrl}" />
         <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Tisgo News" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="${ogTitle}" />
         <meta name="twitter:description" content="${ogDesc}" />
@@ -125,11 +149,16 @@ async function startServer() {
         // Limpa a tag title original para não duplicar
         html = html.replace(/<title>.*?<\/title>/i, "");
         html = html.replace("</head>", `${metaTags}</head>`);
+      } else {
+        html = `<head>${metaTags}</head>` + html;
       }
 
-      res.status(200).set({ "Content-Type": "text/html" }).send(html);
+      res.status(200).set({ 
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=300" 
+      }).send(html);
     } catch (err) {
-      console.error("[SSR Open Graph ERROR]", err);
+      console.error("[SSR Open Graph Universal ERROR]", err);
       next();
     }
   });

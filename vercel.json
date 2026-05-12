@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/**/*.ts": {
+      "includeFiles": "dist/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -10,6 +15,10 @@
     },
     {
       "source": "/manus-storage/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/article/(.*)",
       "destination": "/api"
     },
     {
