@@ -717,7 +717,11 @@ export async function automateNews() {
             successCount++;
             await updateStatus(`Postada com sucesso em ${categoryName}! (${successCount} total)`, progress, true);
 
-            results.push({ title: finalTitle, status: "success", source: source.name });
+            results.push({ title: aiProcessed.title, status: "success", source: source.name });
+            
+            // ── Controle de Ritmo Inteligente (Throttling) ──
+            // Aguarda 5 segundos entre as notícias para respeitar com segurança o teto de 15 RPM da camada gratuita
+            await new Promise(r => setTimeout(r, 5000));
           } catch (err) { }
         }
       } catch (err) {

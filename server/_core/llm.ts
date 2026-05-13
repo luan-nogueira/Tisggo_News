@@ -55,9 +55,29 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
     max_tokens,
   } = params;
 
-  // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa com o modelo confirmado pelo Discovery
-  if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
-    // Array de alta disponibilidade: alterna quotas gratuitas distintas automaticamente em caso de exaustão
+  // ── 1. Extração do Pool Dinâmico de Chaves de Alta Disponibilidade ──
+  const keysPool: string[] = [];
+  const addKey = (k?: string) => {
+    if (!k) return;
+    k.split(/[,;|]+/).forEach(part => {
+      const clean = part.trim();
+      if (clean && !keysPool.includes(clean)) keysPool.push(clean);
+    });
+  };
+
+  addKey(ENV.forgeApiKey);
+  if (typeof process !== "undefined" && process.env) {
+    Object.keys(process.env).forEach(keyName => {
+      if ((keyName.startsWith("GEMINI_API_KEY") || keyName.startsWith("FORGE_API_KEY")) && process.env[keyName]) {
+        addKey(process.env[keyName]);
+      }
+    });
+  }
+
+  // Filtra as chaves nativas do Gemini
+  const geminiKeys = keysPool.filter(k => k.startsWith("AIza") || k.startsWith("AQ."));
+
+  if (geminiKeys.length > 0) {
     const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash"];
     
     const contents = messages
@@ -75,7 +95,6 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
       ...(isJsonRequested ? { responseMimeType: "application/json" } : {})
     };
     
-    // Adiciona personalidade (system_instruction)
     const systemMessage = messages.find(m => m.role === "system");
     if (systemMessage) {
       body.system_instruction = {
@@ -85,11 +104,13 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
 
     let lastErrorText = "";
     let hadRateLimitError = false;
-    // Loop para tentar os modelos e fazer backoff se batermos no limite de quota (429)
-    for (let retry = 0; retry < 2; retry++) {
+
+    // Rotação: tenta em todas as chaves disponíveis no pool para somar e multiplicar os limites gratuitos
+    for (const currentKey of geminiKeys) {
+      const keyShort = currentKey.substring(0, 12) + "...";
       for (const model of modelsToTry) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
-        console.log(`[Gemini Native] Attempting generation with quota tier: ${model} (Retry: ${retry})`);
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${currentKey}`;
+        console.log(`[Gemini Native Pool] Attempting model ${model} with key ${keyShort}`);
         
         try {
           const response = await fetch(url, {
@@ -100,13 +121,12 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
 
           if (!response.ok) {
             lastErrorText = await response.text();
-            console.warn(`[Gemini Native Warning] Tier ${model} returned status ${response.status}. Switching to backup quota bucket...`);
+            console.warn(`[Gemini Native Warning] Model ${model} on key ${keyShort} returned status ${response.status}.`);
             
             if (response.status === 429) {
               hadRateLimitError = true;
-              const sleepTime = params.isInteractive ? 2000 : 20000;
-              console.log(`[Gemini Native] Rate limit hit. Sleeping for ${sleepTime/1000} seconds...`);
-              await new Promise(resolve => setTimeout(resolve, sleepTime));
+              console.log(`[Gemini Native Pool] Quota/Rate limit hit for key ${keyShort}. Rotating automatically to the next backup API key...`);
+              // Passamos imediatamente para a próxima chave sem travar a execução
             }
             continue;
           }
@@ -117,15 +137,15 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
             return outputText;
           }
         } catch (e: any) {
-          console.warn(`[Gemini Native Failover] Network error on ${model}: ${e.message}. Retrying next bucket...`);
+          console.warn(`[Gemini Native Network Error] ${model} on key ${keyShort}: ${e.message}. Testing next option...`);
         }
       }
     }
 
+    // Se todas as chaves do Gemini deram cota excedida, aplicamos um backoff suave e tentamos OpenAI se houver
     if (hadRateLimitError) {
-      console.error("[Gemini Native EXHAUSTED] Rate limits exceeded on all working models.");
+      console.error(`[Gemini Native EXHAUSTED] Rate limits exceeded on ALL ${geminiKeys.length} configured API keys.`);
       
-      // Fallback para OpenAI se houver chave configurada
       if (ENV.openaiApiKey) {
         try {
           return await invokeOpenAI(params);
@@ -134,14 +154,17 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
         }
       }
 
+      const sleepTime = params.isInteractive ? 2000 : 10000;
+      console.log(`[Gemini Native Pool] Sleeping for ${sleepTime/1000}s before giving up...`);
+      await new Promise(resolve => setTimeout(resolve, sleepTime));
+
       throw new Error(JSON.stringify({
         error: {
-          message: "A Inteligência Artificial do site está sobrecarregada ou atingiu o limite gratuito diário do Google. Por favor, tente novamente em alguns minutos."
+          message: "A Inteligência Artificial do site atingiu o limite gratuito diário. Dica: Adicione mais chaves gratuitas separadas por vírgula no painel para multiplicar seu limite!"
         }
       }));
     }
 
-    // Se falhou por outros motivos (404, etc), tenta OpenAI antes de desistir
     if (ENV.openaiApiKey) {
       try {
         return await invokeOpenAI(params);
@@ -150,7 +173,7 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
       }
     }
 
-    console.error(`[Gemini Native EXHAUSTED] All native free-tier buckets consumed. Last API reply: ${lastErrorText}`);
+    console.error(`[Gemini Native EXHAUSTED] All native options failed. Last API reply: ${lastErrorText}`);
     throw new Error(`Gemini API Error: ${lastErrorText}`);
   }
 
