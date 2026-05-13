@@ -23,6 +23,7 @@ import { automateNews } from "./automation.js";
 import { getBrasileirao, getBrasileiraoGames } from "./football.js";
 import { z } from "zod";
 import { storagePut } from "./storage.js";
+import { invokeLLM } from "./_core/llm.js";
 
 export const appRouter = router({
   system: systemRouter,
@@ -231,9 +232,6 @@ export const appRouter = router({
       })).optional()
     })).mutation(async ({ input }) => {
       try {
-        const { invokeLLM } = await import("./_core/llm.js");
-        const { getArticles } = await import("./db.js");
-        
         console.log(`[AI Chat] Pergunta recebida: "${input.question}"`);
 
         // Busca notícias recentes com timeout curto para não travar
@@ -299,7 +297,7 @@ ${weatherInfo}`;
           answer: response
         };
       } catch (err: any) {
-        console.error("[AI Chat ERROR]", err);
+        console.error("[AI Chat ERROR DETAILED]", err.stack || err);
         return {
           answer: "Desculpe, estou passando por uma manutenção técnica rápida. Por favor, tente novamente em alguns minutos!"
         };
@@ -309,8 +307,6 @@ ${weatherInfo}`;
     generateArticle: adminProcedure.input(z.object({
       prompt: z.string()
     })).mutation(async ({ input }) => {
-      const { invokeLLM } = await import("./_core/llm.js");
-      
       let scrapedImage = "";
       let realTimeWebContext = "";
       const urlMatch = input.prompt.match(/https?:\/\/[^\s]+/) || input.prompt.match(/www\.[^\s]+/);
