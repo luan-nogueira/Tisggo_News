@@ -245,10 +245,11 @@ export const appRouter = router({
 
         // Busca notícias recentes com timeout curto para não travar
         let newsContext = "Nenhuma notícia recente disponível no momento.";
+        let loadedArticles: any[] = [];
         try {
-          const recentArticles = await getArticles(10);
-          if (recentArticles && recentArticles.length > 0) {
-            newsContext = recentArticles.map(a => `- Título: "${a.title}" | Resumo: "${a.excerpt}"`).join("\n");
+          loadedArticles = await getArticles(10);
+          if (loadedArticles && loadedArticles.length > 0) {
+            newsContext = loadedArticles.map(a => `- Título: "${a.title}" | Resumo: "${a.excerpt}"`).join("\n");
           }
         } catch (dbErr) {
           console.error("[AI Chat] Erro ao buscar notícias:", dbErr);
@@ -271,6 +272,27 @@ export const appRouter = router({
           }
         } catch (e) {
           console.log("[AI Chat] Clima indisponível ou timeout.");
+        }
+
+        // ── Smart Local Agent (Respostas Locais Autônomas a Custo Zero) ──
+        // Intercepta e atende aos temas mais quentes (Trânsito, Clima e Últimas Notícias) usando os dados reais do portal
+        if (qClean.includes("transito") || qClean.includes("trânsito") || qClean.includes("engarrafamento") || qClean.includes("br-101") || qClean.includes("ponte")) {
+          const transitoNews = loadedArticles.find(a => a.title.toLowerCase().includes("trânsito") || a.title.toLowerCase().includes("acidente") || a.title.toLowerCase().includes("interdição") || a.title.toLowerCase().includes("br-101"));
+          if (transitoNews) {
+            return { answer: `Sobre o trânsito: "${transitoNews.title}". Confira os detalhes completos e atualizados na nossa matéria recente na capa do portal! 🚗💨` };
+          }
+          return { answer: "No momento, não registramos acidentes graves ou interdições nas principais vias de Campos dos Goytacazes e região nas últimas horas. O tráfego flui normalmente. Fique de olho nas nossas atualizações em tempo real! 🚦👍" };
+        }
+
+        if (qClean.includes("clima") || qClean.includes("tempo") || qClean.includes("chove") || qClean.includes("sol") || qClean.includes("temperatura") || qClean.includes("frio") || qClean.includes("calor")) {
+          const tempMatch = weatherInfo.match(/-?\d+°C/);
+          const tempStr = tempMatch ? tempMatch[0] : "agradável";
+          return { answer: `A previsão do tempo atual para Campos dos Goytacazes indica temperatura em torno de ${tempStr}. 🌤️ Para conferir a previsão detalhada e alertas da Defesa Civil, acompanhe a nossa seção de Cidades no portal!` };
+        }
+
+        if (qClean.includes("noticia") || qClean.includes("notícia") || qClean.includes("ultimas") || qClean.includes("últimas") || qClean.includes("aconteceu") || qClean.includes("novidade")) {
+          const topNews = loadedArticles.slice(0, 3).map(a => `• ${a.title}`).join("\n");
+          return { answer: `Aqui estão as nossas manchetes mais quentes do momento:\n\n${topNews || "Nenhuma matéria recente encontrada."}\n\nClique nos cards da capa para ler na íntegra! 📰🔥` };
         }
 
         const systemPrompt = `Você é o Assistente Virtual oficial do portal Tisgo News (focado em Campos dos Goytacazes, Macaé e região do Norte Fluminense).
