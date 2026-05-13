@@ -360,9 +360,10 @@
   .article-body-content,
   .article-body-content * {
     max-width: 100% !important;
-    overflow-wrap: break-word !important;
+    overflow-wrap: normal !important;
     word-break: normal !important;
-    white-space: pre-wrap !important;
+    word-wrap: normal !important;
+    white-space: normal !important;
     box-sizing: border-box !important;
     hyphens: none !important;
   }
