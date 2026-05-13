@@ -581,6 +581,10 @@ export async function automateNews() {
             // ──────────────────────────────────────────────────────────────────
 
             const slug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').trim();
+            if (await db.isUrlBlacklisted(slug)) {
+              console.log(`[Automation] Skipping blacklisted slug: ${slug}`);
+              continue;
+            }
             const existing = await db.getArticleBySlug(slug);
             if (existing) continue;
 

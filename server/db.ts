@@ -337,15 +337,15 @@ export async function deleteFromStorage(url: string) {
 // BLACKLIST
 export async function blacklistUrl(url: string) {
   try {
+    if (!url) return;
     const db = ensureDb();
-    // Use URL as document ID to avoid duplicates and allow easy checking
-    // We sanitize the URL to use as ID (replace non-alphanumeric with _)
-    const sanitizedId = Buffer.from(url).toString('base64');
+    // Sanitização infalível para IDs do Firestore (evita erro de subcoleção com barras do base64)
+    const sanitizedId = Buffer.from(url).toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
     await db.collection("deleted_urls").doc(sanitizedId).set({
       url,
       deletedAt: admin.firestore.Timestamp.now()
     });
-    console.log("[Firebase] URL blacklisted:", url);
+    console.log("[Firebase] URL/Slug blacklisted com sucesso:", url);
   } catch (error: any) {
     console.error("[Firebase] ERROR blacklisting URL:", error.message);
   }
@@ -353,8 +353,9 @@ export async function blacklistUrl(url: string) {
 
 export async function isUrlBlacklisted(url: string): Promise<boolean> {
   try {
+    if (!url) return false;
     const db = ensureDb();
-    const sanitizedId = Buffer.from(url).toString('base64');
+    const sanitizedId = Buffer.from(url).toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
     const doc = await db.collection("deleted_urls").doc(sanitizedId).get();
     return doc.exists;
   } catch (error: any) {

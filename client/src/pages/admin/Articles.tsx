@@ -22,6 +22,7 @@ export default function AdminArticles() {
   const [activeTab, setActiveTab] = useState<"drafts" | "published">("drafts");
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isAutomating, setIsAutomating] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiResult, setAiResult] = useState<any>(null);
 
@@ -46,13 +47,14 @@ export default function AdminArticles() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Tem certeza que deseja deletar este artigo?")) {
-      try {
-        await deleteMutation.mutateAsync(id);
-        refetch();
-      } catch (error) {
-        console.error("Erro ao deletar:", error);
-      }
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success("Artigo deletado permanentemente!");
+      setDeleteId(null);
+      refetch();
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+      toast.error("Erro ao deletar artigo.");
     }
   };
 
@@ -429,8 +431,7 @@ export default function AdminArticles() {
                       variant="ghost" 
                       size="icon" 
                       className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl w-10 h-10 border border-transparent hover:border-red-500/20"
-                      onClick={() => handleDelete(String(article.id))}
-                      disabled={deleteMutation.isPending}
+                      onClick={() => setDeleteId(String(article.id))}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -444,6 +445,41 @@ export default function AdminArticles() {
               <p className="text-gray-500 font-bold">Nenhum artigo encontrado para sua busca.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal Customizado Premium de Exclusão */}
+      {deleteId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-card border border-border p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl relative"
+          >
+            <div className="bg-red-500/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-500/20">
+              <Trash2 className="w-8 h-8 text-red-500 animate-pulse" />
+            </div>
+            <h3 className="text-2xl font-black uppercase text-foreground mb-3 tracking-tight">Tem certeza?</h3>
+            <p className="text-muted-foreground text-xs font-medium mb-8 leading-relaxed">
+              Esta ação não pode ser desfeita. A matéria será excluída permanentemente e enviada para a lista de bloqueados para não voltar mais.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button 
+                onClick={() => handleDelete(deleteId)}
+                className="bg-red-600 hover:bg-red-700 text-white font-black py-6 rounded-2xl text-xs tracking-wider shadow-lg shadow-red-600/20 border-none transition-all"
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "SIM, DELETAR NOTÍCIA"}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setDeleteId(null)}
+                className="font-black py-6 rounded-2xl border-border text-muted-foreground hover:text-foreground text-xs tracking-wider"
+              >
+                CANCELAR
+              </Button>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

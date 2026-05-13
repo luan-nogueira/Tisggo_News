@@ -65,6 +65,15 @@ export async function deleteArticle(id: string) {
     if (article?.sourceUrl) {
       await db.blacklistUrl(article.sourceUrl);
     }
+    if (article?.slug) {
+      // Dupla proteção: coloca o slug base na blacklist para que o scraper reconheça na releitura
+      await db.blacklistUrl(article.slug);
+      // Remove sufixo randômico se houver para blacklistar o slug puro também
+      const cleanSlug = article.slug.replace(/-[a-z0-9]{5,8}$/, "");
+      if (cleanSlug !== article.slug) {
+        await db.blacklistUrl(cleanSlug);
+      }
+    }
     await db.deleteArticle(id);
     return { success: true };
   } catch (error: any) {
