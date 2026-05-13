@@ -268,6 +268,16 @@ export default function ArticleForm() {
                   onChange={(val) => setFormData({ ...formData, content: val })}
                   placeholder="Escreva aqui o corpo da sua notícia..."
                   className="h-[350px]"
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                      [{ 'size': ['small', false, 'large', 'huge'] }],
+                      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                      ['link', 'image', 'video'],
+                      ['clean']
+                    ],
+                  }}
                 />
               </div>
             </div>

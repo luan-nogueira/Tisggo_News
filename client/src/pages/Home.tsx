@@ -58,12 +58,21 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAdvertiseOpen, setIsAdvertiseOpen] = useState(false);
 
-  const { data: sponsors } = trpc.sponsors.list.useQuery();
-  const sidebarSponsors = sponsors?.filter(s => s.location === 'sidebar' && s.active) || [];
-  const sidebarSponsor = sidebarSponsors[0];
-  const horizontalSponsor = sponsors?.find(s => s.location === 'horizontal_bottom' && s.active);
-  const middleSponsor = sponsors?.find(s => s.location === 'horizontal_middle' && s.active);
-  const topBannerSponsor = sponsors?.find(s => (s.location === 'top_banner' || s.location === 'top') && s.active);
+  const { data: rawSponsors } = trpc.sponsors.list.useQuery();
+  const [sponsors, setSponsors] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (rawSponsors) {
+      const activeSponsors = rawSponsors.filter(s => s.active);
+      const shuffled = [...activeSponsors].sort(() => 0.5 - Math.random());
+      setSponsors(shuffled);
+    }
+  }, [rawSponsors]);
+
+  const topBannerSponsor = sponsors[0];
+  const middleSponsor = sponsors[1];
+  const horizontalSponsor = sponsors[2];
+  const sidebarSponsors = sponsors.slice(3, 8);
 
 
   const { data: articles, isLoading: articlesLoading } = trpc.articles.list.useQuery();
@@ -247,7 +256,7 @@ export default function Home() {
                 {topBannerSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
                   <video 
                     src={topBannerSponsor.image} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[350px]" 
+                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                     autoPlay 
                     muted 
                     loop 
@@ -257,7 +266,7 @@ export default function Home() {
                   <img 
                     src={topBannerSponsor.image} 
                     alt={topBannerSponsor.name} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[350px]" 
+                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                   />
                 )}
               </div>
@@ -513,7 +522,7 @@ export default function Home() {
                       {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
                         <video 
                           src={sponsor.image} 
-                          className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[400px]" 
+                          className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                           autoPlay 
                           muted 
                           loop 
@@ -523,7 +532,7 @@ export default function Home() {
                         <img 
                           src={sponsor.image} 
                           alt={sponsor.name} 
-                          className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[400px]" 
+                          className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                         />
                       )}
                     </div>
@@ -627,7 +636,7 @@ export default function Home() {
                 {middleSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
                   <video 
                     src={middleSponsor.image} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[400px]" 
+                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                     autoPlay 
                     muted 
                     loop 
@@ -637,7 +646,7 @@ export default function Home() {
                   <img 
                     src={middleSponsor.image} 
                     alt={middleSponsor.name} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[400px]" 
+                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                   />
                 )}
               </div>
@@ -661,7 +670,7 @@ export default function Home() {
                 {horizontalSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
                   <video 
                     src={horizontalSponsor.image} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[400px]" 
+                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                     autoPlay 
                     muted 
                     loop 
@@ -671,7 +680,7 @@ export default function Home() {
                   <img 
                     src={horizontalSponsor.image} 
                     alt={horizontalSponsor.name} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[400px]" 
+                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                   />
                 )}
               </div>

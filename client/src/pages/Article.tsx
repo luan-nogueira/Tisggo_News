@@ -23,8 +23,16 @@ export default function Article() {
     { categoryId: article?.categoryId || "", orderBy: 'recent' },
     { enabled: !!article?.categoryId }
   );
-  const { data: sponsors } = trpc.sponsors.list.useQuery();
-  const sidebarSponsors = sponsors?.filter(s => s.location === 'sidebar' && s.active) || [];
+  const { data: rawSponsors } = trpc.sponsors.list.useQuery();
+  const [sidebarSponsors, setSidebarSponsors] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (rawSponsors) {
+      const activeSponsors = rawSponsors.filter(s => s.active);
+      const shuffled = [...activeSponsors].sort(() => 0.5 - Math.random());
+      setSidebarSponsors(shuffled.slice(0, 6)); // Display up to 6 random sponsors
+    }
+  }, [rawSponsors]);
 
   useSEO({
     title: article?.title || "Artigo",
@@ -256,7 +264,7 @@ export default function Article() {
           <div className="article-body-wrapper article-body-content">
             <div 
               className="prose prose-invert max-w-none text-foreground leading-relaxed"
-              style={{ overflowWrap: 'normal', wordBreak: 'normal', hyphens: 'none' }}
+              style={{ overflowWrap: 'break-word', wordBreak: 'break-word', hyphens: 'auto' }}
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(
                   (article.content.includes('<p') 
@@ -315,7 +323,7 @@ export default function Article() {
                     {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
                       <video 
                         src={sponsor.image} 
-                        className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[300px]" 
+                        className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                         autoPlay 
                         muted 
                         loop 
@@ -325,7 +333,7 @@ export default function Article() {
                       <img 
                         src={sponsor.image} 
                         alt={sponsor.name} 
-                        className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[300px]" 
+                        className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
                       />
                     )}
                   </div>
