@@ -329,7 +329,12 @@
 
   .news-ticker-content {
     display: inline-block;
-    animation: marquee 30s linear infinite;
+    animation: marquee 75s linear infinite;
+  }
+
+  /* Pausa a rolagem suavemente ao passar o mouse para facilitar a leitura */
+  .news-ticker:hover .news-ticker-content {
+    animation-play-state: paused;
   }
 
   @keyframes marquee {
