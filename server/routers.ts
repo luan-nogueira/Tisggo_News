@@ -434,7 +434,7 @@ Retorne o resultado estritamente no seguinte formato JSON puro (sem marcações 
         return {
           title: generatedTitle.length > 100 ? generatedTitle.substring(0, 97) + "..." : generatedTitle,
           excerpt: generatedExcerpt.length > 160 ? generatedExcerpt.substring(0, 157) + "..." : generatedExcerpt,
-          content: fallbackContent + "\n<p><em>Matéria apurada e estruturada com apoio de automação editorial Tisgo News.</em></p>",
+          content: fallbackContent + "\n<p><em>Matéria apurada e estruturada com apoio da Equipe editorial Tisgo News.</em></p>",
           categorySlug: "cidades",
           coverImage: scrapedImage || ""
         };

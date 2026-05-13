@@ -235,21 +235,34 @@ export default function AdminArticles() {
                   </div>
 
                   <div className="border-b border-border pb-2">
-                    <span className="text-[10px] font-black uppercase text-accent tracking-widest block">Título Sugerido:</span>
-                    <h3 className="text-lg font-bold text-foreground">{aiResult.title}</h3>
+                    <span className="text-[10px] font-black uppercase text-accent tracking-widest block mb-1">Título Sugerido:</span>
+                    <input 
+                      type="text" 
+                      value={aiResult.title || ""} 
+                      onChange={(e) => setAiResult({ ...aiResult, title: e.target.value })}
+                      className="w-full bg-background border border-border rounded-lg p-2 text-sm font-bold text-foreground outline-none focus:border-accent transition-colors"
+                    />
                   </div>
 
                   <div className="border-b border-border pb-2">
-                    <span className="text-[10px] font-black uppercase text-accent tracking-widest block">Resumo (Capa):</span>
-                    <p className="text-xs text-muted-foreground">{aiResult.excerpt}</p>
+                    <span className="text-[10px] font-black uppercase text-accent tracking-widest block mb-1">Resumo (Capa):</span>
+                    <textarea 
+                      rows={2}
+                      value={aiResult.excerpt || ""} 
+                      onChange={(e) => setAiResult({ ...aiResult, excerpt: e.target.value })}
+                      className="w-full bg-background border border-border rounded-lg p-2 text-xs text-foreground outline-none focus:border-accent transition-colors"
+                    />
                   </div>
 
                   <div>
                     <span className="text-[10px] font-black uppercase text-accent tracking-widest block mb-1">Notícia Completa para Aprovação (HTML):</span>
-                    <div 
-                      className="text-xs text-foreground/90 bg-muted/30 p-3 rounded-lg max-h-40 overflow-y-auto border border-border space-y-2 prose prose-invert"
-                      dangerouslySetInnerHTML={{ __html: aiResult.content }}
+                    <textarea 
+                      rows={7}
+                      value={aiResult.content || ""} 
+                      onChange={(e) => setAiResult({ ...aiResult, content: e.target.value })}
+                      className="w-full font-mono text-xs text-foreground/90 bg-background p-3 rounded-lg border border-border outline-none focus:border-accent transition-colors leading-relaxed"
                     />
+                    <span className="text-[9px] text-muted-foreground block mt-1">Dica: Você pode editar e customizar as tags HTML ou o texto livremente antes de publicar.</span>
                   </div>
                 </div>
               )}

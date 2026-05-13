@@ -7,12 +7,30 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 
-// Lazy loading components for performance
-const Admin = lazy(() => import("@/pages/Admin"));
-const Home = lazy(() => import("@/pages/Home"));
-const Article = lazy(() => import("@/pages/Article"));
-const Category = lazy(() => import("@/pages/Category"));
-const Search = lazy(() => import("@/pages/Search"));
+// Interceptador avançado para falhas de carregamento de módulos dinâmicos após novos deploys
+const lazyWithRetry = (componentImport: () => Promise<any>) =>
+  lazy(async () => {
+    const pageForceRefreshed = sessionStorage.getItem('page-force-refreshed') === 'true';
+    try {
+      const component = await componentImport();
+      sessionStorage.setItem('page-force-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageForceRefreshed) {
+        sessionStorage.setItem('page-force-refreshed', 'true');
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw error;
+    }
+  });
+
+// Lazy loading components for performance with automatic fallback reload
+const Admin = lazyWithRetry(() => import("@/pages/Admin"));
+const Home = lazyWithRetry(() => import("@/pages/Home"));
+const Article = lazyWithRetry(() => import("@/pages/Article"));
+const Category = lazyWithRetry(() => import("@/pages/Category"));
+const Search = lazyWithRetry(() => import("@/pages/Search"));
 
 function Router() {
   return (
