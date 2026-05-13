@@ -12,7 +12,7 @@ import { Link } from "wouter";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import DOMPurify from "dompurify";
 import { Header } from "@/components/Header";
-
+import { SponsorBanner } from "@/components/SponsorBanner";
 
 export default function Article() {
   const { slug } = useParams<{ slug: string }>();
@@ -147,35 +147,7 @@ export default function Article() {
           {/* Article Top Sponsor */}
           {articleTopSponsor && (
             <div className="mb-8 mt-2">
-              <div 
-                className="w-full bg-card border border-accent/20 rounded-xl group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg block"
-                onClick={() => {
-                  if (articleTopSponsor.whatsapp) window.open(articleTopSponsor.whatsapp, '_blank');
-                  else if (articleTopSponsor.instagram) window.open(articleTopSponsor.instagram, '_blank');
-                }}
-              >
-                <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
-                  {articleTopSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-                    <video 
-                      src={articleTopSponsor.image} 
-                      className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                      autoPlay 
-                      muted 
-                      loop 
-                      playsInline 
-                    />
-                  ) : (
-                    <img 
-                      src={articleTopSponsor.image} 
-                      alt={articleTopSponsor.name} 
-                      className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                    />
-                  )}
-                </div>
-                <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
-                  Patrocinador
-                </div>
-              </div>
+              <SponsorBanner sponsor={articleTopSponsor} />
             </div>
           )}
 
@@ -307,10 +279,10 @@ export default function Article() {
         )}
 
         <div className="w-full max-w-4xl mx-auto px-4 mt-8 mb-12 overflow-hidden">
-          <div className="article-body-wrapper article-body-content [&_*]:!whitespace-normal [&_*]:!break-words [&_*]:!max-w-full">
+          <div className="article-body-wrapper article-body-content [&_*]:!whitespace-normal [&_*]:!max-w-full">
             <div 
               className="prose prose-invert max-w-none text-foreground leading-relaxed"
-              style={{ overflowWrap: 'break-word', wordBreak: 'break-word', hyphens: 'auto' }}
+              style={{ overflowWrap: 'break-word', hyphens: 'none' }}
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(
                   (article.content.includes('<p') 
@@ -420,35 +392,7 @@ export default function Article() {
         {/* Article Bottom Sponsor */}
         {articleBottomSponsor && (
           <div className="max-w-4xl mx-auto mb-12">
-            <div 
-              className="w-full bg-card border border-accent/20 rounded-xl group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg block"
-              onClick={() => {
-                if (articleBottomSponsor.whatsapp) window.open(articleBottomSponsor.whatsapp, '_blank');
-                else if (articleBottomSponsor.instagram) window.open(articleBottomSponsor.instagram, '_blank');
-              }}
-            >
-              <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
-                {articleBottomSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-                  <video 
-                    src={articleBottomSponsor.image} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                    autoPlay 
-                    muted 
-                    loop 
-                    playsInline 
-                  />
-                ) : (
-                  <img 
-                    src={articleBottomSponsor.image} 
-                    alt={articleBottomSponsor.name} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                  />
-                )}
-              </div>
-              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
-                Patrocinador
-              </div>
-            </div>
+            <SponsorBanner sponsor={articleBottomSponsor} />
           </div>
         )}
 

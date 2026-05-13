@@ -12,8 +12,7 @@ import { FootballWidget } from "@/components/FootballWidget";
 import { AdvertiseModal } from "@/components/AdvertiseModal";
 import { Header } from "@/components/Header";
 import { getCategoryEmoji } from "@/lib/utils";
-
-
+import { SponsorBanner } from "@/components/SponsorBanner";
 
 const renderMedia = (url: string, alt: string, className: string, hasVideo?: boolean, hideIcon?: boolean) => {
   const isVideo = url.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i);
@@ -254,35 +253,7 @@ export default function Home() {
       <main className="max-w-[1600px] mx-auto px-4 py-8">
         {topBannerSponsor && (
           <div className="mb-8">
-            <div 
-              className="w-full bg-card border border-accent/20 rounded-xl group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg block"
-              onClick={() => {
-                if (topBannerSponsor.whatsapp) window.open(topBannerSponsor.whatsapp, '_blank');
-                else if (topBannerSponsor.instagram) window.open(topBannerSponsor.instagram, '_blank');
-              }}
-            >
-              <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
-                {topBannerSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-                  <video 
-                    src={topBannerSponsor.image} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                    autoPlay 
-                    muted 
-                    loop 
-                    playsInline 
-                  />
-                ) : (
-                  <img 
-                    src={topBannerSponsor.image} 
-                    alt={topBannerSponsor.name} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                  />
-                )}
-              </div>
-              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
-                Patrocinador
-              </div>
-            </div>
+            <SponsorBanner sponsor={topBannerSponsor} />
           </div>
         )}
 
@@ -605,35 +576,7 @@ export default function Home() {
             
             {homeSportsSponsor && (
               <div className="mt-6 mb-6">
-                <div 
-                  className="w-full bg-card border border-accent/20 rounded-xl group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg block"
-                  onClick={() => {
-                    if (homeSportsSponsor.whatsapp) window.open(homeSportsSponsor.whatsapp, '_blank');
-                    else if (homeSportsSponsor.instagram) window.open(homeSportsSponsor.instagram, '_blank');
-                  }}
-                >
-                  <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
-                    {homeSportsSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-                      <video 
-                        src={homeSportsSponsor.image} 
-                        className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                        autoPlay 
-                        muted 
-                        loop 
-                        playsInline 
-                      />
-                    ) : (
-                      <img 
-                        src={homeSportsSponsor.image} 
-                        alt={homeSportsSponsor.name} 
-                        className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                      />
-                    )}
-                  </div>
-                  <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
-                    Patrocinador
-                  </div>
-                </div>
+                <SponsorBanner sponsor={homeSportsSponsor} />
               </div>
             )}
             
@@ -668,69 +611,13 @@ export default function Home() {
 
         {middleSponsor && (
           <div className="mb-12">
-            <div 
-              className="w-full bg-card border border-accent/20 rounded-xl group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg block"
-              onClick={() => {
-                if (middleSponsor.whatsapp) window.open(middleSponsor.whatsapp, '_blank');
-                else if (middleSponsor.instagram) window.open(middleSponsor.instagram, '_blank');
-              }}
-            >
-              <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
-                {middleSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-                  <video 
-                    src={middleSponsor.image} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                    autoPlay 
-                    muted 
-                    loop 
-                    playsInline 
-                  />
-                ) : (
-                  <img 
-                    src={middleSponsor.image} 
-                    alt={middleSponsor.name} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                  />
-                )}
-              </div>
-              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
-                Patrocinador
-              </div>
-            </div>
+            <SponsorBanner sponsor={middleSponsor} />
           </div>
         )}
 
         {horizontalSponsor && (
           <div className="mb-12">
-            <div 
-              className="w-full bg-card border border-accent/20 rounded-xl group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg block"
-              onClick={() => {
-                if (horizontalSponsor.whatsapp) window.open(horizontalSponsor.whatsapp, '_blank');
-                else if (horizontalSponsor.instagram) window.open(horizontalSponsor.instagram, '_blank');
-              }}
-            >
-              <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
-                {horizontalSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-                  <video 
-                    src={horizontalSponsor.image} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                    autoPlay 
-                    muted 
-                    loop 
-                    playsInline 
-                  />
-                ) : (
-                  <img 
-                    src={horizontalSponsor.image} 
-                    alt={horizontalSponsor.name} 
-                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
-                  />
-                )}
-              </div>
-              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
-                Patrocinador
-              </div>
-            </div>
+            <SponsorBanner sponsor={horizontalSponsor} />
           </div>
         )}
 

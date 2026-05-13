@@ -39,7 +39,7 @@ export default function AdminSponsors() {
   const [formState, setFormState] = useState({
     name: "",
     image: "",
-    location: "sidebar" as 'sidebar' | 'horizontal_bottom' | 'top_banner' | 'horizontal_middle',
+    location: "",
     whatsapp: "",
     instagram: ""
   });
@@ -55,7 +55,7 @@ export default function AdminSponsors() {
         instagram: currentSponsor.instagram || ""
       });
     } else {
-      setFormState({ name: "", image: "", location: "sidebar", whatsapp: "", instagram: "" });
+      setFormState({ name: "", image: "", location: "", whatsapp: "", instagram: "" });
     }
   }, [currentSponsor]);
 
@@ -116,6 +116,10 @@ export default function AdminSponsors() {
       toast.error("Preencha o nome e a imagem!");
       return;
     }
+    if (!formState.location) {
+      toast.error("Selecione a Localização no Site!");
+      return;
+    }
 
     upsertMutation.mutate({
       id: currentSponsor?.id,
@@ -141,7 +145,7 @@ export default function AdminSponsors() {
           <Button onClick={() => { 
             setIsEditing(true); 
             setCurrentSponsor(null);
-            setFormState({ name: "", image: "", location: "sidebar", whatsapp: "", instagram: "" });
+            setFormState({ name: "", image: "", location: "", whatsapp: "", instagram: "" });
           }} className="bg-accent text-black font-bold w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" /> Novo Patrocinador
           </Button>
@@ -254,7 +258,7 @@ export default function AdminSponsors() {
                     onValueChange={(v: any) => setFormState(p => ({ ...p, location: v }))}
                   >
                     <SelectTrigger className="bg-muted border-border text-foreground">
-                      <SelectValue />
+                      <SelectValue placeholder="Selecione um local..." />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
                       <SelectItem value="top_banner">Home - Topo Principal</SelectItem>

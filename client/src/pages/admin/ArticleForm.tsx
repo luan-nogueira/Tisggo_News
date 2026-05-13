@@ -192,8 +192,8 @@ export default function ArticleForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sidebar — aparece primeiro no mobile */}
-        <div className="space-y-6 lg:order-2 lg:col-start-3 lg:row-start-1">
+        {/* Main Content Area — Title and Content */}
+        <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 space-y-6">
           <Card className="bg-card border-border rounded-[32px] overflow-hidden p-8 space-y-8">
             <div className="space-y-6">
               <div className="flex items-center gap-2 text-accent">
@@ -284,8 +284,8 @@ export default function ArticleForm() {
           </Card>
         </div>
 
-        {/* Main Content Area — ocupa as 2 colunas no desktop */}
-        <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 space-y-6">
+        {/* Sidebar — Settings and Media */}
+        <div className="space-y-6 lg:order-2 lg:col-start-3 lg:row-start-1">
           {/* Metadata Card */}
           <Card className="bg-card border-border rounded-[32px] p-6 space-y-6 shadow-sm">
             <div className="flex items-center gap-2 text-accent">
