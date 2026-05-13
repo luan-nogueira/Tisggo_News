@@ -282,7 +282,7 @@ export default function Article() {
           <div className="article-body-wrapper article-body-content [&_*]:!max-w-full">
             <div 
               className="prose prose-invert max-w-none text-foreground leading-relaxed"
-              style={{ overflowWrap: 'normal', wordBreak: 'normal', hyphens: 'none' }}
+              style={{ overflowWrap: 'break-word', wordBreak: 'normal', whiteSpace: 'pre-wrap', hyphens: 'none' }}
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(
                   (article.content.includes('<p') 

@@ -355,9 +355,9 @@
   .article-body-content,
   .article-body-content * {
     max-width: 100% !important;
-    overflow-wrap: normal !important;
+    overflow-wrap: break-word !important;
     word-break: normal !important;
-    white-space: normal !important;
+    white-space: pre-wrap !important;
     box-sizing: border-box !important;
     hyphens: none !important;
   }
