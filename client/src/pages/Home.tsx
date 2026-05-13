@@ -236,8 +236,12 @@ export default function Home() {
   const renderMobileSponsor = (index: number) => {
     const pool = mobileSponsorsPool.length > 0 ? mobileSponsorsPool : sidebarSponsors;
     if (!pool || pool.length === 0) return null;
-    // Rodízio Circular garantido via módulo infalível
-    const sponsor = pool[index % pool.length];
+    
+    // Barreira absoluta anti-duplicação: se o índice for maior/igual ao total de anunciantes ativos,
+    // aborta a injeção para não repetir o mesmo banner na mesma rolagem do celular!
+    if (index >= pool.length) return null;
+    
+    const sponsor = pool[index];
     if (!sponsor) return null;
     return (
       <div className="block lg:hidden my-6 px-1">
@@ -405,12 +409,12 @@ export default function Home() {
                         {/* Anúncio intercalado perfeitamente no MEIO das últimas notícias no celular */}
                         {idx === 2 && (
                           <div className="block md:hidden col-span-1">
-                            {renderMobileSponsor(3)}
+                            {renderMobileSponsor(1)}
                           </div>
                         )}
                         {idx === 4 && (
                           <div className="block md:hidden col-span-1">
-                            {renderMobileSponsor(4)}
+                            {renderMobileSponsor(2)}
                           </div>
                         )}
                         <Link 
