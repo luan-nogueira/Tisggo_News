@@ -13,18 +13,13 @@ export const SponsorBanner = ({ sponsor }: { sponsor: any }) => {
       <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
         Patrocinador
       </div>
-      <div className="w-full relative overflow-hidden flex items-center justify-center bg-gray-950 flex-grow min-h-[100px]">
-        {/* Fundo ambiente borrado para preencher os espaços laterais elegantemente */}
+      <div className="w-full relative overflow-hidden flex items-center justify-center bg-card flex-grow">
+        {/* Overlay premium suave para emoldurar a arte e dar profundidade editorial */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10 z-10 pointer-events-none" />
         {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-          <video src={sponsor.image} className="absolute inset-0 w-full h-full object-cover scale-125 blur-xl opacity-40 pointer-events-none" autoPlay muted loop playsInline />
+          <video src={sponsor.image} className="w-full h-auto block object-cover group-hover:scale-105 transition-all duration-700 max-h-[200px] md:max-h-[145px]" autoPlay muted loop playsInline />
         ) : (
-          <img src={sponsor.image} alt="" className="absolute inset-0 w-full h-full object-cover scale-125 blur-xl opacity-40 pointer-events-none" />
-        )}
-        {/* Imagem principal integral sem cortes */}
-        {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-          <video src={sponsor.image} className="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[100px]" autoPlay muted loop playsInline />
-        ) : (
-          <img src={sponsor.image} alt={sponsor.name} className="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[100px]" />
+          <img src={sponsor.image} alt={sponsor.name} className="w-full h-auto block object-cover group-hover:scale-105 transition-all duration-700 max-h-[200px] md:max-h-[145px]" />
         )}
       </div>
       {(sponsor.instagram || sponsor.whatsapp) && (
