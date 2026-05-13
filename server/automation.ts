@@ -177,19 +177,33 @@ const SOURCES: NewsSource[] = [
 ];
 
 const FORBIDDEN_WORDS = [
+  // Portais Locais e Regionais
   /Ururau/gi, /Portal Ururau/gi, /ururau\.com\.br/gi,
   /Campos Ocorrências/gi, /camposocorrencias\.com\.br/gi,
-  /Prefeitura de Campos/gi, /campos\.rj\.gov\.br/gi, /Prefeitura de São João da Barra/gi, /Prefeitura de SJB/gi, /sjb\.rj\.gov\.br/gi,
-  /Globo Esporte/gi, /Globo\.com/gi, /GE\.com/gi, /\bGE\b/g, /\bGlobo\b/g,
-  /Reprodução/gi, /Foto:\s*[^<]*/gi, /Fonte:\s*[^<]*/gi,
+  /J3\s*News/gi, /j3news\.com/gi, /j3news/gi, /Jornal Terceira Via/gi, /Terceira Via/gi,
+  /NF\s*Notícias/gi, /nfnoticias\.com\.br/gi, /nfnoticias/gi,
+  /Manchete\s*RJ/gi, /mancheterj\.com/gi, /mancheterj/gi,
+  /Folha da Manhã/gi, /fmanha\.com\.br/gi, /fmanha/gi, /Blog do Bastos/gi, /Ponto de Vista/gi,
+  /InterTV/gi, /Inter\s*TV/gi, /Plície/gi,
+
+  // Prefeituras e Assessorias
+  /Prefeitura de Campos/gi, /campos\.rj\.gov\.br/gi, /Prefeitura de São João da Barra/gi, /Prefeitura de SJB/gi, /sjb\.rj\.gov\.br/gi, /Secom/gi, /Subcom/gi, /Assessoria de Comunicação/gi,
+
+  // Nacionais / Esportes
+  /Globo Esporte/gi, /Globo\.com/gi, /GE\.com/gi, /\bGE\b/g, /\bGlobo\b/g, /\bg1\b/gi, /Portal g1/gi,
+  /UOL/gi, /uol\.com\.br/gi, /UOL Esporte/gi,
+  /ESPN/g, /espn\.com\.br/gi, /Siga a ESPN.*?no WhatsApp/gi,
+
+  // Expressões genéricas de jornais
+  /Reprodução/gi, /Foto:\s*[^<]*/gi, /Fonte:\s*[^<]*/gi, /Créditos:\s*[^<]*/gi,
   /Leia também:[^<]*/gi, /Confira abaixo:[^<]*/gi,
-  /Inscreva-se no canal[^<]*/gi, /Siga o g1[^<]*/gi,
+  /Inscreva-se no canal[^<]*/gi, /Siga o g1[^<]*/gi, /Siga o canal[^<]*/gi,
   /Siga o canal.*?no WhatsApp/gi, /📱[^<]*/gi,
   /Veja também:[^<]*/gi, /LEIA TAMBÉM:[^<]*/gi,
   /Aviso importante: a total ou parcial[^.]*/gi,
   /reproduzir nosso conteúdo, entre em contato[^.]*/gi,
   /comercial@[^.]*/gi,
-  /ESPN/g, /espn\.com\.br/gi, /Siga a ESPN.*?no WhatsApp/gi
+  /Matéria retirada do portal/gi, /Conteúdo extraído de/gi,
 ];
 
 // Palavras/frases que indicam conteúdo patrocinado/pago — esses artigos são ignorados completamente
@@ -242,7 +256,7 @@ DIRETRIZES DE OURO:
 2. GRAMÁTICA E REVISÃO: Sua saída deve ser IMPECÁVEL. Corrija erros de digitação da fonte original, una palavras que vieram quebradas (ex: "Norte Flumin ense" -> "Norte Fluminense") e nunca corte frases.
 3. ESTILO TISGO: Use um tom profissional, mas ágil e moderno. Se a notícia for de urgência (polícia/acidente), use um tom mais direto. Se for cultura/cidade, use um tom mais leve.
 4. FOCO LOCAL: Valorize informações sobre Campos dos Goytacazes, São João da Barra e região Norte Fluminense.
-5. LIMPEZA ABSOLUTA: Remova qualquer rastro de outros portais (G1, Ururau, NF Notícias, etc), nomes de repórteres externos ou convites para redes sociais alheias.
+5. LIMPEZA IMPLACÁVEL (Outros Jornais): Sob nenhuma hipótese mencione nomes de outros portais ou jornais no texto gerado (ex: G1, Globo, GE, Ururau, NF Notícias, J3 News, Terceira Via, Manchete RJ, Folha da Manhã, UOL, ESPN, InterTV, etc.). Se a matéria original citar "Segundo o jornal X", reformule para "Segundo relatos da imprensa local" ou apenas remova a atribuição externa. Remova nomes de repórteres de outras empresas, links e convites para redes sociais ou WhatsApp.
 6. FORMATAÇÃO: Use tags <p> para parágrafos e <strong> para destacar nomes de pessoas, locais ou entidades importantes.
 7. ISOLAMENTO DA NOTÍCIA PRINCIPAL: O texto bruto fornecido pode conter, por engano de raspagem do site original, pedaços, manchetes ou resumos de OUTRAS notícias (ex: listagens de "leia também", "últimas notícias" ou barras laterais). IGNORE COMPLETAMENTE qualquer informação que não esteja diretamente conectada com o assunto principal do "Título Original". Em hipótese alguma misture fatos ou eventos de outras notícias no texto gerado.
 
@@ -569,6 +583,57 @@ export async function automateNews() {
             const slug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').trim();
             const existing = await db.getArticleBySlug(slug);
             if (existing) continue;
+
+            // ── Validação rigorosa de Antiguidade: Notícias de no máximo 12 horas ──
+            let articleDate: Date | null = null;
+            const pubDateStr = $art('meta[property="article:published_time"]').attr('content') ||
+                               $art('meta[property="og:updated_time"]').attr('content') ||
+                               $art('meta[name="pubdate"]').attr('content') ||
+                               $art('meta[name="date"]').attr('content') ||
+                               $art('time[itemprop="datePublished"]').attr('datetime') ||
+                               $art('time').first().attr('datetime');
+
+            if (pubDateStr) {
+              const parsed = new Date(pubDateStr);
+              if (!isNaN(parsed.getTime())) articleDate = parsed;
+            }
+
+            if (!articleDate) {
+              const headerText = $art('header, .post-header, .entry-header, .data-hora, .time, .date, .publicado, .author, .byline, .td-post-date').text() || "";
+              const dateRegex = /(\d{2})\/(\d{2})\/(\d{4})(?:\s*(?:às|-)?\s*(\d{2})[:h](\d{2}))?/i;
+              const match = headerText.match(dateRegex);
+              if (match) {
+                const day = parseInt(match[1]);
+                const month = parseInt(match[2]) - 1;
+                const year = parseInt(match[3]);
+                const hours = match[4] ? parseInt(match[4]) : 0;
+                const minutes = match[5] ? parseInt(match[5]) : 0;
+                articleDate = new Date(year, month, day, hours, minutes);
+              }
+            }
+
+            if (articleDate) {
+              const hoursOld = (Date.now() - articleDate.getTime()) / (1000 * 60 * 60);
+              if (hoursOld > 12) {
+                console.log(`[Automation] Ignorando notícia velha (${Math.round(hoursOld)}h atrás, limite é 12h): "${title}"`);
+                continue;
+              }
+            } else {
+              // Checa se a URL denuncia uma data antiga
+              const urlDateMatch = link.match(/\/(\d{4})\/(\d{2})\/(\d{2})\//);
+              if (urlDateMatch) {
+                const year = parseInt(urlDateMatch[1]);
+                const month = parseInt(urlDateMatch[2]) - 1;
+                const day = parseInt(urlDateMatch[3]);
+                const urlDate = new Date(year, month, day);
+                const hoursOld = (Date.now() - urlDate.getTime()) / (1000 * 60 * 60);
+                if (hoursOld > 24) {
+                  console.log(`[Automation] Ignorando notícia com data antiga na URL: "${title}"`);
+                  continue;
+                }
+              }
+            }
+            // ────────────────────────────────────────────────────────────────────────
 
             console.log(`[Automation] Extracting details for: "${title}"`);
             await updateStatus(`Encontrei uma notícia: ${title.substring(0, 30)}...`, progress, true);
