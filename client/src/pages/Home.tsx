@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Zap, Instagram, MessageCircle, Facebook, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
@@ -59,10 +59,16 @@ export default function Home() {
 
   const { data: rawSponsors } = trpc.sponsors.list.useQuery();
   const [sponsorsMap, setSponsorsMap] = useState<Record<string, any[]>>({});
+  const [mobileSponsorsPool, setMobileSponsorsPool] = useState<any[]>([]);
 
   useEffect(() => {
     if (rawSponsors) {
       const activeSponsors = rawSponsors.filter(s => s.active);
+      
+      // Rodízio Universal Dinâmico: Embaralha do zero todos os anunciantes ativos a cada F5 / atualização de página
+      const shuffledUniversal = [...activeSponsors].sort(() => 0.5 - Math.random());
+      setMobileSponsorsPool(shuffledUniversal);
+
       const grouped: Record<string, any[]> = {};
       activeSponsors.forEach(s => {
         if (!grouped[s.location]) grouped[s.location] = [];
@@ -228,7 +234,10 @@ export default function Home() {
 
   // ── Distribuição Otimizada e Compacta de Patrocinadores para Mobile ──
   const renderMobileSponsor = (index: number) => {
-    const sponsor = sidebarSponsors[index];
+    const pool = mobileSponsorsPool.length > 0 ? mobileSponsorsPool : sidebarSponsors;
+    if (!pool || pool.length === 0) return null;
+    // Rodízio Circular garantido via módulo infalível
+    const sponsor = pool[index % pool.length];
     if (!sponsor) return null;
     return (
       <div className="block lg:hidden my-6 px-1">
@@ -391,48 +400,60 @@ export default function Home() {
                     Últimas Notícias
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {gridArticles.map((article: any) => (
-                      <Link 
-                        key={article.id} 
-                        href={`/article/${article.slug || article.id}`} 
-                        className="group block"
-                        onMouseEnter={() => {
-                          utils.articles.bySlug.prefetch(article.slug || article.id);
-                        }}
-                      >
-                        <div className="bg-card border border-border hover:border-accent transition-all duration-300 rounded overflow-hidden hover:shadow-lg hover:shadow-accent/20">
-                          <div className="relative overflow-hidden bg-gray-800 aspect-video">
-                            {article.coverImage || article.videoUrl ? (
-                              renderMedia(article.coverImage || "", article.title, "w-full h-full object-cover group-hover:scale-110 transition-transform duration-500", !!article.videoUrl)
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5" />
-                            )}
+                    {gridArticles.map((article: any, idx: number) => (
+                      <React.Fragment key={article.id}>
+                        {/* Anúncio intercalado perfeitamente no MEIO das últimas notícias no celular */}
+                        {idx === 2 && (
+                          <div className="block md:hidden col-span-1">
+                            {renderMobileSponsor(3)}
                           </div>
-                          <div className="p-4">
-                            <Badge className="bg-accent text-black hover:bg-yellow-500 text-xs font-bold mb-2">
-                              {categories?.find(c => String(c.id) === String(article.categoryId))?.name}
-                            </Badge>
-                            <h3 className="text-base font-bold font-sans text-foreground mb-2 line-clamp-2 group-hover:text-accent transition-colors leading-tight">
-                              {article.title}
-                            </h3>
-                            <p className="text-xs text-gray-400 line-clamp-2 mb-3">
-                              {(() => {
-                                const text = (article.excerpt || article.content).replace(/<[^>]*>/g, '');
-                                if (text.length <= 100) return text;
-                                const truncated = text.substring(0, 100);
-                                return truncated.substring(0, Math.max(truncated.lastIndexOf(' '), 0)) + '...';
-                              })()}
-                            </p>
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                              <span>{formatDate(article.publishedAt || article.createdAt)}</span>
-                              <div className="flex items-center gap-1">
-                                <Eye className="w-3 h-3" />
-                                <span>{article.views || 0}</span>
+                        )}
+                        {idx === 4 && (
+                          <div className="block md:hidden col-span-1">
+                            {renderMobileSponsor(4)}
+                          </div>
+                        )}
+                        <Link 
+                          href={`/article/${article.slug || article.id}`} 
+                          className="group block"
+                          onMouseEnter={() => {
+                            utils.articles.bySlug.prefetch(article.slug || article.id);
+                          }}
+                        >
+                          <div className="bg-card border border-border hover:border-accent transition-all duration-300 rounded overflow-hidden hover:shadow-lg hover:shadow-accent/20">
+                            <div className="relative overflow-hidden bg-gray-800 aspect-video">
+                              {article.coverImage || article.videoUrl ? (
+                                renderMedia(article.coverImage || "", article.title, "w-full h-full object-cover group-hover:scale-110 transition-transform duration-500", !!article.videoUrl)
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5" />
+                              )}
+                            </div>
+                            <div className="p-4">
+                              <Badge className="bg-accent text-black hover:bg-yellow-500 text-xs font-bold mb-2">
+                                {categories?.find(c => String(c.id) === String(article.categoryId))?.name}
+                              </Badge>
+                              <h3 className="text-base font-bold font-sans text-foreground mb-2 line-clamp-2 group-hover:text-accent transition-colors leading-tight">
+                                {article.title}
+                              </h3>
+                              <p className="text-xs text-gray-400 line-clamp-2 mb-3">
+                                {(() => {
+                                  const text = (article.excerpt || article.content).replace(/<[^>]*>/g, '');
+                                  if (text.length <= 100) return text;
+                                  const truncated = text.substring(0, 100);
+                                  return truncated.substring(0, Math.max(truncated.lastIndexOf(' '), 0)) + '...';
+                                })()}
+                              </p>
+                              <div className="flex items-center justify-between text-xs text-gray-500">
+                                <span>{formatDate(article.publishedAt || article.createdAt)}</span>
+                                <div className="flex items-center gap-1">
+                                  <Eye className="w-3 h-3" />
+                                  <span>{article.views || 0}</span>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </Link>
+                        </Link>
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
