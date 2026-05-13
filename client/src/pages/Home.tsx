@@ -59,20 +59,29 @@ export default function Home() {
   const [isAdvertiseOpen, setIsAdvertiseOpen] = useState(false);
 
   const { data: rawSponsors } = trpc.sponsors.list.useQuery();
-  const [sponsors, setSponsors] = useState<any[]>([]);
+  const [sponsorsMap, setSponsorsMap] = useState<Record<string, any[]>>({});
 
   useEffect(() => {
     if (rawSponsors) {
       const activeSponsors = rawSponsors.filter(s => s.active);
-      const shuffled = [...activeSponsors].sort(() => 0.5 - Math.random());
-      setSponsors(shuffled);
+      const grouped: Record<string, any[]> = {};
+      activeSponsors.forEach(s => {
+        if (!grouped[s.location]) grouped[s.location] = [];
+        grouped[s.location].push(s);
+      });
+      
+      Object.keys(grouped).forEach(k => {
+        grouped[k] = grouped[k].sort(() => 0.5 - Math.random());
+      });
+      setSponsorsMap(grouped);
     }
   }, [rawSponsors]);
 
-  const topBannerSponsor = sponsors[0];
-  const middleSponsor = sponsors[1];
-  const horizontalSponsor = sponsors[2];
-  const sidebarSponsors = sponsors.slice(3, 8);
+  const topBannerSponsor = sponsorsMap['top_banner']?.[0];
+  const middleSponsor = sponsorsMap['horizontal_middle']?.[0];
+  const horizontalSponsor = sponsorsMap['horizontal_bottom']?.[0];
+  const sidebarSponsors = sponsorsMap['sidebar']?.slice(0, 5) || [];
+  const homeSportsSponsor = sponsorsMap['home_sports']?.[0];
 
 
   const { data: articles, isLoading: articlesLoading } = trpc.articles.list.useQuery();
@@ -593,6 +602,40 @@ export default function Home() {
 
             <h3 className="text-lg font-black uppercase text-foreground mb-4">Esportes</h3>
             <FootballWidget />
+            
+            {homeSportsSponsor && (
+              <div className="mt-6 mb-6">
+                <div 
+                  className="w-full bg-card border border-accent/20 rounded-xl group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg block"
+                  onClick={() => {
+                    if (homeSportsSponsor.whatsapp) window.open(homeSportsSponsor.whatsapp, '_blank');
+                    else if (homeSportsSponsor.instagram) window.open(homeSportsSponsor.instagram, '_blank');
+                  }}
+                >
+                  <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
+                    {homeSportsSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
+                      <video 
+                        src={homeSportsSponsor.image} 
+                        className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
+                        autoPlay 
+                        muted 
+                        loop 
+                        playsInline 
+                      />
+                    ) : (
+                      <img 
+                        src={homeSportsSponsor.image} 
+                        alt={homeSportsSponsor.name} 
+                        className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
+                      />
+                    )}
+                  </div>
+                  <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
+                    Patrocinador
+                  </div>
+                </div>
+              </div>
+            )}
             
             <h3 className="text-lg font-black uppercase text-foreground mt-8 mb-4">Destaque</h3>
             {sidebarArticles.map((article) => (

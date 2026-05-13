@@ -24,15 +24,27 @@ export default function Article() {
     { enabled: !!article?.categoryId }
   );
   const { data: rawSponsors } = trpc.sponsors.list.useQuery();
-  const [sidebarSponsors, setSidebarSponsors] = useState<any[]>([]);
+  const [sponsorsMap, setSponsorsMap] = useState<Record<string, any[]>>({});
 
   useEffect(() => {
     if (rawSponsors) {
       const activeSponsors = rawSponsors.filter(s => s.active);
-      const shuffled = [...activeSponsors].sort(() => 0.5 - Math.random());
-      setSidebarSponsors(shuffled.slice(0, 6)); // Display up to 6 random sponsors
+      const grouped: Record<string, any[]> = {};
+      activeSponsors.forEach(s => {
+        if (!grouped[s.location]) grouped[s.location] = [];
+        grouped[s.location].push(s);
+      });
+      
+      Object.keys(grouped).forEach(k => {
+        grouped[k] = grouped[k].sort(() => 0.5 - Math.random());
+      });
+      setSponsorsMap(grouped);
     }
   }, [rawSponsors]);
+
+  const articleTopSponsor = sponsorsMap['article_top']?.[0];
+  const sidebarSponsors = sponsorsMap['article_sidebar']?.slice(0, 6) || [];
+  const articleBottomSponsor = sponsorsMap['article_bottom']?.[0];
 
   useSEO({
     title: article?.title || "Artigo",
@@ -131,6 +143,41 @@ export default function Article() {
             <span className="text-sm text-gray-400">•</span>
             <span className="text-sm text-gray-400">{readingTime} min de leitura</span>
           </div>
+
+          {/* Article Top Sponsor */}
+          {articleTopSponsor && (
+            <div className="mb-8 mt-2">
+              <div 
+                className="w-full bg-card border border-accent/20 rounded-xl group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg block"
+                onClick={() => {
+                  if (articleTopSponsor.whatsapp) window.open(articleTopSponsor.whatsapp, '_blank');
+                  else if (articleTopSponsor.instagram) window.open(articleTopSponsor.instagram, '_blank');
+                }}
+              >
+                <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
+                  {articleTopSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
+                    <video 
+                      src={articleTopSponsor.image} 
+                      className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
+                      autoPlay 
+                      muted 
+                      loop 
+                      playsInline 
+                    />
+                  ) : (
+                    <img 
+                      src={articleTopSponsor.image} 
+                      alt={articleTopSponsor.name} 
+                      className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
+                    />
+                  )}
+                </div>
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
+                  Patrocinador
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Title */}
           <h1 className="font-serif font-black tracking-tighter leading-[1.1] text-foreground mb-8 text-3xl md:text-5xl lg:text-6xl">
@@ -367,6 +414,41 @@ export default function Article() {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Article Bottom Sponsor */}
+        {articleBottomSponsor && (
+          <div className="max-w-4xl mx-auto mb-12">
+            <div 
+              className="w-full bg-card border border-accent/20 rounded-xl group cursor-pointer hover:border-accent transition-all relative overflow-hidden shadow-lg block"
+              onClick={() => {
+                if (articleBottomSponsor.whatsapp) window.open(articleBottomSponsor.whatsapp, '_blank');
+                else if (articleBottomSponsor.instagram) window.open(articleBottomSponsor.instagram, '_blank');
+              }}
+            >
+              <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
+                {articleBottomSponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
+                  <video 
+                    src={articleBottomSponsor.image} 
+                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
+                    autoPlay 
+                    muted 
+                    loop 
+                    playsInline 
+                  />
+                ) : (
+                  <img 
+                    src={articleBottomSponsor.image} 
+                    alt={articleBottomSponsor.name} 
+                    className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[180px]" 
+                  />
+                )}
+              </div>
+              <div className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-black text-[8px] font-black uppercase tracking-widest rounded-sm z-10 shadow-md">
+                Patrocinador
+              </div>
             </div>
           </div>
         )}

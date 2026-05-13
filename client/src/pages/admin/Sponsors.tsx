@@ -150,22 +150,27 @@ export default function AdminSponsors() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { id: 'sidebar', name: 'Barra Lateral', icon: Layout },
-          { id: 'horizontal_bottom', name: 'Banner Inferior', icon: ExternalLink },
-          { id: 'horizontal_middle', name: 'Banner Home', icon: Zap },
-          { id: 'top_banner', name: 'Topo do Site', icon: Crop }
+          { id: 'top_banner', name: 'Home - Topo Principal', icon: Crop },
+          { id: 'horizontal_middle', name: 'Home - Meio Principal', icon: Zap },
+          { id: 'home_sports', name: 'Home - Sessão Esportes', icon: Layout },
+          { id: 'horizontal_bottom', name: 'Home - Rodapé', icon: ExternalLink },
+          { id: 'sidebar', name: 'Home - Barra Lateral', icon: Layout },
+          { id: 'article_top', name: 'Notícia - Topo', icon: Crop },
+          { id: 'article_sidebar', name: 'Notícia - Meio', icon: Layout },
+          { id: 'article_bottom', name: 'Notícia - Rodapé', icon: ExternalLink }
         ].map(slot => {
-          const isOccupied = sponsors?.some((s: any) => s.location === slot.id && s.active);
+          const slotSponsors = sponsors?.filter((s: any) => s.location === slot.id && s.active) || [];
+          const count = slotSponsors.length;
           return (
-            <Card key={slot.id} className={`border-2 transition-all ${isOccupied ? 'border-accent/20 bg-accent/5' : 'border-dashed border-muted bg-transparent'}`}>
+            <Card key={slot.id} className={`border-2 transition-all ${count > 0 ? 'border-accent/20 bg-accent/5' : 'border-dashed border-muted bg-transparent'}`}>
               <CardContent className="p-4 flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isOccupied ? 'bg-accent text-black' : 'bg-muted text-muted-foreground'}`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${count > 0 ? 'bg-accent text-black' : 'bg-muted text-muted-foreground'}`}>
                   <slot.icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate">{slot.name}</p>
-                  <p className={`text-xs font-bold ${isOccupied ? 'text-foreground' : 'text-muted-foreground italic'}`}>
-                    {isOccupied ? 'Ocupado' : 'Disponível'}
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate" title={slot.name}>{slot.name}</p>
+                  <p className={`text-[10px] font-bold ${count > 0 ? 'text-foreground' : 'text-muted-foreground italic'}`}>
+                    {count === 0 ? 'Disponível' : `${count} Patrocinador${count > 1 ? 'es' : ''}`}
                   </p>
                 </div>
               </CardContent>
@@ -252,10 +257,14 @@ export default function AdminSponsors() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
-                      <SelectItem value="sidebar">Barra Lateral (Quadrado)</SelectItem>
-                      <SelectItem value="horizontal_bottom">Banner Inferior (Horizontal)</SelectItem>
-                      <SelectItem value="horizontal_middle">Banner Central (Home)</SelectItem>
-                      <SelectItem value="top_banner">Topo da Página (Abaixo do Menu)</SelectItem>
+                      <SelectItem value="top_banner">Home - Topo Principal</SelectItem>
+                      <SelectItem value="horizontal_middle">Home - Meio Principal</SelectItem>
+                      <SelectItem value="home_sports">Home - Sessão Esportes</SelectItem>
+                      <SelectItem value="horizontal_bottom">Home - Rodapé</SelectItem>
+                      <SelectItem value="sidebar">Home - Barra Lateral</SelectItem>
+                      <SelectItem value="article_top">Notícia - Topo</SelectItem>
+                      <SelectItem value="article_sidebar">Notícia - Meio do Texto</SelectItem>
+                      <SelectItem value="article_bottom">Notícia - Rodapé</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

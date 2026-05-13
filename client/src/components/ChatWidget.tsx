@@ -56,10 +56,22 @@ export function ChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+    <>
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-md z-[90]"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -168,6 +180,7 @@ export function ChatWidget() {
           <Sparkles className="w-5 h-5 text-black relative z-10" />
         )}
       </motion.button>
-    </div>
+      </div>
+    </>
   );
 }
