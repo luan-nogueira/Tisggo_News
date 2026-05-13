@@ -289,7 +289,7 @@ ${weatherInfo}`;
 
         messages.push({ role: "user", content: input.question });
 
-        const response = await invokeLLM({ messages });
+        const response = await invokeLLM({ messages, isInteractive: true });
 
         if (!response) {
           throw new Error("Resposta da IA veio vazia.");

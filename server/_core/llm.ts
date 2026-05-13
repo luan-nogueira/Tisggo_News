@@ -13,6 +13,7 @@ export type LLMParams = {
   response_format?: { type: "json_object" };
   outputSchema?: any;
   output_schema?: any;
+  isInteractive?: boolean;
 };
 
 export const invokeLLM = async (params: LLMParams): Promise<string> => {
@@ -25,7 +26,7 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
   // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa com o modelo confirmado pelo Discovery
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
     // Array de alta disponibilidade: alterna quotas gratuitas distintas automaticamente em caso de exaustão
-    const modelsToTry = ["gemini-flash-lite-latest", "gemini-1.5-flash", "gemini-2.0-flash"];
+    const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b"];
     
     const contents = messages
       .filter(m => m.role !== "system")
@@ -69,8 +70,9 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
             console.warn(`[Gemini Native Warning] Tier ${model} returned status ${response.status}. Switching to backup quota bucket...`);
             
             if (response.status === 429) {
-              console.log("[Gemini Native] Rate limit hit. Sleeping for 20 seconds...");
-              await new Promise(resolve => setTimeout(resolve, 20000));
+              const sleepTime = params.isInteractive ? 2000 : 20000;
+              console.log(`[Gemini Native] Rate limit hit. Sleeping for ${sleepTime/1000} seconds...`);
+              await new Promise(resolve => setTimeout(resolve, sleepTime));
             }
             continue;
           }
