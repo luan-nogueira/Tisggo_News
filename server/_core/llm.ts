@@ -68,7 +68,7 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
   addKey(ENV.forgeApiKey);
   if (typeof process !== "undefined" && process.env) {
     Object.keys(process.env).forEach(keyName => {
-      if ((keyName.startsWith("GEMINI_API_KEY") || keyName.startsWith("FORGE_API_KEY")) && process.env[keyName]) {
+      if ((keyName.includes("GEMINI") || keyName.includes("FORGE")) && process.env[keyName]) {
         addKey(process.env[keyName]);
       }
     });
@@ -78,7 +78,13 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
   const geminiKeys = keysPool.filter(k => k.startsWith("AIza") || k.startsWith("AQ."));
 
   if (geminiKeys.length > 0) {
-    const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash"];
+    // Array infalível de resiliência cobrindo todas as variações de nomenclatura liberadas para contas recém-criadas
+    const modelsToTry = [
+      "gemini-2.0-flash",
+      "gemini-2.0-flash-exp",
+      "gemini-1.5-flash-latest",
+      "gemini-1.5-flash"
+    ];
     
     const contents = messages
       .filter(m => m.role !== "system")
