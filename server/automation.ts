@@ -153,13 +153,33 @@ const SOURCES: NewsSource[] = [
     imageSelector: 'meta[property="og:image"]',
     baseUrl: "https://www.fmanha.com.br",
     limit: 12
+  },
+  {
+    name: "Prefeitura de Campos",
+    url: "https://www.campos.rj.gov.br/ultimas-noticias.php",
+    linkSelector: 'a[href*="noticia.php"]',
+    titleSelector: 'h1, h2, .titulo-noticia, .title',
+    contentSelector: '.texto-noticia, #conteudo, article, .content, .texto',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://www.campos.rj.gov.br",
+    limit: 10
+  },
+  {
+    name: "Prefeitura de SJB",
+    url: "https://www.sjb.rj.gov.br/home",
+    linkSelector: 'a[href*="/noticia/"], a[href*="/noticias/"], a[href*="/post/"]',
+    titleSelector: 'h1, .post-title, .titulo, h2',
+    contentSelector: 'article, .post-content, .entry-content, .conteudo',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://www.sjb.rj.gov.br",
+    limit: 10
   }
 ];
 
 const FORBIDDEN_WORDS = [
   /Ururau/gi, /Portal Ururau/gi, /ururau\.com\.br/gi,
   /Campos Ocorrências/gi, /camposocorrencias\.com\.br/gi,
-  /Prefeitura de Campos/gi, /campos\.rj\.gov\.br/gi,
+  /Prefeitura de Campos/gi, /campos\.rj\.gov\.br/gi, /Prefeitura de São João da Barra/gi, /Prefeitura de SJB/gi, /sjb\.rj\.gov\.br/gi,
   /Globo Esporte/gi, /Globo\.com/gi, /GE\.com/gi, /\bGE\b/g, /\bGlobo\b/g,
   /Reprodução/gi, /Foto:\s*[^<]*/gi, /Fonte:\s*[^<]*/gi,
   /Leia também:[^<]*/gi, /Confira abaixo:[^<]*/gi,
