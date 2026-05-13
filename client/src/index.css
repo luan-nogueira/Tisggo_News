@@ -357,7 +357,7 @@
     max-width: 100% !important;
     overflow-wrap: break-word !important;
     word-break: normal !important;
-    white-space: pre-wrap !important;
+    white-space: normal !important;
     box-sizing: border-box !important;
     hyphens: none !important;
   }
