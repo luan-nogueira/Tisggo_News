@@ -178,15 +178,15 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
 
       {/* Mobile Category Scroll Bar */}
       <div className="xl:hidden border-b border-border bg-card/50 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-10 px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-8 px-6 py-4 whitespace-nowrap">
           {categories?.map((cat) => (
             <Link 
               key={cat.id} 
               href={`/category/${cat.slug}`} 
-              className={`text-[11px] font-black uppercase transition-colors flex items-center gap-2.5 ${String(cat.id) === String(currentCategoryId) ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
+              className={`text-[11px] font-black uppercase transition-colors inline-flex items-center shrink-0 ${String(cat.id) === String(currentCategoryId) ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
             >
-              <span>{getCategoryEmoji(cat.name)}</span>
-              {cat.name}
+              <span className="text-sm shrink-0 mr-1.5">{getCategoryEmoji(cat.name)}</span>
+              <span className="whitespace-nowrap tracking-wider">{cat.name}</span>
             </Link>
           ))}
         </div>
