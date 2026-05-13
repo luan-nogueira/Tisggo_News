@@ -26,7 +26,7 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
   // Se for chave do Gemini (AIza... ou AQ...), usa a API Nativa com o modelo confirmado pelo Discovery
   if (ENV.forgeApiKey.startsWith("AIza") || ENV.forgeApiKey.startsWith("AQ.")) {
     // Array de alta disponibilidade: alterna quotas gratuitas distintas automaticamente em caso de exaustão
-    const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b"];
+    const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash"];
     
     const contents = messages
       .filter(m => m.role !== "system")
@@ -52,6 +52,7 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
     }
 
     let lastErrorText = "";
+    let hadRateLimitError = false;
     // Loop para tentar os modelos e fazer backoff se batermos no limite de quota (429)
     for (let retry = 0; retry < 2; retry++) {
       for (const model of modelsToTry) {
@@ -70,6 +71,7 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
             console.warn(`[Gemini Native Warning] Tier ${model} returned status ${response.status}. Switching to backup quota bucket...`);
             
             if (response.status === 429) {
+              hadRateLimitError = true;
               const sleepTime = params.isInteractive ? 2000 : 20000;
               console.log(`[Gemini Native] Rate limit hit. Sleeping for ${sleepTime/1000} seconds...`);
               await new Promise(resolve => setTimeout(resolve, sleepTime));
@@ -88,6 +90,14 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
       }
     }
 
+    if (hadRateLimitError) {
+      console.error("[Gemini Native EXHAUSTED] Rate limits exceeded on all working models.");
+      throw new Error(JSON.stringify({
+        error: {
+          message: "A Inteligência Artificial do site está sobrecarregada ou atingiu o limite gratuito diário do Google. Por favor, tente novamente em alguns minutos."
+        }
+      }));
+    }
     console.error(`[Gemini Native EXHAUSTED] All native free-tier buckets consumed. Last API reply: ${lastErrorText}`);
     throw new Error(`Gemini API Error: ${lastErrorText}`);
   }
