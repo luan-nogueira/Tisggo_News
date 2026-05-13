@@ -97,7 +97,9 @@ export const appRouter = router({
       const firestore = await db.getDb();
       await firestore.collection("automation_status").doc("current").update({
         stopRequested: true,
-        message: "Solicitando interrupção..."
+        isAutomating: false,
+        progress: 0,
+        message: "Automação interrompida."
       });
       return { success: true };
     }),

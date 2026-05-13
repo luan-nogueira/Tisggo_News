@@ -399,8 +399,8 @@ export async function automateNews() {
   // Inicializa status imediatamente para o Admin ver
   await updateStatus("Iniciando robô...", 0, true);
 
-  // Roda re-escrita retroativa em paralelo para não travar o ciclo principal
-  processRetroactiveRewrites().catch(err => console.error("[Retroactive] Error:", err));
+  // Re-escrita retroativa em paralelo desativada temporariamente para focar 100% da cota IA no ciclo principal
+  // processRetroactiveRewrites().catch(err => console.error("[Retroactive] Error:", err));
 
   const checkStop = async () => {
     const doc = await firestore.collection("automation_status").doc("current").get();
