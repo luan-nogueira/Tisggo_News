@@ -354,14 +354,9 @@ const STOP_WORDS = [
   /Faa parte do nosso grupo/i,
   /Receba as principais notícias/i,
   /ururau\.com\.br/i,
-  /Foto:/i,
-  /VÍDEO:/i,
-  /VDEO:/i,
-  /WhatsApp/i,
   /Inscreva-se/i,
   /Siga o/i,
   /Clique aqui/i,
-  /Reprodução/i,
 ];
 
 async function getOrCreateCategory(name: string) {
@@ -507,7 +502,8 @@ export async function automateNews() {
           }
         });
 
-        const uniqueLinks = [...new Set(links)].slice(0, source.limit || 5);
+        // Amplia a amostragem para ler até as primeiras 20 URLs exclusivas da capa, cobrindo carrosséis e listagens ocultas
+        const uniqueLinks = [...new Set(links)].slice(0, Math.max(source.limit || 10, 15));
 
         for (const link of uniqueLinks) {
           if (await checkStop()) {
@@ -539,7 +535,7 @@ export async function automateNews() {
             const $art = cheerio.load(artHtml);
 
             let title = $art(source.titleSelector).first().text().trim();
-            if (!title || title.length < 20 || title.includes("Autor:") || title.includes("Destaque")) continue;
+            if (!title || title.length < 10 || title.includes("Autor:") || title.includes("Destaque")) continue;
 
             // ── Filtro de conteúdo pago/patrocinado ────────────────────────────
             // Detecta sinais de publieditorial, assessoria ou elogio a gestores
