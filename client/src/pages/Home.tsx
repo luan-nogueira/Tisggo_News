@@ -283,7 +283,7 @@ export default function Home() {
                         <div className="flex gap-2 mb-4">
                           <Badge className="bg-red-600 text-white border-none font-bold">DESTAQUE</Badge>
                         </div>
-                        <h1 className="text-xl md:text-3xl font-serif font-black text-white leading-tight mb-3 drop-shadow-lg">
+                        <h1 className="text-2xl md:text-4xl font-serif font-black text-white leading-tight mb-3 drop-shadow-lg">
                           {article.title}
                         </h1>
                         <p className="text-white/80 text-xs md:text-sm line-clamp-2 mb-6 max-w-xl leading-relaxed hidden md:block drop-shadow">
