@@ -15,9 +15,9 @@ export const SponsorBanner = ({ sponsor }: { sponsor: any }) => {
       </div>
       <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5 flex-grow">
         {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-          <video src={sponsor.image} className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px]" autoPlay muted loop playsInline />
+          <video src={sponsor.image} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px] p-0.5" autoPlay muted loop playsInline />
         ) : (
-          <img src={sponsor.image} alt={sponsor.name} className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px]" />
+          <img src={sponsor.image} alt={sponsor.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px] p-0.5" />
         )}
       </div>
       {(sponsor.instagram || sponsor.whatsapp) && (

@@ -593,7 +593,7 @@ export default function Home() {
                       {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
                         <video 
                           src={sponsor.image} 
-                          className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px]" 
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px] p-0.5" 
                           autoPlay 
                           muted 
                           loop 
@@ -603,7 +603,7 @@ export default function Home() {
                         <img 
                           src={sponsor.image} 
                           alt={sponsor.name} 
-                          className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px]" 
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px] p-0.5" 
                         />
                       )}
                     </div>
