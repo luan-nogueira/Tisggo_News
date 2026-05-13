@@ -56,6 +56,7 @@ export default function Home() {
   const utils = trpc.useUtils();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAdvertiseOpen, setIsAdvertiseOpen] = useState(false);
+  const [selectedSponsorForAction, setSelectedSponsorForAction] = useState<any>(null);
 
   const { data: rawSponsors } = trpc.sponsors.list.useQuery();
   const [sponsorsMap, setSponsorsMap] = useState<Record<string, any[]>>({});
@@ -253,8 +254,13 @@ export default function Home() {
         <div 
           className="bg-card border border-accent/20 rounded-lg overflow-hidden shadow-md group cursor-pointer relative"
           onClick={() => {
-            if (sponsor.whatsapp) window.open(sponsor.whatsapp, '_blank');
-            else if (sponsor.instagram) window.open(sponsor.instagram, '_blank');
+            if (sponsor.whatsapp && sponsor.instagram) {
+              setSelectedSponsorForAction(sponsor);
+            } else if (sponsor.whatsapp) {
+              window.open(sponsor.whatsapp, '_blank');
+            } else if (sponsor.instagram) {
+              window.open(sponsor.instagram, '_blank');
+            }
           }}
         >
           <div className="bg-accent/10 px-3 py-1.5 border-b border-accent/20 flex justify-between items-center backdrop-blur-sm">
@@ -781,6 +787,55 @@ export default function Home() {
               </p>
             </div>
           </div>
+
+          {/* Modal de Escolha de Ação do Patrocinador */}
+          {selectedSponsorForAction && (
+            <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+              <motion.div 
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="bg-card border border-border p-6 rounded-t-3xl sm:rounded-3xl max-w-sm w-full text-center shadow-2xl pb-8"
+              >
+                <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-6 sm:hidden" />
+                <h3 className="text-xl font-black text-foreground uppercase mb-1 truncate">
+                  {selectedSponsorForAction.name || "Patrocinador"}
+                </h3>
+                <p className="text-xs text-muted-foreground font-bold mb-6">
+                  Escolha por onde deseja entrar em contato:
+                </p>
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    onClick={() => {
+                      window.open(selectedSponsorForAction.whatsapp, '_blank');
+                      setSelectedSponsorForAction(null);
+                    }}
+                    className="bg-[#25D366] hover:bg-[#20ba5c] text-white font-black py-6 rounded-2xl flex items-center justify-center gap-3 w-full shadow-lg shadow-[#25D366]/20 text-xs"
+                  >
+                    <MessageCircle className="w-4 h-4 fill-white text-white" />
+                    FALAR NO WHATSAPP
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      window.open(selectedSponsorForAction.instagram, '_blank');
+                      setSelectedSponsorForAction(null);
+                    }}
+                    className="bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90 text-white font-black py-6 rounded-2xl flex items-center justify-center gap-3 w-full shadow-lg shadow-[#FD1D1D]/20 text-xs"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    VER NO INSTAGRAM
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    onClick={() => setSelectedSponsorForAction(null)}
+                    className="font-black py-4 rounded-2xl text-muted-foreground hover:text-foreground mt-2 text-xs"
+                  >
+                    FECHAR
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
         </footer>
       </main>
     </div>
