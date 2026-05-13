@@ -51,53 +51,44 @@ export const invokeLLM = async (params: LLMParams): Promise<string> => {
     }
 
     let lastErrorText = "";
-    for (const model of modelsToTry) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
-      console.log(`[Gemini Native] Attempting generation with quota tier: ${model}`);
-      
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+    // Loop para tentar os modelos e fazer backoff se batermos no limite de quota (429)
+    for (let retry = 0; retry < 2; retry++) {
+      for (const model of modelsToTry) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ENV.forgeApiKey}`;
+        console.log(`[Gemini Native] Attempting generation with quota tier: ${model} (Retry: ${retry})`);
+        
+        try {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
 
-        if (!response.ok) {
-          lastErrorText = await response.text();
-          console.warn(`[Gemini Native Warning] Tier ${model} returned status ${response.status}. Switching to backup quota bucket...`);
-          continue;
-        }
+          if (!response.ok) {
+            lastErrorText = await response.text();
+            console.warn(`[Gemini Native Warning] Tier ${model} returned status ${response.status}. Switching to backup quota bucket...`);
+            
+            if (response.status === 429) {
+              console.log("[Gemini Native] Rate limit hit. Sleeping for 20 seconds...");
+              await new Promise(resolve => setTimeout(resolve, 20000));
+            }
+            continue;
+          }
 
-        const data = await response.json();
-        const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (outputText) {
-          return outputText;
+          const data = await response.json();
+          const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (outputText) {
+            return outputText;
+          }
+        } catch (e: any) {
+          console.warn(`[Gemini Native Failover] Network error on ${model}: ${e.message}. Retrying next bucket...`);
         }
-      } catch (e: any) {
-        console.warn(`[Gemini Native Failover] Network error on ${model}: ${e.message}. Retrying next bucket...`);
       }
     }
 
     console.error(`[Gemini Native EXHAUSTED] All native free-tier buckets consumed. Last API reply: ${lastErrorText}`);
-    // Se todos os buckets nativos estiverem esgotados, segue automaticamente para a proxy reserva da Manus/Forge
+    throw new Error(`Gemini API Error: ${lastErrorText}`);
   }
 
-  // Fallback (Forge/OpenAI)
-  const url = "https://forge.manus.im/v1/chat/completions";
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${ENV.forgeApiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages,
-      temperature: temperature ?? 0.7,
-      max_tokens: max_tokens,
-    }),
-  });
-
-  const data = await response.json();
-  return data.choices[0].message.content;
+  throw new Error("Chave de API inválida configurada.");
 };
