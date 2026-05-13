@@ -244,6 +244,7 @@ DIRETRIZES DE OURO:
 4. FOCO LOCAL: Valorize informações sobre Campos dos Goytacazes, São João da Barra e região Norte Fluminense.
 5. LIMPEZA ABSOLUTA: Remova qualquer rastro de outros portais (G1, Ururau, NF Notícias, etc), nomes de repórteres externos ou convites para redes sociais alheias.
 6. FORMATAÇÃO: Use tags <p> para parágrafos e <strong> para destacar nomes de pessoas, locais ou entidades importantes.
+7. ISOLAMENTO DA NOTÍCIA PRINCIPAL: O texto bruto fornecido pode conter, por engano de raspagem do site original, pedaços, manchetes ou resumos de OUTRAS notícias (ex: listagens de "leia também", "últimas notícias" ou barras laterais). IGNORE COMPLETAMENTE qualquer informação que não esteja diretamente conectada com o assunto principal do "Título Original". Em hipótese alguma misture fatos ou eventos de outras notícias no texto gerado.
 
 FORMATO DE RETORNO (JSON):
 {
@@ -584,7 +585,8 @@ export async function automateNews() {
                if (alternative) coverImage = alternative.startsWith('http') ? alternative : source.baseUrl + alternative;
             }
 
-            $art('script, style, iframe, .adsbygoogle, .banners, .whatsapp-button, .social-share, footer, nav, header, .related-posts, .recommended-posts, .post-navigation').remove();
+            // Remove de forma agressiva todas as listagens secundárias, rodapés e barras laterais para evitar vazamento/mistura de outras notícias
+            $art('aside, .sidebar, .widget, .related, .relacionados, .veja-tambem, .outras-noticias, .recent-posts, .latest-posts, .more-news, .mais-noticias, .posts-relacionados, .comments, #comments, .td-related-posts, .elementor-widget-recent-posts, section.related, div[class*="related"], div[class*="relacionad"], div[class*="recommend"], div[class*="outras"], script, style, iframe, .adsbygoogle, .banners, .whatsapp-button, .social-share, footer, nav, header, .related-posts, .recommended-posts, .post-navigation').remove();
 
 
             let contentHtml = "";
@@ -596,6 +598,9 @@ export async function automateNews() {
               const blocksArray = contentBlocks.toArray();
               for (const block of blocksArray) {
                 if (stopReading) break;
+                
+                // Se o próprio bloco for ou estiver dentro de uma área secundária ou link de outra notícia, ignoramos
+                if ($art(block).closest('a, aside, footer, .sidebar, .related').length > 0) continue;
                 
                 const items = $art(block).find('p, h2, h3, h4, li, table').toArray();
                 if (items.length > 0) {
@@ -611,7 +616,7 @@ export async function automateNews() {
                        $art(item).addClass('w-full border-collapse my-4 text-sm');
                        $art(item).find('th, td').addClass('border border-gray-700 p-2 text-left');
                        contentHtml += $art(item).prop('outerHTML') + '\n';
-                       return;
+                       continue;
                     }
                     const text = $art(item).text().trim();
                     const html = $art(item).html() || "";
