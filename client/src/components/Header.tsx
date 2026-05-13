@@ -61,17 +61,36 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
             >
               <Menu className="w-6 h-6" />
             </button>
-            <Link href="/" className="flex items-center gap-3 group shrink-0">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 shrink-0">
-                <img 
-                  src="/brand-icon.png" 
-                  alt="Tisgo Icon" 
-                  className="w-full h-full object-contain rounded-full border-2 border-accent/20"
-                  onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl sm:text-3xl font-black leading-none tracking-tighter italic flex items-center">
+            <div className="flex items-center gap-3 shrink-0">
+              {/* Instagram Story Logo */}
+              <a 
+                href="https://www.instagram.com/tisgonews/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                title="Ver Instagram"
+                className="relative group shrink-0 block"
+              >
+                {/* Gradient ring mimicking Instagram Story */}
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2.5px] bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(220,39,67,0.5)]">
+                  {/* Internal background container to create the gap between ring and avatar */}
+                  <div className="w-full h-full bg-background rounded-full p-[2px] flex items-center justify-center">
+                    <img 
+                      src="/brand-icon.png" 
+                      alt="Tisgo Story" 
+                      className="w-full h-full object-contain rounded-full"
+                      onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                    />
+                  </div>
+                </div>
+                {/* Optional subtle live/story tag or pulse to make it extremely premium and engaging */}
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#dc2743] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider scale-90 opacity-90 group-hover:scale-100 group-hover:opacity-100 transition-all border border-background">
+                  Story
+                </span>
+              </a>
+
+              {/* Brand Text linking to Home */}
+              <Link href="/" className="flex flex-col group shrink-0">
+                <span className="text-2xl sm:text-3xl font-black leading-none tracking-tighter italic flex items-center group-hover:opacity-90 transition-opacity">
                   <span className="text-accent drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">TISGO</span>
                   <span className="text-foreground drop-shadow-[0_2px_0_rgba(0,0,0,0.3)]">NEWS</span>
                 </span>
@@ -82,8 +101,8 @@ export function Header({ categories, currentCategoryId, onOpenAdvertise, showWea
                   </span>
                   <div className="h-[1px] w-3 bg-accent/30" />
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
           </div>
 
           <nav className="hidden xl:flex items-center gap-4">
