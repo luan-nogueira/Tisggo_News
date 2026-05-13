@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [isAutomating, setIsAutomating] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(10);
   
   const runCleanup = trpc.articles.cleanup.useMutation({
     onSuccess: (count) => {
@@ -94,6 +95,7 @@ export default function Dashboard() {
   const totalArticles = articles?.length || 0;
   const totalViews = articles?.reduce((sum, a) => sum + (a.views || 0), 0) || 0;
   const publishedArticles = articles?.filter(a => a.published).length || 0;
+  const displayedArticles = articles?.slice(0, visibleCount) || [];
 
   const formatDate = (dateStr: any) => {
     try {
@@ -461,7 +463,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {articles.map((article) => (
+                    {displayedArticles.map((article) => (
                       <tr key={article.id} className="border-b border-border hover:bg-accent/5 transition-colors">
                         <td className="py-2 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
@@ -520,7 +522,7 @@ export default function Dashboard() {
 
               {/* Mobile Card List */}
               <div className="md:hidden divide-y divide-border">
-                {articles.map((article) => (
+                {displayedArticles.map((article) => (
                   <div key={article.id} className="p-4 bg-card active:bg-accent/5 transition-colors">
                     <div className="flex gap-4 mb-3">
                       <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
@@ -567,6 +569,32 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+
+              {/* Pagination Footbar */}
+              {articles && articles.length > 10 && (
+                <div className="p-6 bg-accent/5 border-t border-border flex flex-col sm:flex-row items-center justify-center gap-4">
+                  {visibleCount < articles.length && (
+                    <Button 
+                      onClick={() => setVisibleCount(prev => prev + 10)}
+                      className="bg-accent text-black font-black hover:bg-yellow-500 uppercase px-6 py-4 rounded-xl text-xs w-full sm:w-auto"
+                    >
+                      Ver Mais Notícias ↓
+                    </Button>
+                  )}
+                  {visibleCount > 10 && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => setVisibleCount(10)}
+                      className="border-border text-foreground font-black hover:bg-accent/10 uppercase px-6 py-4 rounded-xl text-xs w-full sm:w-auto"
+                    >
+                      Ver Menos ↑
+                    </Button>
+                  )}
+                  <span className="text-xs text-muted-foreground font-bold mt-2 sm:mt-0">
+                    Exibindo {displayedArticles.length} de {articles.length}
+                  </span>
+                </div>
+              )}
 
               {/* Custom Delete Modal */}
               {deleteId && (
