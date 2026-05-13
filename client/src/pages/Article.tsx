@@ -306,9 +306,8 @@ export default function Article() {
           </motion.div>
         )}
 
-        {/* Article Body */}
-        <div className="w-full px-4 mt-8 mb-12">
-          <div className="article-body-wrapper article-body-content">
+        <div className="w-full max-w-4xl mx-auto px-4 mt-8 mb-12 overflow-hidden">
+          <div className="article-body-wrapper article-body-content [&_*]:!whitespace-normal [&_*]:!break-words [&_*]:!max-w-full">
             <div 
               className="prose prose-invert max-w-none text-foreground leading-relaxed"
               style={{ overflowWrap: 'break-word', wordBreak: 'break-word', hyphens: 'auto' }}
