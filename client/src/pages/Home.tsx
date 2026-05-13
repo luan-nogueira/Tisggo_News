@@ -226,48 +226,48 @@ export default function Home() {
     }
   };
 
-  // ── Distribuição Otimizada de Patrocinadores para Mobile ──
+  // ── Distribuição Otimizada e Compacta de Patrocinadores para Mobile ──
   const renderMobileSponsor = (index: number) => {
     const sponsor = sidebarSponsors[index];
     if (!sponsor) return null;
     return (
-      <div className="block lg:hidden my-8 px-1">
-        <div className="flex items-center gap-2 mb-3 justify-center">
+      <div className="block lg:hidden my-6 px-1">
+        <div className="flex items-center gap-2 mb-2 justify-center">
           <span className="h-px bg-accent/20 flex-grow" />
-          <span className="text-[9px] font-black text-accent uppercase tracking-widest">Patrocinador Destaque</span>
+          <span className="text-[8px] font-black text-accent uppercase tracking-widest">Patrocinador Destaque</span>
           <span className="h-px bg-accent/20 flex-grow" />
         </div>
         <div 
-          className="bg-card border border-accent/30 rounded-xl overflow-hidden shadow-xl group cursor-pointer relative"
+          className="bg-card border border-accent/20 rounded-lg overflow-hidden shadow-md group cursor-pointer relative"
           onClick={() => {
             if (sponsor.whatsapp) window.open(sponsor.whatsapp, '_blank');
             else if (sponsor.instagram) window.open(sponsor.instagram, '_blank');
           }}
         >
-          <div className="bg-accent/10 px-4 py-2 border-b border-accent/20 flex justify-between items-center backdrop-blur-sm">
-            <span className="text-[10px] font-black uppercase text-accent tracking-widest truncate">{sponsor.name || "Patrocínio"}</span>
-            <div className="flex gap-2">
-              {sponsor.instagram && <Instagram className="w-3.5 h-3.5 text-accent" />}
-              {sponsor.whatsapp && <MessageCircle className="w-3.5 h-3.5 text-accent" />}
+          <div className="bg-accent/10 px-3 py-1.5 border-b border-accent/20 flex justify-between items-center backdrop-blur-sm">
+            <span className="text-[9px] font-black uppercase text-accent tracking-widest truncate">{sponsor.name || "Patrocínio"}</span>
+            <div className="flex gap-1.5">
+              {sponsor.instagram && <Instagram className="w-3 h-3 text-accent" />}
+              {sponsor.whatsapp && <MessageCircle className="w-3 h-3 text-accent" />}
             </div>
           </div>
           <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
             {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
-              <video src={sponsor.image} className="w-full h-auto max-h-[220px] object-cover block" autoPlay muted loop playsInline />
+              <video src={sponsor.image} className="w-full h-auto max-h-[100px] object-cover block" autoPlay muted loop playsInline />
             ) : (
-              <img src={sponsor.image} alt={sponsor.name} className="w-full h-auto max-h-[220px] object-cover block" />
+              <img src={sponsor.image} alt={sponsor.name} className="w-full h-auto max-h-[100px] object-cover block" />
             )}
           </div>
           {(sponsor.instagram || sponsor.whatsapp) && (
-            <div className="p-2 bg-accent/5 flex justify-center gap-6 border-t border-accent/10">
+            <div className="p-1.5 bg-accent/5 flex justify-center gap-4 border-t border-accent/10">
               {sponsor.instagram && (
-                <span className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-accent">
-                  <Instagram className="w-3 h-3" /> Instagram
+                <span className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground hover:text-accent">
+                  <Instagram className="w-2.5 h-2.5" /> Instagram
                 </span>
               )}
               {sponsor.whatsapp && (
-                <span className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-accent">
-                  <MessageCircle className="w-3 h-3" /> WhatsApp
+                <span className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground hover:text-accent">
+                  <MessageCircle className="w-2.5 h-2.5" /> WhatsApp
                 </span>
               )}
             </div>
