@@ -293,7 +293,6 @@ export default function Article() {
                         .map(p => `<p>${p.replace(/\n/g, ' ')}</p>`)
                         .join('')
                   ).replace(/-\s*\n\s*/g, '-') // Força a união de hífens quebrados no HTML final
-                   .replace(/>\s*</g, '><') // Remove espaços entre tags que podem causar quebras
                 )
               }} 
             />

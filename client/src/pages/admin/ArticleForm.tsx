@@ -240,6 +240,9 @@ export default function ArticleForm() {
                   .ql-editor {
                     color: var(--foreground) !important;
                     min-height: 350px;
+                    white-space: pre-wrap !important;
+                    word-break: normal !important;
+                    overflow-wrap: break-word !important;
                   }
                   .ql-editor.ql-blank::before {
                     color: var(--muted-foreground) !important;
