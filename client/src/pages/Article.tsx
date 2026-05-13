@@ -278,7 +278,7 @@ export default function Article() {
           </motion.div>
         )}
 
-        <div className="w-full max-w-4xl mx-auto px-4 mt-8 mb-12 overflow-hidden">
+        <div className="w-full max-w-4xl mx-auto px-4 mt-8 mb-12">
           <div className="article-body-wrapper article-body-content [&_*]:!whitespace-normal [&_*]:!max-w-full">
             <div 
               className="prose prose-invert max-w-none text-foreground leading-relaxed"

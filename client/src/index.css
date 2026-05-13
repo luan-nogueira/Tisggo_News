@@ -355,11 +355,11 @@
   .article-body-content,
   .article-body-content * {
     max-width: 100% !important;
-    overflow-wrap: normal !important;
-    word-wrap: normal !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
     word-break: normal !important;
-    hyphens: none !important;
-    white-space: normal !important;
+    hyphens: auto !important;
+    white-space: pre-wrap !important;
     box-sizing: border-box !important;
   }
 
