@@ -589,11 +589,16 @@ export default function Home() {
                         {sponsor.whatsapp && <MessageCircle className="w-3 h-3 text-accent" />}
                       </div>
                     </div>
-                    <div className="w-full relative overflow-hidden flex items-center justify-center bg-black/5">
+                    <div className="w-full relative overflow-hidden flex items-center justify-center bg-gray-950 min-h-[100px]">
+                      {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
+                        <video src={sponsor.image} className="absolute inset-0 w-full h-full object-cover scale-125 blur-xl opacity-40 pointer-events-none" autoPlay muted loop playsInline />
+                      ) : (
+                        <img src={sponsor.image} alt="" className="absolute inset-0 w-full h-full object-cover scale-125 blur-xl opacity-40 pointer-events-none" />
+                      )}
                       {sponsor.image?.match(/\.(mp4|webm|ogg|mov|m4v|avi)([?#]|$)/i) ? (
                         <video 
                           src={sponsor.image} 
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px] p-0.5" 
+                          className="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[100px]" 
                           autoPlay 
                           muted 
                           loop 
@@ -603,7 +608,7 @@ export default function Home() {
                         <img 
                           src={sponsor.image} 
                           alt={sponsor.name} 
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[95px] p-0.5" 
+                          className="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-500 max-h-[130px] md:max-h-[100px]" 
                         />
                       )}
                     </div>
