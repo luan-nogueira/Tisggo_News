@@ -234,6 +234,15 @@ export const appRouter = router({
       try {
         console.log(`[AI Chat] Pergunta recebida: "${input.question}"`);
 
+        // ── Cache de Saudação Local a Custo Zero ──
+        const qClean = input.question.toLowerCase().trim();
+        const greetings = ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite", "tudo bem", "tudo bem?", "hey", "oii"];
+        if (greetings.includes(qClean) || qClean.length <= 3) {
+          return {
+            answer: "Olá! Sou o Assistente IA oficial do portal Tisgo News. 📰✨ Estou aqui para te ajudar a navegar pelas últimas notícias de Campos dos Goytacazes e do Norte Fluminense. O que você gostaria de conferir hoje?"
+          };
+        }
+
         // Busca notícias recentes com timeout curto para não travar
         let newsContext = "Nenhuma notícia recente disponível no momento.";
         try {
@@ -299,7 +308,7 @@ ${weatherInfo}`;
       } catch (err: any) {
         console.error("[AI Chat ERROR DETAILED]", err.stack || err);
         return {
-          answer: "Desculpe, estou passando por uma manutenção técnica rápida. Por favor, tente novamente em alguns minutos!"
+          answer: "Meus servidores de IA estão super concorridos neste exato momento e atingiram a capacidade máxima! 🚀 Mas confira as nossas manchetes em destaque na capa do portal ou navegue pelas categorias para ficar por dentro de tudo!"
         };
       }
     }),
