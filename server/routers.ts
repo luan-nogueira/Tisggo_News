@@ -241,7 +241,7 @@ export const appRouter = router({
         const greetings = ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite", "tudo bem", "tudo bem?", "hey", "oii", "oi ne", "oi né", "eai", "opa"];
         if (greetings.includes(qClean) || qClean.length <= 3) {
           return {
-            answer: "Olá! Tudo ótimo por aqui! Sou a IA oficial da redação do **Tisgo News**. 🚀\nEstou de olho em tudo o que está acontecendo em Campos dos Goytacazes e região. Quer saber as manchetes de hoje, a previsão do tempo ou como está o trânsito?"
+            answer: "Olá! Sou a Inteligência Artificial exclusiva da redação do **Tisgo News**. Acompanho em tempo real os acontecimentos de Campos dos Goytacazes e da região Norte Fluminense. Gostaria de informações sobre o trânsito, a previsão do tempo ou conferir as principais manchetes do dia?"
           };
         }
 
@@ -277,24 +277,24 @@ export const appRouter = router({
         }
 
         // ── Smart Local Agent (Respostas Locais Autônomas a Custo Zero) ──
-        // Intercepta e atende aos temas mais quentes (Trânsito, Clima e Últimas Notícias) usando os dados reais do portal
+        // Intercepta e atende aos temas mais quentes (Trânsito, Clima e Últimas Notícias) usando os dados reais do portal de forma 100% profissional.
         if (qClean.includes("transito") || qClean.includes("trânsito") || qClean.includes("engarrafamento") || qClean.includes("br-101") || qClean.includes("ponte")) {
           const transitoNews = loadedArticles.find(a => a.title.toLowerCase().includes("trânsito") || a.title.toLowerCase().includes("acidente") || a.title.toLowerCase().includes("interdição") || a.title.toLowerCase().includes("br-101"));
           if (transitoNews) {
-            return { answer: `Sobre o trânsito: "${transitoNews.title}". Confira os detalhes completos e atualizados na nossa matéria recente na capa do portal! 🚗💨` };
+            return { answer: `Nossa redação destacou a seguinte atualização sobre o trânsito local: **"${transitoNews.title}"**.\n\nPara obter todos os detalhes e orientações oficiais, convidamos você a ler a matéria completa em nossa página inicial.` };
           }
-          return { answer: "No momento, não registramos acidentes graves ou interdições nas principais vias de Campos dos Goytacazes e região nas últimas horas. O tráfego flui normalmente. Fique de olho nas nossas atualizações em tempo real! 🚦👍" };
+          return { answer: "Até o presente momento, nossa central de jornalismo não registrou ocorrências de acidentes graves ou interdições de grande impacto nas principais vias de Campos dos Goytacazes, como a BR-101. Continuamos monitorando o tráfego em tempo real." };
         }
 
         if (qClean.includes("clima") || qClean.includes("tempo") || qClean.includes("chove") || qClean.includes("sol") || qClean.includes("temperatura") || qClean.includes("frio") || qClean.includes("calor")) {
           const tempMatch = weatherInfo.match(/-?\d+°C/);
-          const tempStr = tempMatch ? tempMatch[0] : "agradável";
-          return { answer: `A previsão do tempo atual para Campos dos Goytacazes indica temperatura em torno de ${tempStr}. 🌤️ Para conferir a previsão detalhada e alertas da Defesa Civil, acompanhe a nossa seção de Cidades no portal!` };
+          const tempStr = tempMatch ? tempMatch[0] : "variável";
+          return { answer: `Os indicadores meteorológicos atuais para Campos dos Goytacazes registram temperatura aproximada de **${tempStr}**.\n\nRecomendamos acessar nossa seção de Cidades no portal para acompanhar boletins completos e eventuais alertas emitidos pela Defesa Civil.` };
         }
 
         if (qClean.includes("noticia") || qClean.includes("notícia") || qClean.includes("ultimas") || qClean.includes("últimas") || qClean.includes("aconteceu") || qClean.includes("novidade")) {
-          const topNews = loadedArticles.slice(0, 3).map(a => `• ${a.title}`).join("\n");
-          return { answer: `Aqui estão as nossas manchetes mais quentes do momento:\n\n${topNews || "Nenhuma matéria recente encontrada."}\n\nClique nos cards da capa para ler na íntegra! 📰🔥` };
+          const topNews = loadedArticles.slice(0, 3).map(a => `• ${a.title}`).join("\n\n");
+          return { answer: `A equipe editorial do **Tisgo News** separou as principais manchetes para você:\n\n${topNews || "No momento, nossa redação está apurando novas informações."}\n\nAcesse a capa do nosso portal para ler as reportagens na íntegra e manter-se atualizado.` };
         }
 
         // ── Busca Tabela e Próximos Jogos do Brasileirão ──
@@ -351,7 +351,7 @@ ${footballContext}`;
       } catch (err: any) {
         console.error("[AI Chat ERROR DETAILED]", err.stack || err);
         return {
-          answer: "Meus servidores de IA estão super concorridos neste exato momento e atingiram a capacidade máxima! 🚀 Mas confira as nossas manchetes em destaque na capa do portal ou navegue pelas categorias para ficar por dentro de tudo!"
+          answer: "No momento, nossos servidores de inteligência artificial estão processando um alto volume de acessos. Enquanto a conexão é estabilizada, convidamos você a conferir as manchetes em destaque diretamente na página inicial do **Tisgo News**."
         };
       }
     }),
