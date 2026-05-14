@@ -132,7 +132,51 @@ const SOURCES: NewsSource[] = [
     contentSelector: '.noticia_texto, #texto-materia, .entry-content',
     imageSelector: 'meta[property="og:image"]',
     baseUrl: "https://www.nfnoticias.com.br",
-    limit: 12
+    limit: 10
+  },
+  {
+    name: "NF Notícias - Esportes",
+    url: "https://www.nfnoticias.com.br/editoria-3/esportes",
+    linkSelector: 'a[href*="/noticia/"]',
+    titleSelector: 'h1, .titulo-noticia',
+    contentSelector: '.noticia_texto, #texto-materia, .entry-content',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://www.nfnoticias.com.br",
+    forcedCategory: "Esportes",
+    limit: 6
+  },
+  {
+    name: "NF Notícias - Geral",
+    url: "https://www.nfnoticias.com.br/editoria-1/geral",
+    linkSelector: 'a[href*="/noticia/"]',
+    titleSelector: 'h1, .titulo-noticia',
+    contentSelector: '.noticia_texto, #texto-materia, .entry-content',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://www.nfnoticias.com.br",
+    forcedCategory: "Geral",
+    limit: 6
+  },
+  {
+    name: "NF Notícias - Política",
+    url: "https://www.nfnoticias.com.br/editoria-2/politica",
+    linkSelector: 'a[href*="/noticia/"]',
+    titleSelector: 'h1, .titulo-noticia',
+    contentSelector: '.noticia_texto, #texto-materia, .entry-content',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://www.nfnoticias.com.br",
+    forcedCategory: "Política",
+    limit: 6
+  },
+  {
+    name: "NF Notícias - Cidades",
+    url: "https://www.nfnoticias.com.br/editoria-6/cidades",
+    linkSelector: 'a[href*="/noticia/"]',
+    titleSelector: 'h1, .titulo-noticia',
+    contentSelector: '.noticia_texto, #texto-materia, .entry-content',
+    imageSelector: 'meta[property="og:image"]',
+    baseUrl: "https://www.nfnoticias.com.br",
+    forcedCategory: "Cidade",
+    limit: 6
   },
   {
     name: "Manchete RJ",
