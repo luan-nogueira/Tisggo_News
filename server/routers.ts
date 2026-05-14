@@ -238,10 +238,10 @@ export const appRouter = router({
 
         // ── Cache de Saudação Local a Custo Zero ──
         const qClean = input.question.toLowerCase().trim();
-        const greetings = ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite", "tudo bem", "tudo bem?", "hey", "oii"];
+        const greetings = ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite", "tudo bem", "tudo bem?", "hey", "oii", "oi ne", "oi né", "eai", "opa"];
         if (greetings.includes(qClean) || qClean.length <= 3) {
           return {
-            answer: "Olá! Sou o Assistente IA oficial do portal Tisgo News. 📰✨ Estou aqui para te ajudar a navegar pelas últimas notícias de Campos dos Goytacazes e do Norte Fluminense. O que você gostaria de conferir hoje?"
+            answer: "Olá! Tudo ótimo por aqui! Sou a IA oficial da redação do **Tisgo News**. 🚀\nEstou de olho em tudo o que está acontecendo em Campos dos Goytacazes e região. Quer saber as manchetes de hoje, a previsão do tempo ou como está o trânsito?"
           };
         }
 
@@ -297,18 +297,37 @@ export const appRouter = router({
           return { answer: `Aqui estão as nossas manchetes mais quentes do momento:\n\n${topNews || "Nenhuma matéria recente encontrada."}\n\nClique nos cards da capa para ler na íntegra! 📰🔥` };
         }
 
-        const systemPrompt = `Você é o Assistente Virtual oficial do portal Tisgo News (focado em Campos dos Goytacazes, Macaé e região do Norte Fluminense).
+        // ── Busca Tabela e Próximos Jogos do Brasileirão ──
+        let footballContext = "Sem informações de jogos no momento.";
+        try {
+          const { getBrasileiraoGames } = await import("./football.js");
+          const games = await getBrasileiraoGames();
+          if (games && games.length > 0) {
+            // Pega os próximos 15 jogos para não estourar o limite de tokens
+            footballContext = games.slice(0, 15).map(g => 
+              `- ${g.homeTeam} vs ${g.awayTeam} | Data: ${g.date} às ${g.time} | Estádio: ${g.stadium} | Status: ${g.status || "Agendado"}`
+            ).join("\n");
+          }
+        } catch (e) {
+          console.log("[AI Chat] Erro ao buscar jogos de futebol.", e);
+        }
+
+        const systemPrompt = `Você é o Assistente Virtual e Jornalista Esportivo oficial do portal Tisgo News (focado no Norte Fluminense e esportes).
 Sua missão é responder de forma curta, prestativa e muito amigável.
 REGRAS CRÍTICAS:
-1. Responda SEMPRE em português do Brasil.
-2. Ao mencionar temperaturas ou clima, use EXCLUSIVAMENTE graus Celsius (°C) e quilômetros por hora (km/h). NUNCA mencione Fahrenheit.
-3. Baseie-se prioritariamente no contexto das últimas notícias abaixo para informar o leitor sobre o que está acontecendo no portal e na região.
+1. Responda SEMPRE em português do Brasil, com um tom animado de redação.
+2. Ao mencionar temperaturas, use EXCLUSIVAMENTE graus Celsius (°C).
+3. Baseie-se prioritariamente no contexto das últimas notícias para informar o leitor.
+4. Se o usuário perguntar sobre o "próximo jogo" de um time de futebol, busque no contexto [Próximos Jogos do Brasileirão Série A] abaixo. Informe com entusiasmo o dia, horário e os times que vão jogar.
 
 [Últimas Notícias do Portal Tisgo News]
 ${newsContext}
 
 [Clima Atual em Campos dos Goytacazes]
-${weatherInfo}`;
+${weatherInfo}
+
+[Próximos Jogos do Brasileirão Série A]
+${footballContext}`;
 
         const messages: any[] = [
           { role: "system", content: systemPrompt }

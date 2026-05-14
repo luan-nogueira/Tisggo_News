@@ -15,7 +15,7 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Olá! Sou o Assistente IA do Tisgo News. Como posso te ajudar hoje?"
+      content: "Olá! Eu sou a Inteligência Artificial do **Tisgo News** 🗞️✨\n\nEstou conectado em tempo real com a nossa redação. Posso te atualizar sobre as últimas notícias de Campos e região, como está o trânsito na BR-101 ou a previsão do tempo. O que você quer saber agora?"
     }
   ]);
 
